@@ -1,23 +1,28 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import Joi from 'joi';
-import User from '../models/User.js';
-import { generateTwoFACode, hashTwoFACode, verifyTwoFACode, isTwoFACodeExpired } from '../utils/twofa.js';
-import emailService from '../utils/emailService.js';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import Joi from "joi";
+import User from "../models/User.js";
+import {
+  generateTwoFACode,
+  hashTwoFACode,
+  verifyTwoFACode,
+  isTwoFACodeExpired,
+} from "../utils/twofa.js";
+import emailService from "../utils/emailService.js";
 
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
     { id: user.id, role: user.role, name: user.name },
     process.env.JWT_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: "1h" }
   );
-  
+
   const refreshToken = jwt.sign(
     { id: user.id },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: "7d" }
   );
-  
+
   return { accessToken, refreshToken };
 };
 
@@ -37,7 +42,7 @@ export const register = async (req, res) => {
 
     const existingUser = await User.findOne({ where: { email: value.email } });
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+      return res.status(400).json({ error: "Email already registered" });
     }
 
     const passwordHash = await bcrypt.hash(value.password, 10);
@@ -47,19 +52,20 @@ export const register = async (req, res) => {
       email: value.email,
       password_hash: passwordHash,
       membership_number: value.membership_number,
-      is_verified: false,
+      is_verified: 0, // Changed from false to 0
     });
 
     // Send welcome email
     await emailService.sendWelcomeEmail(user.email, user.name);
 
     res.status(201).json({
-      message: 'Registration successful. Your account is pending admin verification.',
+      message:
+        "Registration successful. Your account is pending admin verification.",
       userId: user.id,
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Registration failed" });
   }
 };
 
@@ -77,13 +83,17 @@ export const login = async (req, res) => {
 
     const user = await User.findOne({ where: { email: value.email } });
 
-    if (!user || !user.is_verified) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    // Changed from !user.is_verified to user.is_verified !== 1
+    if (!user || user.is_verified !== 1) {
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const isPasswordValid = await bcrypt.compare(value.password, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(
+      value.password,
+      user.password_hash
+    );
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     // Generate 2FA code
@@ -99,24 +109,24 @@ export const login = async (req, res) => {
     // Send 2FA code via email
     const emailResult = await emailService.send2FACode(user.email, twoFACode);
     if (!emailResult.success) {
-      console.error('Failed to send 2FA code:', emailResult.error);
-      return res.status(500).json({ error: 'Failed to send 2FA code' });
+      console.error("Failed to send 2FA code:", emailResult.error);
+      return res.status(500).json({ error: "Failed to send 2FA code" });
     }
 
     // Generate temporary token
     const tempToken = jwt.sign(
-      { id: user.id, state: '2FA_PENDING' },
+      { id: user.id, state: "2FA_PENDING" },
       process.env.JWT_SECRET,
-      { expiresIn: '5m' }
+      { expiresIn: "5m" }
     );
 
-    res.status(200).json({ 
+    res.status(200).json({
       tempToken,
-      message: '2FA code sent to your email'
+      message: "2FA code sent to your email",
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Login failed" });
   }
 };
 
@@ -134,16 +144,19 @@ export const verify2FA = async (req, res) => {
     const user = await User.findByPk(req.user.id);
 
     if (!user || !user.two_fa_code_hash || !user.two_fa_code_expiry) {
-      return res.status(401).json({ error: 'No 2FA code found' });
+      return res.status(401).json({ error: "No 2FA code found" });
     }
 
     if (isTwoFACodeExpired(user.two_fa_code_expiry)) {
-      return res.status(401).json({ error: 'Invalid or expired 2FA code' });
+      return res.status(401).json({ error: "Invalid or expired 2FA code" });
     }
 
-    const isCodeValid = await verifyTwoFACode(value.code, user.two_fa_code_hash);
+    const isCodeValid = await verifyTwoFACode(
+      value.code,
+      user.two_fa_code_hash
+    );
     if (!isCodeValid) {
-      return res.status(401).json({ error: 'Invalid or expired 2FA code' });
+      return res.status(401).json({ error: "Invalid or expired 2FA code" });
     }
 
     // Clear 2FA data
@@ -167,8 +180,8 @@ export const verify2FA = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('2FA verification error:', error);
-    res.status(500).json({ error: '2FA verification failed' });
+    console.error("2FA verification error:", error);
+    res.status(500).json({ error: "2FA verification failed" });
   }
 };
 
@@ -176,21 +189,21 @@ export const logout = async (req, res) => {
   try {
     // In a real implementation, you would invalidate the token here
     // For JWT, this typically involves adding the token to a blacklist
-    res.status(200).json({ message: 'Logged out successfully' });
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({ error: 'Logout failed' });
+    console.error("Logout error:", error);
+    res.status(500).json({ error: "Logout failed" });
   }
 };
 
 export const verifySession = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: ['id', 'name', 'email', 'role', 'membership_number']
+      attributes: ["id", "name", "email", "role", "membership_number"],
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     res.status(200).json({
@@ -203,8 +216,8 @@ export const verifySession = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Session verification error:', error);
-    res.status(500).json({ error: 'Session verification failed' });
+    console.error("Session verification error:", error);
+    res.status(500).json({ error: "Session verification failed" });
   }
 };
 
@@ -213,12 +226,14 @@ export const resend2FA = async (req, res) => {
     const user = await User.findByPk(req.user.id);
 
     if (!user || !user.two_fa_code_hash || !user.two_fa_code_expiry) {
-      return res.status(400).json({ error: 'No 2FA code found' });
+      return res.status(400).json({ error: "No 2FA code found" });
     }
 
     // Check if 2FA code is still valid
     if (isTwoFACodeExpired(user.two_fa_code_expiry)) {
-      return res.status(400).json({ error: '2FA code has expired. Please login again.' });
+      return res
+        .status(400)
+        .json({ error: "2FA code has expired. Please login again." });
     }
 
     // Generate a new 2FA code
@@ -234,13 +249,78 @@ export const resend2FA = async (req, res) => {
     // Send new 2FA code via email
     const emailResult = await emailService.send2FACode(user.email, twoFACode);
     if (!emailResult.success) {
-      console.error('Failed to send 2FA code:', emailResult.error);
-      return res.status(500).json({ error: 'Failed to send 2FA code' });
+      console.error("Failed to send 2FA code:", emailResult.error);
+      return res.status(500).json({ error: "Failed to send 2FA code" });
     }
 
-    res.status(200).json({ message: 'New 2FA code sent to your email' });
+    res.status(200).json({ message: "New 2FA code sent to your email" });
   } catch (error) {
-    console.error('Resend 2FA error:', error);
-    res.status(500).json({ error: 'Failed to resend 2FA code' });
+    console.error("Resend 2FA error:", error);
+    res.status(500).json({ error: "Failed to resend 2FA code" });
+  }
+};
+
+// New function to get unverified users (for admin approval)
+export const getUnverifiedUsers = async (req, res) => {
+  try {
+    // Check if user is admin
+    const user = await User.findByPk(req.user.id);
+    if (user.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
+
+    // Get all unverified users (where is_verified = 0)
+    const unverifiedUsers = await User.findAll({
+      where: { is_verified: 0 }, // Changed from false to 0
+      attributes: ["id", "name", "email", "membership_number", "createdAt"],
+    });
+
+    res.status(200).json({ users: unverifiedUsers });
+  } catch (error) {
+    console.error("Get unverified users error:", error);
+    res.status(500).json({ error: "Failed to fetch unverified users" });
+  }
+};
+
+// New function to verify a user (for admin approval)
+export const verifyUser = async (req, res) => {
+  try {
+    // Check if user is admin
+    const adminUser = await User.findByPk(req.user.id);
+    if (adminUser.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
+
+    // Get user ID from request body
+    const { userId } = req.body;
+
+    // Find the user to verify
+    const userToVerify = await User.findByPk(userId);
+    if (!userToVerify) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update user's verification status (set is_verified = 1)
+    await userToVerify.update({ is_verified: 1 }); // Changed from true to 1
+
+    // Send verification email
+    await emailService.sendAccountVerifiedEmail(
+      userToVerify.email,
+      userToVerify.name
+    );
+
+    res.status(200).json({
+      message: `User ${userToVerify.name} has been successfully verified.`,
+      user: {
+        id: userToVerify.id,
+        name: userToVerify.name,
+        email: userToVerify.email,
+        membership_number: userToVerify.membership_number,
+        is_verified: 1, // Changed from true to 1
+      },
+    });
+  } catch (error) {
+    console.error("User verification error:", error);
+    res.status(500).json({ error: "Failed to verify user" });
   }
 };

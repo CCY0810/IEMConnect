@@ -1,8 +1,8 @@
-import { DataTypes } from 'sequelize';
-import sequelize from '../config/database.js';
+import { DataTypes } from "sequelize";
+import sequelize from "../config/database.js";
 
 const User = sequelize.define(
-  'User',
+  "User",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -23,16 +23,16 @@ const User = sequelize.define(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('member', 'admin'),
-      defaultValue: 'member',
+      type: DataTypes.ENUM("member", "admin"),
+      defaultValue: "member",
     },
     membership_number: {
       type: DataTypes.STRING(6),
       allowNull: false,
     },
     is_verified: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
     },
     two_fa_code_hash: {
       type: DataTypes.STRING,
@@ -44,7 +44,7 @@ const User = sequelize.define(
     },
   },
   {
-    tableName: 'users',
+    tableName: "users",
     timestamps: true,
   }
 );

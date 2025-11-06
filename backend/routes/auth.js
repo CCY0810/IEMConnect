@@ -1,14 +1,27 @@
-import express from "express"
-import { register, login, verify2FA, logout, verifySession, resend2FA } from "../controllers/authController.js"
-import { verifyTempToken, verifyToken } from "../middleware/auth.js"
+import express from "express";
+import {
+  register,
+  login,
+  verify2FA,
+  logout,
+  verifySession,
+  resend2FA,
+  getUnverifiedUsers,
+  verifyUser,
+} from "../controllers/authController.js";
+import { verifyTempToken, verifyToken } from "../middleware/auth.js";
 
-const router = express.Router()
+const router = express.Router();
 
-router.post("/register", register)
-router.post("/login", login)
-router.post("/verify-2fa", verifyTempToken, verify2FA)
-router.post("/logout", verifyToken, logout)
-router.get("/verify-session", verifyToken, verifySession)
-router.post("/resend-2fa", verifyTempToken, resend2FA)
+router.post("/register", register);
+router.post("/login", login);
+router.post("/verify-2fa", verifyTempToken, verify2FA);
+router.post("/logout", verifyToken, logout);
+router.get("/verify-session", verifyToken, verifySession);
+router.post("/resend-2fa", verifyTempToken, resend2FA);
 
-export default router
+// Admin approval routes
+router.get("/unverified-users", verifyToken, getUnverifiedUsers);
+router.post("/verify-user", verifyToken, verifyUser);
+
+export default router;
