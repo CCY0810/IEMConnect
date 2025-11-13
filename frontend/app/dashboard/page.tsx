@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { getUnverifiedUsers, verifyUser } from "@/lib/admin-api";
 import {
@@ -20,8 +20,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Menu, LogOut, Users, ShieldCheck } from "lucide-react";
 
 interface UnverifiedUser {
   id: number;
@@ -34,20 +35,22 @@ interface UnverifiedUser {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, token, logout } = useAuth();
+
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showApprovalPanel, setShowApprovalPanel] = useState(false);
   const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [approvalLoading, setApprovalLoading] = useState<number | null>(null);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
-    if (!token) {
-      router.push("/login");
-    }
-  }, [token, router]);
+    if (!token) router.push("/login");
+  }, [token]);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   const fetchUnverifiedUsers = async () => {
     try {
@@ -65,14 +68,13 @@ export default function DashboardPage() {
     }
   };
 
-  const handleApproveUser = async (userId: number) => {
+  const handleApproveUser = async (id: number) => {
     try {
-      setApprovalLoading(userId);
-      const response = await verifyUser(userId);
-      setMessage({ type: "success", text: response.message });
+      setApprovalLoading(id);
+      const res = await verifyUser(id);
 
-      // Remove the approved user from the list
-      setUnverifiedUsers((prev) => prev.filter((user) => user.id !== userId));
+      setMessage({ type: "success", text: res.message });
+      setUnverifiedUsers((prev) => prev.filter((u) => u.id !== id));
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -84,259 +86,220 @@ export default function DashboardPage() {
   };
 
   const toggleApprovalPanel = () => {
-    const newValue = !showApprovalPanel;
-    setShowApprovalPanel(newValue);
+    const open = !showApprovalPanel;
+    setShowApprovalPanel(open);
 
-    if (newValue && user?.role === "admin") {
-      fetchUnverifiedUsers();
-    }
+    if (open && user?.role === "admin") fetchUnverifiedUsers();
   };
 
-  if (!user) {
-    return null;
-  }
-
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-lg font-bold text-background">IC</span>
-            </div>
-            <h1 className="text-xl font-bold text-foreground">IEM Connect</h1>
-          </div>
-          <Button
-            onClick={handleLogout}
-            className="bg-destructive hover:bg-destructive/90 text-background"
-          >
-            Logout
+    <div className="flex min-h-screen bg-background">
+
+      {/* SIDEBAR */}
+      <aside
+        className={`bg-card border-r border-border transition-all duration-300 ${
+          sidebarOpen ? "w-64" : "w-20"
+        }`}
+      >
+        <div className="p-5 border-b border-border flex items-center justify-between">
+          <h1 className="font-bold text-xl text-foreground">IC</h1>
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Menu size={20} />
           </Button>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="space-y-8">
-          {/* Welcome Card */}
-          <Card className="bg-card border-border">
+        <div className="p-5 space-y-6">
+          <SidebarItem open={sidebarOpen} icon={<Users size={18} />} label="Dashboard" active />
+          <SidebarItem open={sidebarOpen} icon={<ShieldCheck size={18} />} label="Security" />
+          <SidebarItem
+            open={sidebarOpen}
+            icon={<LogOut size={18} />}
+            label="Logout"
+            onClick={handleLogout}
+          />
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT */}
+      <div className="flex-1">
+        {/* TOP HEADER */}
+        <header className="bg-card border-b border-border px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground text-sm">
+              Welcome back, {user.name}. Here's your summary.
+            </p>
+          </div>
+        </header>
+
+        {/* CONTENT AREA */}
+        <main className="px-6 py-10 space-y-10 max-w-6xl mx-auto">
+          {/* PROFILE SECTION */}
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-3xl text-foreground">
-                Welcome, {user.name}!
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Your account is fully authenticated and secure
-              </CardDescription>
+              <CardTitle>Account Overview</CardTitle>
+              <CardDescription>Your authenticated account details</CardDescription>
             </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Info label="Full Name" value={user.name} />
+              <Info label="Email" value={user.email} />
+              <Info
+                label="Role"
+                value={
+                  <span className="flex items-center gap-2 capitalize">
+                    {user.role} {user.role === "admin" && <Badge>Admin</Badge>}
+                  </span>
+                }
+              />
+              <Info label="Membership Number" value={user.membership_number} />
+            </CardContent>
           </Card>
 
-          {/* User Information Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-foreground">
-                  Account Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Full Name</p>
-                  <p className="text-lg font-medium text-foreground">
-                    {user.name}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="text-lg font-medium text-foreground">
-                    {user.email}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Role</p>
-                  <p className="text-lg font-medium text-foreground capitalize">
-                    {user.role}{" "}
-                    {user.role === "admin" && (
-                      <Badge variant="secondary">Admin</Badge>
-                    )}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-foreground">
-                  Membership Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Membership Number
-                  </p>
-                  <p className="text-lg font-medium text-foreground">
-                    {user.membership_number}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Security Status
-                  </p>
-                  <p className="text-lg font-medium text-accent">
-                    ✓ 2FA Verified
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Admin Approval Button (only for admins) */}
+          {/* ADMIN PANEL */}
           {user.role === "admin" && (
-            <Card className="bg-card border-border">
+            <Card className="shadow-sm">
               <CardHeader>
-                <CardTitle className="text-foreground">Admin Panel</CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Manage user approvals
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={toggleApprovalPanel}
-                  variant={showApprovalPanel ? "secondary" : "default"}
-                >
-                  {showApprovalPanel
-                    ? "Hide Approval Panel"
-                    : "Approve New Users"}
-                </Button>
-
-                {/* Approval Panel */}
-                {showApprovalPanel && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                      Pending User Approvals
-                    </h3>
-
-                    {message && (
-                      <Alert
-                        className="mb-4"
-                        variant={
-                          message.type === "error" ? "destructive" : "default"
-                        }
-                      >
-                        <AlertTitle>
-                          {message.type === "error" ? "Error" : "Success"}
-                        </AlertTitle>
-                        <AlertDescription>{message.text}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    {loading ? (
-                      <p>Loading unverified users...</p>
-                    ) : unverifiedUsers.length === 0 ? (
-                      <p className="text-muted-foreground">
-                        No users pending approval.
-                      </p>
-                    ) : (
-                      <div className="border rounded-md">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Name</TableHead>
-                              <TableHead>Email</TableHead>
-                              <TableHead>Membership Number</TableHead>
-                              <TableHead>Registered</TableHead>
-                              <TableHead>Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {unverifiedUsers.map((unverifiedUser) => (
-                              <TableRow key={unverifiedUser.id}>
-                                <TableCell className="font-medium">
-                                  {unverifiedUser.name}
-                                </TableCell>
-                                <TableCell>{unverifiedUser.email}</TableCell>
-                                <TableCell>
-                                  {unverifiedUser.membership_number}
-                                </TableCell>
-                                <TableCell>
-                                  {new Date(
-                                    unverifiedUser.createdAt
-                                  ).toLocaleDateString()}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    onClick={() =>
-                                      handleApproveUser(unverifiedUser.id)
-                                    }
-                                    disabled={
-                                      approvalLoading === unverifiedUser.id
-                                    }
-                                    size="sm"
-                                  >
-                                    {approvalLoading === unverifiedUser.id
-                                      ? "Verifying..."
-                                      : "Verify"}
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Admin Panel</CardTitle>
+                    <CardDescription>Approve new user registrations</CardDescription>
                   </div>
-                )}
-              </CardContent>
+                  <Button onClick={toggleApprovalPanel} variant="secondary">
+                    {showApprovalPanel ? "Hide Panel" : "Show Approvals"}
+                  </Button>
+                </div>
+              </CardHeader>
+
+              {showApprovalPanel && (
+                <CardContent className="mt-4">
+                  <h3 className="text-lg font-semibold mb-4">Pending User Approvals</h3>
+
+                  {message && (
+                    <Alert
+                      className="mb-4"
+                      variant={message.type === "error" ? "destructive" : "default"}
+                    >
+                      <AlertTitle>
+                        {message.type === "error" ? "Error" : "Success"}
+                      </AlertTitle>
+                      <AlertDescription>{message.text}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {loading ? (
+                    <p className="text-muted-foreground">Loading users...</p>
+                  ) : unverifiedUsers.length === 0 ? (
+                    <div className="text-muted-foreground">No pending users.</div>
+                  ) : (
+                    <Table className="border rounded-md overflow-hidden">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Membership No.</TableHead>
+                          <TableHead>Registered</TableHead>
+                          <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {unverifiedUsers.map((u) => (
+                          <TableRow key={u.id}>
+                            <TableCell>{u.name}</TableCell>
+                            <TableCell>{u.email}</TableCell>
+                            <TableCell>{u.membership_number}</TableCell>
+                            <TableCell>
+                              {new Date(u.createdAt).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                size="sm"
+                                disabled={approvalLoading === u.id}
+                                onClick={() => handleApproveUser(u.id)}
+                              >
+                                {approvalLoading === u.id ? "Verifying..." : "Verify"}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              )}
             </Card>
           )}
 
-          {/* Security Information */}
-          <Card className="bg-card border-border">
+          {/* SECURITY */}
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-foreground">
-                Security Information
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Your account is protected with two-factor authentication
-              </CardDescription>
+              <CardTitle>Security Status</CardTitle>
+              <CardDescription>Your account protection details</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center mt-0.5">
-                    <span className="text-sm text-accent">✓</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">
-                      Two-Factor Authentication (2FA)
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Active and protecting your account
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center mt-0.5">
-                    <span className="text-sm text-accent">✓</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Secure Login</p>
-                    <p className="text-sm text-muted-foreground">
-                      Your session is encrypted and secure
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <CardContent className="space-y-4">
+              <SecurityItem title="2FA Enabled" description="Your account is protected with verified two-factor authentication." />
+              <SecurityItem title="Encrypted Authentication" description="Your session and data are encrypted and secured." />
             </CardContent>
           </Card>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
+  );
+}
+
+/* SMALL REUSABLE COMPONENTS */
+function Info({ label, value }: { label: string; value: any }) {
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="text-lg font-medium">{value}</p>
+    </div>
+  );
+}
+
+function SecurityItem({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center mt-0.5">
+        <span className="text-sm text-accent">✓</span>
+      </div>
+      <div>
+        <p className="font-medium">{title}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function SidebarItem({
+  icon,
+  label,
+  open,
+  active,
+  onClick,
+}: {
+  icon: any;
+  label: string;
+  open: boolean;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition ${
+        active ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+      }`}
+    >
+      {icon}
+      {open && <span>{label}</span>}
+    </button>
   );
 }
