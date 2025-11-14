@@ -23,25 +23,22 @@ export default function LoginPage() {
         backgroundImage: "url('/login-page-bg.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        filter: "blur(3px)",       
+        backgroundRepeat: "no-repeat",     
         transform: "scale(1.05)",  
       }}
     ></div>
 
-    <div className="absolute inset-0 bg-white/50"></div>
+    <div className="absolute inset-0 bg-white/45"></div>
 
 
       <div className="absolute top-20 left-20 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-300/15 rounded-full blur-3xl"></div>
 
-      {/* MAIN LAYOUT */}
       <div className="relative z-10 w-full max-w-6xl px-8 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
 
-        {/* LEFT PANEL  */}
         <div className="hidden lg:flex flex-col justify-center space-y-8">
           
-          {/* Logo */}
+          {/*LOGO*/}
           <div className="flex items-center space-x-6 mb-10">
             <div className="p-4 bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/70">
               <img
@@ -51,7 +48,6 @@ export default function LoginPage() {
               />
             </div>
               
-            {/* Divider Line */}
             <div className="h-20 w-px bg-blue-300/70"></div>
             
             <div className="space-y-1">
@@ -65,7 +61,6 @@ export default function LoginPage() {
           </div>
 
 
-          {/* Main heading with gradient */}
           <div className="space-y-4">
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
               <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
@@ -81,19 +76,19 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Description*/}
-          <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
+          {/*Description*/}
+          <p className="text-lg text-gray-700 leading-relaxed max-w-lg">
             Login to manage your membership, register for events, and access all essential IEM Connect services with secure authentication.
           </p>
 
-          {/* Feature highlights*/}
+          {/*Feature highlights*/}
           <div className="space-y-3">
             {[
               "✓ 2-Factor Authentication secured",
               "✓ Real-time member verification", 
               "✓ Encrypted data transmission",
             ].map((feature, index) => (
-              <div key={index} className="flex items-center space-x-3 text-gray-600">
+              <div key={index} className="flex items-center space-x-3 text-gray-700">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm font-medium">{feature}</span>
               </div>
@@ -103,7 +98,6 @@ export default function LoginPage() {
           
         </div>
 
-        {/* RIGHT FORM CARD*/}
         <div className="flex justify-center items-center">
           <div className="w-full max-w-md">
             <div className="bg-white/80 backdrop-blur-lg border border-white/60 rounded-2xl shadow-2xl shadow-blue-500/10 p-12">

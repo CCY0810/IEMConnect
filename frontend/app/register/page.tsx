@@ -22,12 +22,11 @@ export default function RegisterPage() {
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
-          filter: "blur(3px)",
           transform: "scale(1.05)",
         }}
       ></div>
 
-      <div className="absolute inset-0 bg-white/50"></div>
+      <div className="absolute inset-0 bg-white/45"></div>
 
       <div className="absolute top-20 left-20 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-300/15 rounded-full blur-3xl"></div>
@@ -72,7 +71,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Description */}
-          <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
+          <p className="text-lg text-gray-700 leading-relaxed max-w-lg">
             Register to access verified membership features, event participation, 
             and all IEM Connect engineering services through a secure platform.
           </p>
@@ -83,7 +82,7 @@ export default function RegisterPage() {
               "✓ Secure password encryption",
               "✓ Email + 2FA verification ready",
             ].map((feature, index) => (
-              <div key={index} className="flex items-center space-x-3 text-gray-600">
+              <div key={index} className="flex items-center space-x-3 text-gray-700">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm font-medium">{feature}</span>
               </div>
