@@ -281,9 +281,15 @@ export default function EventsPage() {
                       </TableCell>
 
                       <TableCell className="text-right">
-                        <Button size="sm" variant="outline" className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex items-center gap-1"
+                          onClick={() => router.push("/view_event")}
+                        >
                           <Eye size={16} /> View
                         </Button>
+
                       </TableCell>
                     </TableRow>
                   ))}
