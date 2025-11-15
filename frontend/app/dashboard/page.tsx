@@ -168,7 +168,7 @@ export default function DashboardPage() {
             open={sidebarOpen}
             icon={<Calendar size={18} />}
             label="Events"
-            onClick={() => router.push("/admin/events")}     // 
+            onClick={() => router.push("/event")}     // 
           />
           <SidebarButton
             open={sidebarOpen}
