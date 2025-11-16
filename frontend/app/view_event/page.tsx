@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { getEventById, updateEvent, Event } from "@/lib/event-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,33 +38,115 @@ import {
 
 export default function ViewEventPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, logout } = useAuth();
+
+  const eventId = parseInt(searchParams.get("id") || "0");
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Sample event (frontend only)
-  const event = {
-    directorName: "Dr. Farhan",
-    matric: "A21MX1234",
-    phone: "012-3456789",
-    email: "farhan@utm.my",
-    title: "Engineering Summit 2025",
-    description:
-      "A grand annual professional engineering event involving talks, workshops, and exhibitions.",
-    cost: "20",
-    target: "300 engineering students",
-    paperwork: "/sample-paper.pdf",
-    poster: "/placeholder-image.svg",
-    from: "2025-02-20",
-    until: "2025-02-21",
+  // Form state for editing
+  const [formData, setFormData] = useState({
+    directorName: "",
+    matric: "",
+    phone: "",
+    email: "",
+    title: "",
+    description: "",
+    cost: "",
+    targetedParticipants: "",
+    startDate: "",
+    endDate: "",
+  });
+
+  const [newPoster, setNewPoster] = useState<File | null>(null);
+  const [newPaperwork, setNewPaperwork] = useState<File | null>(null);
+
+  // Check if user is admin
+  const isAdmin = user?.role === "admin";
+
+  // Fetch event data
+  useEffect(() => {
+    const fetchEvent = async () => {
+      if (!eventId) {
+        setError("Invalid event ID");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const data = await getEventById(eventId);
+        setEvent(data);
+
+        // Populate form data
+        setFormData({
+          directorName: data.director_name,
+          matric: data.director_matric,
+          phone: data.director_phone,
+          email: data.director_email,
+          title: data.title,
+          description: data.description || "",
+          cost: data.cost.toString(),
+          targetedParticipants: data.targeted_participants || "",
+          startDate: data.start_date,
+          endDate: data.end_date,
+        });
+        setError("");
+      } catch (err: any) {
+        setError(err.response?.data?.error || "Failed to fetch event");
+        console.error("Fetch event error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchEvent();
+    }
+  }, [eventId, user]);
+
+  const handleUpdate = async () => {
+    if (!eventId) return;
+
+    setError("");
+    setLoading(true);
+
+    try {
+      const updated = await updateEvent(eventId, {
+        director_name: formData.directorName,
+        director_matric: formData.matric,
+        director_phone: formData.phone,
+        director_email: formData.email,
+        title: formData.title,
+        description: formData.description,
+        cost: parseFloat(formData.cost),
+        targeted_participants: formData.targetedParticipants,
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        poster_file: newPoster || undefined,
+        paperwork_file: newPaperwork || undefined,
+      });
+
+      setEvent(updated);
+      setEditing(false);
+      alert("Event updated successfully!");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to update event");
+      console.error("Update event error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!user) return null;
 
   return (
     <div className="flex min-h-screen bg-[#F3F6FB] text-slate-900">
-
       {/* SIDEBAR */}
       <aside
         className={`transition-all duration-300 ${
@@ -88,7 +171,9 @@ export default function ViewEventPage() {
             {sidebarOpen && (
               <div>
                 <div className="text-sm font-semibold">IEM Connect</div>
-                <div className="text-xs text-slate-300">Admin Panel</div>
+                <div className="text-xs text-slate-300">
+                  {isAdmin ? "Admin Panel" : "Member Portal"}
+                </div>
               </div>
             )}
           </div>
@@ -159,10 +244,8 @@ export default function ViewEventPage() {
 
       {/* MAIN AREA */}
       <div className="flex-1">
-
         {/* HEADER */}
         <header className="flex items-center justify-between px-8 py-4 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40">
-
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push("/event")}
@@ -172,92 +255,216 @@ export default function ViewEventPage() {
             </button>
 
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">View Event</h2>
-              <p className="text-sm text-slate-500">Event details & director information</p>
+              <h2 className="text-2xl font-semibold tracking-tight">
+                View Event
+              </h2>
+              <p className="text-sm text-slate-500">
+                Event details & director information
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-5">
             <div className="text-right">
               <div className="text-sm font-semibold">{user.name}</div>
-              <div className="text-xs text-slate-400 capitalize">{user.role}</div>
+              <div className="text-xs text-slate-400 capitalize">
+                {user.role}
+              </div>
             </div>
 
-            <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm">
-              <img src="/placeholder-user.jpg" className="w-full h-full object-cover" />
-            </div>
+            <button
+              onClick={() => router.push("/profile")}
+              className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              title="View Profile"
+            >
+              <img
+                src="/placeholder-user.jpg"
+                className="w-full h-full object-cover"
+              />
+            </button>
           </div>
         </header>
 
         {/* CONTENT */}
         <main className="px-8 py-10 max-w-5xl mx-auto space-y-10">
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">
+              Loading event...
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          ) : !event ? (
+            <div className="text-center py-8 text-gray-500">
+              Event not found
+            </div>
+          ) : (
+            <>
+              {/* DIRECTOR INFO */}
+              <Card className="bg-white/70 shadow">
+                <CardHeader>
+                  <CardTitle>Director Information</CardTitle>
+                  <CardDescription>
+                    Details of the event director
+                  </CardDescription>
+                </CardHeader>
 
-          {/* DIRECTOR INFO */}
-          <Card className="bg-white/70 shadow">
-            <CardHeader>
-              <CardTitle>Director Information</CardTitle>
-              <CardDescription>Details of the event director</CardDescription>
-            </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputField
+                    label="Full Name"
+                    editable={editing}
+                    value={formData.directorName}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, directorName: e.target.value })
+                    }
+                  />
+                  <InputField
+                    label="Matric Number"
+                    editable={editing}
+                    value={formData.matric}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, matric: e.target.value })
+                    }
+                  />
+                  <InputField
+                    label="Phone Number"
+                    editable={editing}
+                    value={formData.phone}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                  />
+                  <InputField
+                    label="Email Address"
+                    editable={editing}
+                    value={formData.email}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                  />
+                </CardContent>
+              </Card>
 
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InputField label="Full Name" editable={editing} defaultValue={event.directorName} />
-              <InputField label="Matric Number" editable={editing} defaultValue={event.matric} />
-              <InputField label="Phone Number" editable={editing} defaultValue={event.phone} />
-              <InputField label="Email Address" editable={editing} defaultValue={event.email} />
-            </CardContent>
-          </Card>
+              {/* EVENT INFO */}
+              <Card className="bg-white/70 shadow">
+                <CardHeader>
+                  <CardTitle>Event Information</CardTitle>
+                  <CardDescription>Complete event details</CardDescription>
+                </CardHeader>
 
-          {/* EVENT INFO */}
-          <Card className="bg-white/70 shadow">
-            <CardHeader>
-              <CardTitle>Event Information</CardTitle>
-              <CardDescription>Complete event details</CardDescription>
-            </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputField
+                    label="Event Title"
+                    editable={editing}
+                    value={formData.title}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    className="md:col-span-2"
+                  />
 
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <span className="text-sm font-medium text-slate-600">
+                      Description
+                    </span>
+                    {editing ? (
+                      <Textarea
+                        value={formData.description}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            description: e.target.value,
+                          })
+                        }
+                      />
+                    ) : (
+                      <p className="text-slate-700">{event.description}</p>
+                    )}
+                  </div>
 
-              <InputField
-                label="Event Title"
-                editable={editing}
-                defaultValue={event.title}
-                className="md:col-span-2"
-              />
+                  <InputField
+                    label="Cost (RM)"
+                    editable={editing}
+                    value={formData.cost}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, cost: e.target.value })
+                    }
+                    type="number"
+                  />
+                  <InputField
+                    label="Targeted Participants"
+                    editable={editing}
+                    value={formData.targetedParticipants}
+                    onChange={(e: any) =>
+                      setFormData({
+                        ...formData,
+                        targetedParticipants: e.target.value,
+                      })
+                    }
+                  />
 
-              <div className="md:col-span-2">
-                <span className="text-sm font-medium text-slate-600">Description</span>
-                {editing ? (
-                  <Textarea defaultValue={event.description} />
-                ) : (
-                  <p className="text-slate-700">{event.description}</p>
-                )}
-              </div>
+                  <FileField
+                    label="Paperwork"
+                    file={event.paperwork_url}
+                    editable={editing}
+                    onChange={(e: any) =>
+                      setNewPaperwork(e.target.files?.[0] || null)
+                    }
+                  />
+                  <PosterField
+                    poster={event.poster_url}
+                    editable={editing}
+                    onChange={(e: any) =>
+                      setNewPoster(e.target.files?.[0] || null)
+                    }
+                  />
 
-              <InputField label="Cost (RM)" editable={editing} defaultValue={event.cost} />
-              <InputField label="Targeted Participants" editable={editing} defaultValue={event.target} />
+                  <InputField
+                    label="Date From"
+                    type="date"
+                    editable={editing}
+                    value={formData.startDate}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, startDate: e.target.value })
+                    }
+                  />
+                  <InputField
+                    label="Date Until"
+                    type="date"
+                    editable={editing}
+                    value={formData.endDate}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
+                  />
+                </CardContent>
+              </Card>
 
-              <FileField label="Paperwork" file={event.paperwork} editable={editing} />
-              <PosterField poster={event.poster} editable={editing} />
+              {/* FOOTER BUTTONS */}
+              {isAdmin && (
+                <div className="flex justify-between mt-6">
+                  <Button
+                    className="px-6 py-2 bg-blue-600 text-white"
+                    onClick={() =>
+                      editing ? handleUpdate() : setEditing(true)
+                    }
+                    disabled={loading}
+                  >
+                    {loading
+                      ? "Saving..."
+                      : editing
+                      ? "Save Changes"
+                      : "Edit Event"}
+                  </Button>
 
-              <InputField label="Date From" type="date" editable={editing} defaultValue={event.from} />
-              <InputField label="Date Until" type="date" editable={editing} defaultValue={event.until} />
-
-            </CardContent>
-          </Card>
-
-          {/* FOOTER BUTTONS */}
-          <div className="flex justify-between mt-6">
-            <Button
-              className="px-6 py-2 bg-blue-600 text-white"
-              onClick={() => setEditing(!editing)}
-            >
-              {editing ? "Save Changes" : "Edit Event"}
-            </Button>
-
-            <Button className="px-6 py-2 bg-slate-700 text-white">
-              Generate Report
-            </Button>
-          </div>
-
+                  <Button className="px-6 py-2 bg-slate-700 text-white">
+                    Generate Report
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </main>
       </div>
     </div>
@@ -266,47 +473,76 @@ export default function ViewEventPage() {
 
 /* ---------------------- COMPONENTS ---------------------- */
 
-function InputField({ label, editable, defaultValue, type = "text", className = "" }: any) {
+function InputField({
+  label,
+  editable,
+  value,
+  onChange,
+  type = "text",
+  className = "",
+}: any) {
   return (
     <div className={className}>
       <span className="text-sm font-medium text-slate-600">{label}</span>
       {editable ? (
-        <Input type={type} defaultValue={defaultValue} />
+        <Input type={type} value={value} onChange={onChange} />
       ) : (
-        <p className="text-slate-700">{defaultValue}</p>
+        <p className="text-slate-700">{value}</p>
       )}
     </div>
   );
 }
 
-function FileField({ label, file, editable }: any) {
+function FileField({ label, file, editable, onChange }: any) {
   return (
     <div>
       <span className="text-sm font-medium text-slate-600">{label}</span>
 
       {editable ? (
-        <Input type="file" className="mt-2" />
-      ) : (
-        <a href={file} download className="text-blue-600 underline text-sm block mt-1">
+        <Input type="file" className="mt-2" onChange={onChange} />
+      ) : file ? (
+        <a
+          href={`http://localhost:5000${file}`}
+          download
+          className="text-blue-600 underline text-sm block mt-1"
+        >
           Download File
         </a>
+      ) : (
+        <p className="text-slate-500 text-sm mt-1">No file uploaded</p>
       )}
     </div>
   );
 }
 
-function PosterField({ poster, editable }: any) {
+function PosterField({ poster, editable, onChange }: any) {
   return (
     <div>
       <span className="text-sm font-medium text-slate-600">Poster</span>
 
       {editable ? (
-        <Input type="file" accept="image/*" className="mt-2" />
-      ) : (
-        <img
-          src={poster}
-          className="w-40 h-40 object-cover rounded-md border mt-2"
+        <Input
+          type="file"
+          accept="image/*"
+          className="mt-2"
+          onChange={onChange}
         />
+      ) : poster ? (
+        <img
+          src={`http://localhost:5000${poster}`}
+          alt="Event Poster"
+          className="w-full max-w-sm h-auto object-cover rounded-md border mt-2"
+          onError={(e) => {
+            console.error("Failed to load poster:", poster);
+            e.currentTarget.style.display = "none";
+            if (e.currentTarget.nextSibling) {
+              (e.currentTarget.nextSibling as HTMLElement).style.display =
+                "block";
+            }
+          }}
+        />
+      ) : (
+        <p className="text-slate-500 text-sm mt-1">No poster uploaded</p>
       )}
     </div>
   );

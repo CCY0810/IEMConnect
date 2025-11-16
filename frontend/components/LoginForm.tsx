@@ -40,7 +40,7 @@ export default function LoginForm() {
     } catch (err: any) {
       setError(
         err?.response?.data?.error ??
-          (err instanceof Error ? err.message : "Login failed"),
+          (err instanceof Error ? err.message : "Login failed")
       );
     } finally {
       setIsLoading(false);
@@ -114,6 +114,14 @@ export default function LoginForm() {
                   <Eye className="h-4 w-4" />
                 )}
               </Button>
+            </div>
+            <div className="text-right mt-1">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
           </div>
 

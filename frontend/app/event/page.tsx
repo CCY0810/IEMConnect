@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { getEvents, Event } from "@/lib/event-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,9 +37,8 @@ import {
   PieChart,
   Plus,
   Search,
-  Eye
+  Eye,
 } from "lucide-react";
-
 
 export default function EventsPage() {
   const router = useRouter();
@@ -46,41 +46,38 @@ export default function EventsPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const events = [
-    {
-      id: 1,
-      title: "Engineering Summit 2025",
-      director: "Dr. Farhan",
-      date: "2025-02-20",
-      status: "Upcoming",
-    },
-    {
-      id: 2,
-      title: "AI Robotics Workshop",
-      director: "Ir. Balqis",
-      date: "2025-03-05",
-      status: "Open",
-    },
-    {
-      id: 3,
-      title: "IEM Annual General Meeting",
-      director: "Ir. Afiq",
-      date: "2025-01-12",
-      status: "Completed",
-    },
-  ];
+  // Fetch events from backend
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        const data = await getEvents({ search });
+        setEvents(data);
+        setError("");
+      } catch (err: any) {
+        setError(err.response?.data?.error || "Failed to fetch events");
+        console.error("Fetch events error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filtered = events.filter((e) =>
-    e.title.toLowerCase().includes(search.toLowerCase())
-  );
+    if (user) {
+      fetchEvents();
+    }
+  }, [search, user]);
+
+  // Check if user is admin
+  const isAdmin = user?.role === "admin";
 
   if (!user) return null;
 
   return (
     <div className="flex min-h-screen bg-[#F3F6FB] text-slate-900">
-
-
       <aside
         className={`transition-all duration-300 ${
           sidebarOpen ? "w-72" : "w-20"
@@ -105,7 +102,9 @@ export default function EventsPage() {
             {sidebarOpen && (
               <div>
                 <div className="text-sm font-semibold">IEM Connect</div>
-                <div className="text-xs text-slate-300">Admin Panel</div>
+                <div className="text-xs text-slate-300">
+                  {isAdmin ? "Admin Panel" : "Member Portal"}
+                </div>
               </div>
             )}
           </div>
@@ -173,29 +172,31 @@ export default function EventsPage() {
         </nav>
       </aside>
 
-
       <div className="flex-1 min-h-screen">
-
         <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
-
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">Events</h2>
             <p className="text-sm text-slate-500">Manage IEM Connect events</p>
           </div>
 
           <div className="flex items-center gap-5">
-
             <div className="text-right">
               <div className="text-sm font-semibold">{user.name}</div>
-              <div className="text-xs text-slate-400 capitalize">{user.role}</div>
+              <div className="text-xs text-slate-400 capitalize">
+                {user.role}
+              </div>
             </div>
 
-            <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm">
+            <button
+              onClick={() => router.push("/profile")}
+              className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              title="View Profile"
+            >
               <img
                 src="/placeholder-user.jpg"
                 className="w-full h-full object-cover"
               />
-            </div>
+            </button>
 
             <button className="p-2 rounded hover:bg-slate-200" onClick={logout}>
               <LogOut size={18} />
@@ -203,24 +204,27 @@ export default function EventsPage() {
           </div>
         </header>
 
-
-
         <main className="px-8 py-10 space-y-8 max-w-7xl mx-auto">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold">Event Management</h3>
             </div>
 
-            <Button
-              className="flex items-center gap-2 bg-blue-600"
-              onClick={() => router.push("/create_event")}
-            >
-              <Plus size={18} /> Create Event
-            </Button>
-
+            {isAdmin && (
+              <Button
+                className="flex items-center gap-2 bg-blue-600"
+                onClick={() => router.push("/create_event")}
+              >
+                <Plus size={18} /> Create Event
+              </Button>
+            )}
           </div>
-
 
           <Card className="bg-white/70 shadow">
             <CardHeader>
@@ -229,7 +233,10 @@ export default function EventsPage() {
             </CardHeader>
             <CardContent>
               <div className="relative w-full">
-                <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
+                <Search
+                  className="absolute left-3 top-2.5 text-slate-400"
+                  size={18}
+                />
                 <Input
                   placeholder="Search event..."
                   className="pl-10"
@@ -247,54 +254,65 @@ export default function EventsPage() {
             </CardHeader>
 
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Director</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  {filtered.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell>{event.title}</TableCell>
-                      <TableCell>{event.director}</TableCell>
-                      <TableCell>
-                        {new Date(event.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            event.status === "Upcoming"
-                              ? "bg-blue-100 text-blue-600"
-                              : event.status === "Open"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-slate-200 text-slate-600"
-                          }`}
-                        >
-                          {event.status}
-                        </span>
-                      </TableCell>
-
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex items-center gap-1"
-                          onClick={() => router.push("/view_event")}
-                        >
-                          <Eye size={16} /> View
-                        </Button>
-
-                      </TableCell>
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">
+                  Loading events...
+                </div>
+              ) : events.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No events found. {isAdmin && "Create your first event!"}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Director</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+
+                  <TableBody>
+                    {events.map((event) => (
+                      <TableRow key={event.id}>
+                        <TableCell>{event.title}</TableCell>
+                        <TableCell>{event.director_name}</TableCell>
+                        <TableCell>
+                          {new Date(event.start_date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              event.status === "Upcoming"
+                                ? "bg-blue-100 text-blue-600"
+                                : event.status === "Open"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-slate-200 text-slate-600"
+                            }`}
+                          >
+                            {event.status}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                            onClick={() =>
+                              router.push(`/view_event?id=${event.id}`)
+                            }
+                          >
+                            <Eye size={16} /> View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </main>
@@ -302,7 +320,6 @@ export default function EventsPage() {
     </div>
   );
 }
-
 
 function SidebarButton({
   icon,

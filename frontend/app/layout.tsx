@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from 'next/font/google';
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../context/auth-context";
 
@@ -17,10 +17,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-background text-foreground`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body
+        className={`${inter.className} bg-background text-foreground`}
+        suppressHydrationWarning
+      >
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

@@ -54,9 +54,10 @@ export default function DashboardPage() {
   const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [approvalLoading, setApprovalLoading] = useState<number | null>(null);
-  const [message, setMessage] = useState<
-    { type: "success" | "error"; text: string } | null
-  >(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!token) router.push("/login");
@@ -106,6 +107,8 @@ export default function DashboardPage() {
     if (open && user?.role === "admin") fetchUnverifiedUsers();
   };
 
+  const isAdmin = user?.role === "admin";
+
   if (!user) return null;
 
   return (
@@ -136,7 +139,9 @@ export default function DashboardPage() {
             {sidebarOpen && (
               <div>
                 <div className="text-sm font-semibold">IEM Connect</div>
-                <div className="text-xs text-slate-300">Admin Panel</div>
+                <div className="text-xs text-slate-300">
+                  {isAdmin ? "Admin Panel" : "Member Portal"}
+                </div>
               </div>
             )}
           </div>
@@ -162,37 +167,37 @@ export default function DashboardPage() {
             open={sidebarOpen}
             icon={<FileText size={18} />}
             label="Reports"
-            onClick={() => router.push("/admin/reports")}       //alll link here change later when the page is created
+            onClick={() => router.push("/admin/reports")} //alll link here change later when the page is created
           />
           <SidebarButton
             open={sidebarOpen}
             icon={<Calendar size={18} />}
             label="Events"
-            onClick={() => router.push("/event")}     // 
+            onClick={() => router.push("/event")} //
           />
           <SidebarButton
             open={sidebarOpen}
             icon={<CheckSquare size={18} />}
             label="Attendance"
-            onClick={() => router.push("/admin/attendance")}    // 
+            onClick={() => router.push("/admin/attendance")} //
           />
           <SidebarButton
             open={sidebarOpen}
             icon={<Bell size={18} />}
             label="Notifications"
-            onClick={() => router.push("/admin/notifications")}   // 
+            onClick={() => router.push("/admin/notifications")} //
           />
           <SidebarButton
             open={sidebarOpen}
             icon={<Settings size={18} />}
             label="Settings"
-            onClick={() => router.push("/admin/settings")}  //
+            onClick={() => router.push("/admin/settings")} //
           />
           <SidebarButton
             open={sidebarOpen}
             icon={<HelpCircle size={18} />}
             label="Help"
-            onClick={() => router.push("/admin/help")}    //
+            onClick={() => router.push("/admin/help")} //
           />
 
           <div className="mt-6 border-t border-white/10 pt-4">
@@ -211,31 +216,31 @@ export default function DashboardPage() {
         {/* top header */}
         <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">
-              Dashboard
-            </h2>
-            <p className="text-sm text-slate-500">
-              Welcome back, {user.name}.
-            </p>
+            <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
+            <p className="text-sm text-slate-500">Welcome back, {user.name}.</p>
           </div>
 
-            <div className="flex items-center gap-5">
-
-              {/* User Name + Role */}
-              <div className="text-right">
-                <div className="text-sm font-semibold">{user.name}</div>
-                <div className="text-xs text-slate-400 capitalize">{user.role}</div>
+          <div className="flex items-center gap-5">
+            {/* User Name + Role */}
+            <div className="text-right">
+              <div className="text-sm font-semibold">{user.name}</div>
+              <div className="text-xs text-slate-400 capitalize">
+                {user.role}
               </div>
+            </div>
 
-              {/* Profile Picture */}
-              <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm">
-                <img
-                  src="/placeholder-user.jpg"
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
+            {/* Profile Picture - Clickable */}
+            <button
+              onClick={() => router.push("/profile")}
+              className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              title="View Profile"
+            >
+              <img
+                src="/placeholder-user.jpg"
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </button>
 
             <button
               onClick={handleLogout}
@@ -252,7 +257,9 @@ export default function DashboardPage() {
           <Card className="bg-white/70 shadow">
             <CardHeader>
               <CardTitle>Profile Overview</CardTitle>
-              <CardDescription>Your authenticated profile details</CardDescription>
+              <CardDescription>
+                Your authenticated profile details
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Info label="Full Name" value={user.name} />
@@ -266,10 +273,12 @@ export default function DashboardPage() {
                 }
               />
               <Info label="Membership Number" value={user.membership_number} />
-              <Info label="Matric Number" value={user.email} />    {/*later nid to add phone number & matric number*/}
-              <Info label="Phone Number" value={user.email} />     {/*for now just leave it, can add when edit profile instead of add at register*/}
+              <Info label="Matric Number" value={user.email} />{" "}
+              {/*later nid to add phone number & matric number*/}
+              <Info label="Phone Number" value={user.email} />{" "}
+              {/*for now just leave it, can add when edit profile instead of add at register*/}
             </CardContent>
-          </Card> 
+          </Card>
 
           {/* ADMIN PANEL */}
           {user.role === "admin" && (
@@ -278,7 +287,9 @@ export default function DashboardPage() {
                 <div className="flex justify-between items-center">
                   <div>
                     <CardTitle>Admin Panel</CardTitle>
-                    <CardDescription>Approve new user registrations</CardDescription>
+                    <CardDescription>
+                      Approve new user registrations
+                    </CardDescription>
                   </div>
                   <Button onClick={toggleApprovalPanel} variant="secondary">
                     {showApprovalPanel ? "Hide Approvals" : "Show Approvals"}
@@ -288,12 +299,16 @@ export default function DashboardPage() {
 
               {showApprovalPanel && (
                 <CardContent className="mt-4">
-                  <h3 className="text-lg font-semibold mb-4">Pending User Approvals</h3>
+                  <h3 className="text-lg font-semibold mb-4">
+                    Pending User Approvals
+                  </h3>
 
                   {message && (
                     <Alert
                       className="mb-4"
-                      variant={message.type === "error" ? "destructive" : "default"}
+                      variant={
+                        message.type === "error" ? "destructive" : "default"
+                      }
                     >
                       <AlertTitle>
                         {message.type === "error" ? "Error" : "Success"}
@@ -323,14 +338,18 @@ export default function DashboardPage() {
                             <TableCell>{u.name}</TableCell>
                             <TableCell>{u.email}</TableCell>
                             <TableCell>{u.membership_number}</TableCell>
-                            <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              {new Date(u.createdAt).toLocaleDateString()}
+                            </TableCell>
                             <TableCell className="text-right">
                               <Button
                                 size="sm"
                                 disabled={approvalLoading === u.id}
                                 onClick={() => handleApproveUser(u.id)}
                               >
-                                {approvalLoading === u.id ? "Verifying..." : "Verify"}
+                                {approvalLoading === u.id
+                                  ? "Verifying..."
+                                  : "Verify"}
                               </Button>
                             </TableCell>
                           </TableRow>

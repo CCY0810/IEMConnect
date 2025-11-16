@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { createEvent } from "@/lib/event-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,12 +41,96 @@ export default function CreateEventPage() {
   const { user, logout } = useAuth();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Form state
+  const [formData, setFormData] = useState({
+    directorName: "",
+    matric: "",
+    phone: "",
+    email: "",
+    title: "",
+    description: "",
+    cost: "",
+    targetedParticipants: "",
+    startDate: "",
+    endDate: "",
+  });
+
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [paperworkFile, setPaperworkFile] = useState<File | null>(null);
 
   if (!user) return null;
 
+  // Redirect non-admin users
+  if (user.role !== "admin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="bg-white/80 backdrop-blur-lg border border-white/60 rounded-2xl shadow-2xl p-12 max-w-md text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-2xl mb-4">
+            <svg
+              className="w-8 h-8 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Access Denied
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Only administrators can create events. You'll be redirected to the
+            dashboard.
+          </p>
+          <Button onClick={() => router.push("/dashboard")} className="w-full">
+            Go to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await createEvent({
+        director_name: formData.directorName,
+        director_matric: formData.matric,
+        director_phone: formData.phone,
+        director_email: formData.email,
+        title: formData.title,
+        description: formData.description,
+        cost: formData.cost ? parseFloat(formData.cost) : 0,
+        targeted_participants: formData.targetedParticipants,
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        poster_file: posterFile || undefined,
+        paperwork_file: paperworkFile || undefined,
+      });
+
+      alert("Event created successfully!");
+      router.push("/event");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to create event");
+      console.error("Create event error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-[#F3F6FB] text-slate-900">
-
       {/* SIDEBAR */}
       <aside
         className={`transition-all duration-300 ${
@@ -140,11 +225,8 @@ export default function CreateEventPage() {
         </nav>
       </aside>
 
-
       <div className="flex-1">
-
         <header className="flex items-center justify-between px-8 py-4 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40">
-
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push("/event")}
@@ -171,131 +253,239 @@ export default function CreateEventPage() {
               </div>
             </div>
 
-            <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm">
+            <button
+              onClick={() => router.push("/profile")}
+              className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              title="View Profile"
+            >
               <img
                 src="/placeholder-user.jpg"
                 className="w-full h-full object-cover"
               />
-            </div>
+            </button>
           </div>
         </header>
 
-
         <main className="px-8 py-10 max-w-5xl mx-auto space-y-10">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
 
-          {/* DIRECTOR INFO */}
-          <Card className="bg-white/70 shadow">
-            <CardHeader>
-              <CardTitle>Director Information</CardTitle>
-              <CardDescription>Event director details</CardDescription>
-            </CardHeader>
+          <form onSubmit={handleSubmit}>
+            {/* DIRECTOR INFO */}
+            <Card className="bg-white/70 shadow">
+              <CardHeader>
+                <CardTitle>Director Information</CardTitle>
+                <CardDescription>Event director details</CardDescription>
+              </CardHeader>
 
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Full Name *
+                  </span>
+                  <Input
+                    placeholder="Enter director name"
+                    value={formData.directorName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, directorName: e.target.value })
+                    }
+                    required
+                    disabled={loading}
+                  />
+                </div>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Full Name
-                </span>
-                <Input placeholder="Enter director name" />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Matric Number *
+                  </span>
+                  <Input
+                    placeholder="Enter matric number"
+                    value={formData.matric}
+                    onChange={(e) =>
+                      setFormData({ ...formData, matric: e.target.value })
+                    }
+                    required
+                    disabled={loading}
+                  />
+                </div>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Matric Number
-                </span>
-                <Input placeholder="Enter matric number" />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Phone Number *
+                  </span>
+                  <Input
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    required
+                    disabled={loading}
+                  />
+                </div>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Phone Number
-                </span>
-                <Input placeholder="Enter phone number" />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Email Address *
+                  </span>
+                  <Input
+                    type="email"
+                    placeholder="Enter email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Email Address
-                </span>
-                <Input placeholder="Enter email" />
-              </div>
-            </CardContent>
-          </Card>
+            {/* EVENT INFO */}
+            <Card className="bg-white/70 shadow mt-10">
+              <CardHeader>
+                <CardTitle>Event Information</CardTitle>
+                <CardDescription>Event details & files</CardDescription>
+              </CardHeader>
 
-          {/* EVENT INFO */}
-          <Card className="bg-white/70 shadow">
-            <CardHeader>
-              <CardTitle>Event Information</CardTitle>
-              <CardDescription>Event details & files</CardDescription>
-            </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <span className="text-sm font-medium text-slate-600">
+                    Event Title *
+                  </span>
+                  <Input
+                    placeholder="Enter event title"
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    required
+                    disabled={loading}
+                  />
+                </div>
 
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <span className="text-sm font-medium text-slate-600">
+                    Description
+                  </span>
+                  <Textarea
+                    placeholder="Enter event description"
+                    rows={4}
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    disabled={loading}
+                  />
+                </div>
 
-              <div className="md:col-span-2">
-                <span className="text-sm font-medium text-slate-600">
-                  Event Title
-                </span>
-                <Input placeholder="Enter event title" />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Cost (RM)
+                  </span>
+                  <Input
+                    type="number"
+                    placeholder="Enter cost"
+                    value={formData.cost}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cost: e.target.value })
+                    }
+                    min="0"
+                    step="0.01"
+                    disabled={loading}
+                  />
+                </div>
 
-              <div className="md:col-span-2">
-                <span className="text-sm font-medium text-slate-600">
-                  Description
-                </span>
-                <Textarea placeholder="Enter event description" rows={4} />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Targeted Participants
+                  </span>
+                  <Input
+                    placeholder="e.g. 100 students"
+                    value={formData.targetedParticipants}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        targetedParticipants: e.target.value,
+                      })
+                    }
+                    disabled={loading}
+                  />
+                </div>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Cost (RM)
-                </span>
-                <Input type="number" placeholder="Enter cost" />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Upload Paperwork
+                  </span>
+                  <Input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) =>
+                      setPaperworkFile(e.target.files?.[0] || null)
+                    }
+                    disabled={loading}
+                  />
+                </div>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Targeted Participants
-                </span>
-                <Input placeholder="e.g. 100 students" />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Upload Poster
+                  </span>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setPosterFile(e.target.files?.[0] || null)}
+                    disabled={loading}
+                  />
+                </div>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Upload Paperwork
-                </span>
-                <Input type="file" />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Date From *
+                  </span>
+                  <Input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startDate: e.target.value })
+                    }
+                    required
+                    disabled={loading}
+                  />
+                </div>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Upload Poster
-                </span>
-                <Input type="file" />
-              </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Date Until *
+                  </span>
+                  <Input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Date From
-                </span>
-                <Input type="date" />
-              </div>
-
-              <div>
-                <span className="text-sm font-medium text-slate-600">
-                  Date Until
-                </span>
-                <Input type="date" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* SAVE BUTTON */}
-          <div className="flex justify-end">
-            <Button className="bg-blue-600 text-white px-6 py-2">
-              Save Event
-            </Button>
-          </div>
-
+            {/* SAVE BUTTON */}
+            <div className="flex justify-end mt-10">
+              <Button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2"
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save Event"}
+              </Button>
+            </div>
+          </form>
         </main>
       </div>
     </div>
