@@ -1,102 +1,95 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
+import LoginForm from "@/components/LoginForm";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const { login, error, clearError, isLoading, twoFAState } = useAuth()
-  const router = useRouter()
+  const router = useRouter();
+  const { token, tempToken } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    clearError()
-
-    if (!email || !password) {
-      return
-    }
-
-    try {
-      setIsSubmitting(true)
-      await login(email, password)
-      // If 2FA is required, the context will update and we navigate in the next effect
-    } catch {
-      // Error is handled by the context
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // Navigate to 2FA verification if required
-  if (twoFAState.requires_2fa && twoFAState.totp_secret) {
-    router.push("/verify-2fa")
-  }
+  useEffect(() => {
+    if (token) router.push("/dashboard");
+    else if (tempToken) router.push("/verify-2fa");
+  }, [token, tempToken, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting || isLoading}
-              />
+    <div className="min-h-screen flex items-center justify-center bg-[#F7F9FC] relative">
+
+      {/* Engineering soft blueprint background */}
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=1700&auto=format')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      ></div>
+
+      {/* MAIN LAYOUT */}
+      <div className="relative z-10 w-full max-w-6xl px-8 grid grid-cols-1 md:grid-cols-2 gap-10">
+
+        {/* LEFT PANEL */}
+        <div className="hidden md:flex flex-col justify-center">
+
+          {/* Logo */}
+          <img src="IEMConnect\public\iem-logo.jpg" alt="IEM Logo" className="w-40 mb-6 drop-shadow-md" />
+
+
+          <h1 className="text-5xl font-extrabold text-[#0057A8] leading-tight">
+            IEM UTM
+          </h1>
+
+          <h2 className="text-3xl font-bold text-[#7A0026] mt-1">
+            Student Section
+          </h2>
+
+          <p className="mt-4 text-lg text-[#3A4A5F] max-w-md leading-relaxed">
+            Official engineering membership portal for IEM UTM Student Section.
+            Access exclusive tools, verification, and member services.
+          </p>
+
+          <div className="h-px w-48 bg-[#0057A8]/40 mt-8"></div>
+
+          <p className="text-sm text-[#6C7A89] mt-4">
+            Powered by engineering authenticity • Verified membership • Secure by design
+          </p>
+        </div>
+
+        {/* RIGHT FORM CARD */}
+        <div className="flex justify-center items-center">
+          <div className="
+            w-full max-w-md 
+            bg-white
+            border border-[#E2E8F0] 
+            shadow-[0_8px_30px_rgba(0,0,0,0.08)]
+            rounded-2xl 
+            p-10
+          ">
+            <h2 className="text-3xl font-semibold text-center text-[#0057A8] mb-2">
+              Member Login
+            </h2>
+
+            <p className="text-center text-sm text-[#445569] mb-6">
+              Sign in with your verified IEM credentials
+            </p>
+
+            <LoginForm />
+
+            <p className="mt-6 text-center text-xs text-[#6C7A89]">
+              Secure Access • IEM Verified • 2FA Enabled
+            </p>
+
+            <div className="mt-4 flex justify-center">
+              <div className="h-1 w-20 bg-[#D4A626] rounded-full"></div>
             </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isSubmitting || isLoading}
-              />
-            </div>
-
-            {error && (
-              <div className="bg-destructive/10 border border-destructive text-destructive text-sm p-3 rounded-md">
-                {error}
-              </div>
-            )}
-
-            <Button type="submit" className="w-full" disabled={isSubmitting || isLoading}>
-              {isSubmitting ? "Logging in..." : "Login"}
-            </Button>
-          </form>
-
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-primary hover:underline">
-              Register
-            </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+      </div>
     </div>
-  )
+  );
 }
+
