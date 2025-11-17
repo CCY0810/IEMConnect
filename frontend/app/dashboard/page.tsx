@@ -179,7 +179,9 @@ export default function DashboardPage() {
             open={sidebarOpen}
             icon={<CheckSquare size={18} />}
             label="Attendance"
-            onClick={() => router.push("/admin/attendance")} //
+            onClick={() =>
+              router.push(isAdmin ? "/admin/attendance" : "/attendance")
+            }
           />
           <SidebarButton
             open={sidebarOpen}

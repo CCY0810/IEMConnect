@@ -1,8 +1,9 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/attendance/page": "app/admin/attendance/page.js",
+  "/attendance/page": "app/attendance/page.js",
+  "/create_event/page": "app/create_event/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/event/page": "app/event/page.js",
   "/login/page": "app/login/page.js",
-  "/profile/page": "app/profile/page.js",
   "/view_event/page": "app/view_event/page.js"
 }

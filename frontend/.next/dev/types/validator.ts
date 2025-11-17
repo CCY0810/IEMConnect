@@ -36,6 +36,33 @@ type LayoutConfig<Route extends LayoutRoutes = LayoutRoutes> = {
 }
 
 
+// Validate ../../../app/admin/attendance/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/admin/attendance">> = Specific
+  const handler = {} as typeof import("../../../app/admin/attendance/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/attendance/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/attendance">> = Specific
+  const handler = {} as typeof import("../../../app/attendance/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/check-in/[id]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/check-in/[id]">> = Specific
+  const handler = {} as typeof import("../../../app/check-in/[id]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/create_event/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/create_event">> = Specific

@@ -23,14 +23,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Database sync
+// Database sync - using validate instead of alter to prevent index duplication
 sequelize
-  .sync({ alter: true })
+  .authenticate()
   .then(() => {
-    console.log("Database synchronized");
+    console.log("Database connection established successfully");
   })
   .catch((err) => {
-    console.error("Database sync failed:", err);
+    console.error("Database connection failed:", err);
   });
 
 // Routes

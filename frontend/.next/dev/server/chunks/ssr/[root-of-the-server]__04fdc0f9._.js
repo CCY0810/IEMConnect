@@ -399,7 +399,7 @@ const Textarea = (props)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$p
         className: `w-full min-h-[120px] rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${props.className}`
     }, void 0, false, {
         fileName: "[project]/frontend/app/view_event/page.tsx",
-        lineNumber: 19,
+        lineNumber: 24,
         columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
 ;
@@ -436,6 +436,11 @@ function ViewEventPage() {
     const [showParticipants, setShowParticipants] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [participants, setParticipants] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
     const [loadingParticipants, setLoadingParticipants] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    // Attendance state
+    const [attendanceLoading, setAttendanceLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [attendanceList, setAttendanceList] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [showAttendanceList, setShowAttendanceList] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [attendanceMessage, setAttendanceMessage] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     // Check if user is admin
     const isAdmin = user?.role === "admin";
     // Fetch event data
@@ -584,12 +589,12 @@ function ViewEventPage() {
                                             className: `object-contain ${sidebarOpen ? "w-10 h-10" : "w-8 h-8"}`
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 252,
+                                            lineNumber: 270,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                        lineNumber: 247,
+                                        lineNumber: 265,
                                         columnNumber: 13
                                     }, this),
                                     sidebarOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -599,7 +604,7 @@ function ViewEventPage() {
                                                 children: "IEM Connect"
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 262,
+                                                lineNumber: 280,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -607,19 +612,19 @@ function ViewEventPage() {
                                                 children: isAdmin ? "Admin Panel" : "Member Portal"
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 263,
+                                                lineNumber: 281,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                        lineNumber: 261,
+                                        lineNumber: 279,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 246,
+                                lineNumber: 264,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -629,18 +634,18 @@ function ViewEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 274,
+                                    lineNumber: 292,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 270,
+                                lineNumber: 288,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                        lineNumber: 245,
+                        lineNumber: 263,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -651,7 +656,7 @@ function ViewEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 280,
+                                    lineNumber: 298,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Dashboard",
@@ -659,7 +664,7 @@ function ViewEventPage() {
                                 onClick: ()=>router.push("/dashboard")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 279,
+                                lineNumber: 297,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -667,7 +672,7 @@ function ViewEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 286,
+                                    lineNumber: 304,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Reports",
@@ -675,7 +680,7 @@ function ViewEventPage() {
                                 onClick: ()=>router.push("/admin/reports")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 285,
+                                lineNumber: 303,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -683,7 +688,7 @@ function ViewEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 292,
+                                    lineNumber: 310,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Events",
@@ -692,7 +697,7 @@ function ViewEventPage() {
                                 onClick: ()=>router.push("/event")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 291,
+                                lineNumber: 309,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -700,7 +705,7 @@ function ViewEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 299,
+                                    lineNumber: 317,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Attendance",
@@ -708,7 +713,7 @@ function ViewEventPage() {
                                 onClick: ()=>router.push("/admin/attendance")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 298,
+                                lineNumber: 316,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -716,7 +721,7 @@ function ViewEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 305,
+                                    lineNumber: 323,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Notifications",
@@ -724,7 +729,7 @@ function ViewEventPage() {
                                 onClick: ()=>router.push("/admin/notifications")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 304,
+                                lineNumber: 322,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -732,7 +737,7 @@ function ViewEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 311,
+                                    lineNumber: 329,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Settings",
@@ -740,7 +745,7 @@ function ViewEventPage() {
                                 onClick: ()=>router.push("/admin/settings")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 310,
+                                lineNumber: 328,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -748,7 +753,7 @@ function ViewEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 317,
+                                    lineNumber: 335,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Help",
@@ -756,7 +761,7 @@ function ViewEventPage() {
                                 onClick: ()=>router.push("/admin/help")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 316,
+                                lineNumber: 334,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -766,7 +771,7 @@ function ViewEventPage() {
                                         size: 18
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                        lineNumber: 325,
+                                        lineNumber: 343,
                                         columnNumber: 21
                                     }, void 0),
                                     label: "Logout",
@@ -774,24 +779,24 @@ function ViewEventPage() {
                                     onClick: logout
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 324,
+                                    lineNumber: 342,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 323,
+                                lineNumber: 341,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                        lineNumber: 278,
+                        lineNumber: 296,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 240,
+                lineNumber: 258,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -810,12 +815,12 @@ function ViewEventPage() {
                                             size: 20
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 343,
+                                            lineNumber: 361,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                        lineNumber: 339,
+                                        lineNumber: 357,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -825,7 +830,7 @@ function ViewEventPage() {
                                                 children: "View Event"
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 347,
+                                                lineNumber: 365,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -833,19 +838,19 @@ function ViewEventPage() {
                                                 children: "Event details & director information"
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 350,
+                                                lineNumber: 368,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                        lineNumber: 346,
+                                        lineNumber: 364,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 338,
+                                lineNumber: 356,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -859,7 +864,7 @@ function ViewEventPage() {
                                                 children: user.name
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 358,
+                                                lineNumber: 376,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -867,13 +872,13 @@ function ViewEventPage() {
                                                 children: user.role
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 359,
+                                                lineNumber: 377,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                        lineNumber: 357,
+                                        lineNumber: 375,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -885,24 +890,24 @@ function ViewEventPage() {
                                             className: "w-full h-full object-cover"
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 369,
+                                            lineNumber: 387,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                        lineNumber: 364,
+                                        lineNumber: 382,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                lineNumber: 356,
+                                lineNumber: 374,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                        lineNumber: 337,
+                        lineNumber: 355,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -912,21 +917,21 @@ function ViewEventPage() {
                             children: "Loading event..."
                         }, void 0, false, {
                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                            lineNumber: 380,
+                            lineNumber: 398,
                             columnNumber: 13
                         }, this) : error ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg",
                             children: error
                         }, void 0, false, {
                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                            lineNumber: 384,
+                            lineNumber: 402,
                             columnNumber: 13
                         }, this) : !event ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "text-center py-8 text-gray-500",
                             children: "Event not found"
                         }, void 0, false, {
                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                            lineNumber: 388,
+                            lineNumber: 406,
                             columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
                             children: [
@@ -935,7 +940,7 @@ function ViewEventPage() {
                                     children: registrationMessage.text
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 394,
+                                    lineNumber: 412,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -949,19 +954,19 @@ function ViewEventPage() {
                                                         size: 20
                                                     }, void 0, false, {
                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                        lineNumber: 409,
+                                                        lineNumber: 427,
                                                         columnNumber: 21
                                                     }, this),
                                                     "Event Statistics"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 408,
+                                                lineNumber: 426,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 407,
+                                            lineNumber: 425,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -976,7 +981,7 @@ function ViewEventPage() {
                                                                     children: "Registered Participants"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                    lineNumber: 416,
+                                                                    lineNumber: 434,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -984,13 +989,13 @@ function ViewEventPage() {
                                                                     children: event.participant_count || 0
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                    lineNumber: 419,
+                                                                    lineNumber: 437,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                            lineNumber: 415,
+                                                            lineNumber: 433,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1000,7 +1005,7 @@ function ViewEventPage() {
                                                                     children: "Your Status"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                    lineNumber: 424,
+                                                                    lineNumber: 442,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 event.is_registered ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1010,31 +1015,31 @@ function ViewEventPage() {
                                                                         children: "✓ Registered"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                        lineNumber: 427,
+                                                                        lineNumber: 445,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                    lineNumber: 426,
+                                                                    lineNumber: 444,
                                                                     columnNumber: 25
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     className: "text-sm text-slate-600",
                                                                     children: "Not registered"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                    lineNumber: 432,
+                                                                    lineNumber: 450,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                            lineNumber: 423,
+                                                            lineNumber: 441,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 414,
+                                                    lineNumber: 432,
                                                     columnNumber: 19
                                                 }, this),
                                                 !isAdmin && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1049,14 +1054,14 @@ function ViewEventPage() {
                                                                 size: 18
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                lineNumber: 449,
+                                                                lineNumber: 467,
                                                                 columnNumber: 27
                                                             }, this),
                                                             registering ? "Unregistering..." : "Unregister from Event"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                        lineNumber: 443,
+                                                        lineNumber: 461,
                                                         columnNumber: 25
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
                                                         onClick: handleRegister,
@@ -1067,19 +1072,19 @@ function ViewEventPage() {
                                                                 size: 18
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                lineNumber: 460,
+                                                                lineNumber: 478,
                                                                 columnNumber: 27
                                                             }, this),
                                                             registering ? "Registering..." : "Register for Event"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                        lineNumber: 455,
+                                                        lineNumber: 473,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 441,
+                                                    lineNumber: 459,
                                                     columnNumber: 21
                                                 }, this),
                                                 isAdmin && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1093,31 +1098,31 @@ function ViewEventPage() {
                                                                 size: 18
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                lineNumber: 477,
+                                                                lineNumber: 495,
                                                                 columnNumber: 25
                                                             }, this),
                                                             loadingParticipants ? "Loading..." : "View Participant List"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                        lineNumber: 472,
+                                                        lineNumber: 490,
                                                         columnNumber: 23
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 471,
+                                                    lineNumber: 489,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 413,
+                                            lineNumber: 431,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 406,
+                                    lineNumber: 424,
                                     columnNumber: 15
                                 }, this),
                                 isAdmin && showParticipants && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1136,14 +1141,14 @@ function ViewEventPage() {
                                                                         size: 20
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                        lineNumber: 494,
+                                                                        lineNumber: 512,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     "Registered Participants"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                lineNumber: 493,
+                                                                lineNumber: 511,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardDescription"], {
@@ -1154,13 +1159,13 @@ function ViewEventPage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                lineNumber: 497,
+                                                                lineNumber: 515,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                        lineNumber: 492,
+                                                        lineNumber: 510,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1170,18 +1175,18 @@ function ViewEventPage() {
                                                         children: "Hide List"
                                                     }, void 0, false, {
                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                        lineNumber: 501,
+                                                        lineNumber: 519,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 491,
+                                                lineNumber: 509,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 490,
+                                            lineNumber: 508,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1190,7 +1195,7 @@ function ViewEventPage() {
                                                 children: "No participants registered yet."
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 512,
+                                                lineNumber: 530,
                                                 columnNumber: 23
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "space-y-4",
@@ -1212,7 +1217,7 @@ function ViewEventPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                lineNumber: 525,
+                                                                                lineNumber: 543,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -1220,7 +1225,7 @@ function ViewEventPage() {
                                                                                 children: participant.user.name
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                lineNumber: 528,
+                                                                                lineNumber: 546,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1228,13 +1233,13 @@ function ViewEventPage() {
                                                                                 children: participant.status
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                lineNumber: 531,
+                                                                                lineNumber: 549,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                        lineNumber: 524,
+                                                                        lineNumber: 542,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1247,7 +1252,7 @@ function ViewEventPage() {
                                                                                         children: "Email:"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                        lineNumber: 545,
+                                                                                        lineNumber: 563,
                                                                                         columnNumber: 37
                                                                                     }, this),
                                                                                     " ",
@@ -1255,7 +1260,7 @@ function ViewEventPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                lineNumber: 544,
+                                                                                lineNumber: 562,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1265,7 +1270,7 @@ function ViewEventPage() {
                                                                                         children: "Matric:"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                        lineNumber: 549,
+                                                                                        lineNumber: 567,
                                                                                         columnNumber: 37
                                                                                     }, this),
                                                                                     " ",
@@ -1273,7 +1278,7 @@ function ViewEventPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                lineNumber: 548,
+                                                                                lineNumber: 566,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1283,7 +1288,7 @@ function ViewEventPage() {
                                                                                         children: "Membership:"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                        lineNumber: 553,
+                                                                                        lineNumber: 571,
                                                                                         columnNumber: 37
                                                                                     }, this),
                                                                                     " ",
@@ -1291,7 +1296,7 @@ function ViewEventPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                lineNumber: 552,
+                                                                                lineNumber: 570,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1301,7 +1306,7 @@ function ViewEventPage() {
                                                                                         children: "Faculty:"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                        lineNumber: 559,
+                                                                                        lineNumber: 577,
                                                                                         columnNumber: 37
                                                                                     }, this),
                                                                                     " ",
@@ -1309,13 +1314,13 @@ function ViewEventPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                                lineNumber: 558,
+                                                                                lineNumber: 576,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                        lineNumber: 543,
+                                                                        lineNumber: 561,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1327,39 +1332,39 @@ function ViewEventPage() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                        lineNumber: 565,
+                                                                        lineNumber: 583,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                                lineNumber: 523,
+                                                                lineNumber: 541,
                                                                 columnNumber: 31
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                            lineNumber: 522,
+                                                            lineNumber: 540,
                                                             columnNumber: 29
                                                         }, this)
                                                     }, participant.id, false, {
                                                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                        lineNumber: 518,
+                                                        lineNumber: 536,
                                                         columnNumber: 27
                                                     }, this))
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                lineNumber: 516,
+                                                lineNumber: 534,
                                                 columnNumber: 23
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 510,
+                                            lineNumber: 528,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 489,
+                                    lineNumber: 507,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1371,20 +1376,20 @@ function ViewEventPage() {
                                                     children: "Director Information"
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 584,
+                                                    lineNumber: 602,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardDescription"], {
                                                     children: "Details of the event director"
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 585,
+                                                    lineNumber: 603,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 583,
+                                            lineNumber: 601,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1400,7 +1405,7 @@ function ViewEventPage() {
                                                         })
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 591,
+                                                    lineNumber: 609,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(InputField, {
@@ -1413,7 +1418,7 @@ function ViewEventPage() {
                                                         })
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 599,
+                                                    lineNumber: 617,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(InputField, {
@@ -1426,7 +1431,7 @@ function ViewEventPage() {
                                                         })
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 607,
+                                                    lineNumber: 625,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(InputField, {
@@ -1439,19 +1444,19 @@ function ViewEventPage() {
                                                         })
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 615,
+                                                    lineNumber: 633,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 590,
+                                            lineNumber: 608,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 582,
+                                    lineNumber: 600,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1463,20 +1468,20 @@ function ViewEventPage() {
                                                     children: "Event Information"
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 629,
+                                                    lineNumber: 647,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardDescription"], {
                                                     children: "Complete event details"
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 630,
+                                                    lineNumber: 648,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 628,
+                                            lineNumber: 646,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1493,7 +1498,7 @@ function ViewEventPage() {
                                                     className: "md:col-span-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 634,
+                                                    lineNumber: 652,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1504,7 +1509,7 @@ function ViewEventPage() {
                                                             children: "Description"
                                                         }, void 0, false, {
                                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                            lineNumber: 645,
+                                                            lineNumber: 663,
                                                             columnNumber: 21
                                                         }, this),
                                                         editing ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Textarea, {
@@ -1515,20 +1520,20 @@ function ViewEventPage() {
                                                                 })
                                                         }, void 0, false, {
                                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                            lineNumber: 649,
+                                                            lineNumber: 667,
                                                             columnNumber: 23
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                             className: "text-slate-700",
                                                             children: event.description
                                                         }, void 0, false, {
                                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                            lineNumber: 659,
+                                                            lineNumber: 677,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 644,
+                                                    lineNumber: 662,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(InputField, {
@@ -1542,7 +1547,7 @@ function ViewEventPage() {
                                                     type: "number"
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 663,
+                                                    lineNumber: 681,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(InputField, {
@@ -1555,7 +1560,7 @@ function ViewEventPage() {
                                                         })
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 672,
+                                                    lineNumber: 690,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(FileField, {
@@ -1565,7 +1570,7 @@ function ViewEventPage() {
                                                     onChange: (e)=>setNewPaperwork(e.target.files?.[0] || null)
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 684,
+                                                    lineNumber: 702,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(PosterField, {
@@ -1574,7 +1579,7 @@ function ViewEventPage() {
                                                     onChange: (e)=>setNewPoster(e.target.files?.[0] || null)
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 692,
+                                                    lineNumber: 710,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(InputField, {
@@ -1588,7 +1593,7 @@ function ViewEventPage() {
                                                         })
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 700,
+                                                    lineNumber: 718,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(InputField, {
@@ -1602,19 +1607,19 @@ function ViewEventPage() {
                                                         })
                                                 }, void 0, false, {
                                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                                    lineNumber: 709,
+                                                    lineNumber: 727,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 633,
+                                            lineNumber: 651,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 627,
+                                    lineNumber: 645,
                                     columnNumber: 15
                                 }, this),
                                 isAdmin && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1627,7 +1632,7 @@ function ViewEventPage() {
                                             children: loading ? "Saving..." : editing ? "Save Changes" : "Edit Event"
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 724,
+                                            lineNumber: 742,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1635,32 +1640,32 @@ function ViewEventPage() {
                                             children: "Generate Report"
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/view_event/page.tsx",
-                                            lineNumber: 738,
+                                            lineNumber: 756,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/frontend/app/view_event/page.tsx",
-                                    lineNumber: 723,
+                                    lineNumber: 741,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true)
                     }, void 0, false, {
                         fileName: "[project]/frontend/app/view_event/page.tsx",
-                        lineNumber: 378,
+                        lineNumber: 396,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 335,
+                lineNumber: 353,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/frontend/app/view_event/page.tsx",
-        lineNumber: 238,
+        lineNumber: 256,
         columnNumber: 5
     }, this);
 }
@@ -1673,7 +1678,7 @@ function ViewEventPage() {
                 children: label
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 763,
+                lineNumber: 781,
                 columnNumber: 7
             }, this),
             editable ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1682,20 +1687,20 @@ function ViewEventPage() {
                 onChange: onChange
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 765,
+                lineNumber: 783,
                 columnNumber: 9
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                 className: "text-slate-700",
                 children: value
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 767,
+                lineNumber: 785,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/frontend/app/view_event/page.tsx",
-        lineNumber: 762,
+        lineNumber: 780,
         columnNumber: 5
     }, this);
 }
@@ -1707,7 +1712,7 @@ function FileField({ label, file, editable, onChange }) {
                 children: label
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 776,
+                lineNumber: 794,
                 columnNumber: 7
             }, this),
             editable ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1716,7 +1721,7 @@ function FileField({ label, file, editable, onChange }) {
                 onChange: onChange
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 779,
+                lineNumber: 797,
                 columnNumber: 9
             }, this) : file ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                 href: `http://localhost:5000${file}`,
@@ -1725,20 +1730,20 @@ function FileField({ label, file, editable, onChange }) {
                 children: "Download File"
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 781,
+                lineNumber: 799,
                 columnNumber: 9
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                 className: "text-slate-500 text-sm mt-1",
                 children: "No file uploaded"
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 789,
+                lineNumber: 807,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/frontend/app/view_event/page.tsx",
-        lineNumber: 775,
+        lineNumber: 793,
         columnNumber: 5
     }, this);
 }
@@ -1750,7 +1755,7 @@ function PosterField({ poster, editable, onChange }) {
                 children: "Poster"
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 798,
+                lineNumber: 816,
                 columnNumber: 7
             }, this),
             editable ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1760,7 +1765,7 @@ function PosterField({ poster, editable, onChange }) {
                 onChange: onChange
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 801,
+                lineNumber: 819,
                 columnNumber: 9
             }, this) : poster ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
                 src: `http://localhost:5000${poster}`,
@@ -1775,20 +1780,20 @@ function PosterField({ poster, editable, onChange }) {
                 }
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 808,
+                lineNumber: 826,
                 columnNumber: 9
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                 className: "text-slate-500 text-sm mt-1",
                 children: "No poster uploaded"
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 822,
+                lineNumber: 840,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/frontend/app/view_event/page.tsx",
-        lineNumber: 797,
+        lineNumber: 815,
         columnNumber: 5
     }, this);
 }
@@ -1802,20 +1807,20 @@ function SidebarButton({ icon, label, open, active, onClick }) {
                 children: icon
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 838,
+                lineNumber: 856,
                 columnNumber: 7
             }, this),
             open && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                 children: label
             }, void 0, false, {
                 fileName: "[project]/frontend/app/view_event/page.tsx",
-                lineNumber: 839,
+                lineNumber: 857,
                 columnNumber: 16
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/frontend/app/view_event/page.tsx",
-        lineNumber: 830,
+        lineNumber: 848,
         columnNumber: 5
     }, this);
 }

@@ -50,6 +50,14 @@ const Event = sequelize.define(
       type: DataTypes.DATEONLY,
       allowNull: false,
     },
+    start_time: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    end_time: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
     status: {
       type: DataTypes.ENUM("Upcoming", "Open", "Completed"),
       defaultValue: "Upcoming",
@@ -60,6 +68,23 @@ const Event = sequelize.define(
     },
     paperwork_file: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+    attendance_code: {
+      type: DataTypes.STRING(8),
+      allowNull: true,
+    },
+    attendance_status: {
+      type: DataTypes.ENUM("Pending", "Active", "Closed"),
+      defaultValue: "Pending",
+      allowNull: false,
+    },
+    attendance_started_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    attendance_stopped_at: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
   },

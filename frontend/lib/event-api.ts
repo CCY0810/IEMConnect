@@ -12,6 +12,8 @@ export interface Event {
   targeted_participants?: string;
   start_date: string;
   end_date: string;
+  start_time?: string | null;
+  end_time?: string | null;
   status: "Upcoming" | "Open" | "Completed";
   poster_file?: string;
   paperwork_file?: string;
@@ -20,6 +22,10 @@ export interface Event {
   participant_count?: number;
   is_registered?: boolean;
   registration_status?: "registered" | "cancelled" | "attended" | null;
+  attendance_code?: string | null;
+  attendance_status?: "Pending" | "Active" | "Closed";
+  attendance_started_at?: string | null;
+  attendance_stopped_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -35,6 +41,8 @@ export interface CreateEventData {
   targeted_participants?: string;
   start_date: string;
   end_date: string;
+  start_time?: string;
+  end_time?: string;
   status?: "Upcoming" | "Open" | "Completed";
   poster_file?: File;
   paperwork_file?: File;
