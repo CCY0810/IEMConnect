@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { getEventById, updateEvent, Event } from "@/lib/event-api";
+import {
+  getEventById,
+  updateEvent,
+  Event,
+  registerForEvent,
+  unregisterFromEvent,
+  getEventParticipants,
+} from "@/lib/event-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +41,9 @@ import {
   HelpCircle,
   PieChart,
   ArrowLeft,
+  UserCheck,
+  UserX,
+  Users,
 } from "lucide-react";
 
 export default function ViewEventPage() {
@@ -65,6 +75,18 @@ export default function ViewEventPage() {
 
   const [newPoster, setNewPoster] = useState<File | null>(null);
   const [newPaperwork, setNewPaperwork] = useState<File | null>(null);
+
+  // Registration state
+  const [registering, setRegistering] = useState(false);
+  const [registrationMessage, setRegistrationMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  // Participants state
+  const [showParticipants, setShowParticipants] = useState(false);
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
@@ -140,6 +162,73 @@ export default function ViewEventPage() {
       console.error("Update event error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!eventId) return;
+
+    setRegistering(true);
+    setRegistrationMessage(null);
+
+    try {
+      await registerForEvent(eventId);
+      setRegistrationMessage({
+        type: "success",
+        text: "Successfully registered for event!",
+      });
+
+      // Refresh event data
+      const data = await getEventById(eventId);
+      setEvent(data);
+    } catch (err: any) {
+      setRegistrationMessage({
+        type: "error",
+        text: err.response?.data?.error || "Failed to register for event",
+      });
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleUnregister = async () => {
+    if (!eventId) return;
+
+    setRegistering(true);
+    setRegistrationMessage(null);
+
+    try {
+      await unregisterFromEvent(eventId);
+      setRegistrationMessage({
+        type: "success",
+        text: "Successfully unregistered from event!",
+      });
+
+      // Refresh event data
+      const data = await getEventById(eventId);
+      setEvent(data);
+    } catch (err: any) {
+      setRegistrationMessage({
+        type: "error",
+        text: err.response?.data?.error || "Failed to unregister from event",
+      });
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleViewParticipants = async () => {
+    if (!eventId) return;
+
+    setLoadingParticipants(true);
+    try {
+      const data = await getEventParticipants(eventId);
+      setParticipants(data.participants || []);
+      setShowParticipants(true);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to load participants");
+    } finally {
+      setLoadingParticipants(false);
     }
   };
 
@@ -301,6 +390,194 @@ export default function ViewEventPage() {
             </div>
           ) : (
             <>
+              {registrationMessage && (
+                <div
+                  className={`px-4 py-3 rounded-lg ${
+                    registrationMessage.type === "success"
+                      ? "bg-green-50 border border-green-200 text-green-800"
+                      : "bg-red-50 border border-red-200 text-red-800"
+                  }`}
+                >
+                  {registrationMessage.text}
+                </div>
+              )}
+
+              {/* EVENT STATISTICS */}
+              <Card className="bg-white/70 shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users size={20} />
+                    Event Statistics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-slate-500">
+                        Registered Participants
+                      </p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {event.participant_count || 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Your Status</p>
+                      {event.is_registered ? (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                            ✓ Registered
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-slate-600">
+                          Not registered
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* REGISTRATION ACTION BUTTON */}
+                  {!isAdmin && (
+                    <div className="mt-6 pt-4 border-t border-slate-200">
+                      {event.is_registered ? (
+                        <Button
+                          onClick={handleUnregister}
+                          disabled={registering}
+                          variant="destructive"
+                          className="w-full gap-2"
+                        >
+                          <UserX size={18} />
+                          {registering
+                            ? "Unregistering..."
+                            : "Unregister from Event"}
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={handleRegister}
+                          disabled={registering}
+                          className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                        >
+                          <UserCheck size={18} />
+                          {registering
+                            ? "Registering..."
+                            : "Register for Event"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ADMIN VIEW PARTICIPANTS BUTTON */}
+                  {isAdmin && (
+                    <div className="mt-6 pt-4 border-t border-slate-200">
+                      <Button
+                        onClick={handleViewParticipants}
+                        disabled={loadingParticipants}
+                        className="w-full gap-2 bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Users size={18} />
+                        {loadingParticipants
+                          ? "Loading..."
+                          : "View Participant List"}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* PARTICIPANTS LIST (ADMIN ONLY) */}
+              {isAdmin && showParticipants && (
+                <Card className="bg-white/70 shadow">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Users size={20} />
+                          Registered Participants
+                        </CardTitle>
+                        <CardDescription>
+                          Total: {participants.length} participant(s)
+                        </CardDescription>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowParticipants(false)}
+                      >
+                        Hide List
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {participants.length === 0 ? (
+                      <p className="text-center text-slate-500 py-8">
+                        No participants registered yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {participants.map((participant: any, index: number) => (
+                          <div
+                            key={participant.id}
+                            className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-semibold text-slate-700">
+                                    #{index + 1}
+                                  </span>
+                                  <h4 className="font-semibold text-slate-900">
+                                    {participant.user.name}
+                                  </h4>
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      participant.status === "registered"
+                                        ? "bg-green-100 text-green-700"
+                                        : participant.status === "attended"
+                                        ? "bg-blue-100 text-blue-700"
+                                        : "bg-slate-100 text-slate-600"
+                                    }`}
+                                  >
+                                    {participant.status}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-slate-600 mt-2">
+                                  <p>
+                                    <span className="font-medium">Email:</span>{" "}
+                                    {participant.user.email}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium">Matric:</span>{" "}
+                                    {participant.user.matric_number}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium">
+                                      Membership:
+                                    </span>{" "}
+                                    {participant.user.membership_number}
+                                  </p>
+                                  <p>
+                                    <span className="font-medium">
+                                      Faculty:
+                                    </span>{" "}
+                                    {participant.user.faculty}
+                                  </p>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-2">
+                                  Registered on:{" "}
+                                  {new Date(
+                                    participant.registration_date
+                                  ).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* DIRECTOR INFO */}
               <Card className="bg-white/70 shadow">
                 <CardHeader>

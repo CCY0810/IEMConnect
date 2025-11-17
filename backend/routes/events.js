@@ -6,6 +6,9 @@ import {
   updateEvent,
   deleteEvent,
   getFile,
+  registerForEvent,
+  unregisterFromEvent,
+  getEventParticipants,
 } from "../controllers/eventController.js";
 import { verifyToken } from "../middleware/auth.js";
 import { verifyAdmin } from "../middleware/admin.js";
@@ -25,6 +28,15 @@ router.get("/", getEvents);
 
 // Get single event by ID (accessible to all authenticated users)
 router.get("/:id", getEventById);
+
+// Register for an event (authenticated users)
+router.post("/:id/register", registerForEvent);
+
+// Unregister from an event (authenticated users)
+router.delete("/:id/unregister", unregisterFromEvent);
+
+// Get participants for an event (admin only)
+router.get("/:id/participants", verifyAdmin, getEventParticipants);
 
 // Create event (admin only)
 router.post(

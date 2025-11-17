@@ -17,6 +17,9 @@ export interface Event {
   paperwork_file?: string;
   poster_url?: string;
   paperwork_url?: string;
+  participant_count?: number;
+  is_registered?: boolean;
+  registration_status?: "registered" | "cancelled" | "attended" | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -115,4 +118,20 @@ export const getFileUrl = (filename: string): string => {
   const baseUrl =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
   return `${baseUrl}/events/files/${filename}`;
+};
+
+// Register for an event
+export const registerForEvent = async (eventId: number): Promise<void> => {
+  await api.post(`/events/${eventId}/register`);
+};
+
+// Unregister from an event
+export const unregisterFromEvent = async (eventId: number): Promise<void> => {
+  await api.delete(`/events/${eventId}/unregister`);
+};
+
+// Get event participants (admin only)
+export const getEventParticipants = async (eventId: number): Promise<any> => {
+  const response = await api.get(`/events/${eventId}/participants`);
+  return response.data;
 };

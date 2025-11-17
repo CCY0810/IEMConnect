@@ -1,4 +1,6 @@
 import Event from "../models/Event.js";
+import EventRegistration from "../models/EventRegistration.js";
+import User from "../models/User.js";
 import { Op } from "sequelize";
 import fs from "fs";
 import path from "path";
@@ -74,6 +76,7 @@ export const createEvent = async (req, res) => {
 export const getEvents = async (req, res) => {
   try {
     const { search, status } = req.query;
+    const userId = req.user?.id;
 
     const whereClause = {};
 
@@ -95,19 +98,42 @@ export const getEvents = async (req, res) => {
       order: [["created_at", "DESC"]],
     });
 
-    // Add full URLs for files
-    const eventsWithUrls = events.map((event) => {
-      const eventData = event.toJSON();
-      if (eventData.poster_file) {
-        eventData.poster_url = `/api/v1/events/files/${eventData.poster_file}`;
-      }
-      if (eventData.paperwork_file) {
-        eventData.paperwork_url = `/api/v1/events/files/${eventData.paperwork_file}`;
-      }
-      return eventData;
-    });
+    // Get participant counts for all events
+    const eventsWithData = await Promise.all(
+      events.map(async (event) => {
+        const eventData = event.toJSON();
 
-    res.json({ events: eventsWithUrls });
+        // Add file URLs
+        if (eventData.poster_file) {
+          eventData.poster_url = `/api/v1/events/files/${eventData.poster_file}`;
+        }
+        if (eventData.paperwork_file) {
+          eventData.paperwork_url = `/api/v1/events/files/${eventData.paperwork_file}`;
+        }
+
+        // Get participant count
+        const participantCount = await EventRegistration.count({
+          where: { event_id: event.id, status: "registered" },
+        });
+        eventData.participant_count = participantCount;
+
+        // Check if current user is registered (if userId provided)
+        if (userId) {
+          const userRegistration = await EventRegistration.findOne({
+            where: {
+              event_id: event.id,
+              user_id: userId,
+            },
+          });
+          eventData.is_registered = !!userRegistration;
+          eventData.registration_status = userRegistration?.status || null;
+        }
+
+        return eventData;
+      })
+    );
+
+    res.json({ events: eventsWithData });
   } catch (error) {
     console.error("Get events error:", error);
     res
@@ -120,6 +146,7 @@ export const getEvents = async (req, res) => {
 export const getEventById = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id;
 
     const event = await Event.findByPk(id);
 
@@ -135,6 +162,24 @@ export const getEventById = async (req, res) => {
     }
     if (eventData.paperwork_file) {
       eventData.paperwork_url = `/api/v1/events/files/${eventData.paperwork_file}`;
+    }
+
+    // Get participant count
+    const participantCount = await EventRegistration.count({
+      where: { event_id: id, status: "registered" },
+    });
+    eventData.participant_count = participantCount;
+
+    // Check if current user is registered (if userId provided)
+    if (userId) {
+      const userRegistration = await EventRegistration.findOne({
+        where: {
+          event_id: id,
+          user_id: userId,
+        },
+      });
+      eventData.is_registered = !!userRegistration;
+      eventData.registration_status = userRegistration?.status || null;
     }
 
     res.json({ event: eventData });
@@ -289,5 +334,126 @@ export const getFile = (req, res) => {
   } catch (error) {
     console.error("Get file error:", error);
     res.status(500).json({ error: "Failed to retrieve file" });
+  }
+};
+
+// Register for an event
+export const registerForEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if event exists
+    const event = await Event.findByPk(id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Check if already registered
+    const existingRegistration = await EventRegistration.findOne({
+      where: {
+        user_id: userId,
+        event_id: id,
+      },
+    });
+
+    if (existingRegistration) {
+      return res
+        .status(400)
+        .json({ error: "Already registered for this event" });
+    }
+
+    // Create registration
+    const registration = await EventRegistration.create({
+      user_id: userId,
+      event_id: id,
+      status: "registered",
+    });
+
+    res.status(201).json({
+      message: "Successfully registered for event",
+      registration,
+    });
+  } catch (error) {
+    console.error("Register for event error:", error);
+    res.status(500).json({ error: "Failed to register for event" });
+  }
+};
+
+// Unregister from an event
+export const unregisterFromEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Find registration
+    const registration = await EventRegistration.findOne({
+      where: {
+        user_id: userId,
+        event_id: id,
+      },
+    });
+
+    if (!registration) {
+      return res.status(404).json({ error: "Registration not found" });
+    }
+
+    // Delete registration
+    await registration.destroy();
+
+    res.json({ message: "Successfully unregistered from event" });
+  } catch (error) {
+    console.error("Unregister from event error:", error);
+    res.status(500).json({ error: "Failed to unregister from event" });
+  }
+};
+
+// Get participants for an event (admin only)
+export const getEventParticipants = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if event exists
+    const event = await Event.findByPk(id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Get all registrations with user details
+    const registrations = await EventRegistration.findAll({
+      where: { event_id: id },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: [
+            "id",
+            "name",
+            "email",
+            "membership_number",
+            "matric_number",
+            "faculty",
+          ],
+        },
+      ],
+      order: [["registration_date", "ASC"]],
+    });
+
+    res.json({
+      event: {
+        id: event.id,
+        title: event.title,
+      },
+      total_participants: registrations.length,
+      participants: registrations.map((reg) => ({
+        id: reg.id,
+        user: reg.user,
+        registration_date: reg.registration_date,
+        status: reg.status,
+      })),
+    });
+  } catch (error) {
+    console.error("Get event participants error:", error);
+    res.status(500).json({ error: "Failed to fetch participants" });
   }
 };

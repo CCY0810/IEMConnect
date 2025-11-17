@@ -269,6 +269,7 @@ export default function EventsPage() {
                       <TableHead>Title</TableHead>
                       <TableHead>Director</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Participants</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Action</TableHead>
                     </TableRow>
@@ -281,6 +282,11 @@ export default function EventsPage() {
                         <TableCell>{event.director_name}</TableCell>
                         <TableCell>
                           {new Date(event.start_date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-slate-600">
+                            {event.participant_count || 0} registered
+                          </span>
                         </TableCell>
                         <TableCell>
                           <span

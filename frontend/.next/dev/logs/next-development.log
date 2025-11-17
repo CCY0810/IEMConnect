@@ -9,3 +9,31 @@
 [00:14:32.035] Server  LOG      ✓ Compiled in 50ms
 [00:18:18.746] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
 [00:19:11.362] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:03:14.516] Server  LOG      ✓ Compiled in 91ms
+[00:03:14.521] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./frontend/context/auth-context.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:03:14.521] Server  WARN     ⚠ Fast Refresh had to perform a full reload when ./frontend/context/auth-context.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:03:14.924] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:03:15.033] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:11:29.850] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763321817214-157470272.jpg
+[00:25:24.219] Server  LOG      ✓ Compiled in 42ms
+[00:25:41.359] Server  LOG      ✓ Compiled in 38ms
+[00:26:05.127] Server  LOG      ✓ Compiled in 46ms
+[00:26:05.278] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:26:41.182] Server  LOG      ✓ Compiled in 63ms
+[00:26:41.446] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:27:20.073] Server  LOG      ✓ Compiled in 40ms
+[00:27:51.429] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:28:04.337] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:28:28.209] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:28:28.373] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:29:10.288] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:29:12.479] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:29:12.641] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:30:44.592] Server  LOG      ✓ Compiled in 43ms
+[00:30:44.724] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:30:45.575] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:31:00.759] Server  LOG      ✓ Compiled in 45ms
+[00:31:30.817] Server  LOG      ✓ Compiled in 61ms
+[00:31:30.983] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:31:31.570] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763372217541-959664760.jpg
+[00:31:51.774] Server  LOG      ✓ Compiled in 41ms
