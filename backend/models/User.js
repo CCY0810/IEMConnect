@@ -30,6 +30,37 @@ const User = sequelize.define(
       type: DataTypes.STRING(6),
       allowNull: false,
     },
+    // New profile fields
+    matric_number: {
+      type: DataTypes.STRING(9),
+      allowNull: false,
+      unique: true,
+    },
+    faculty: {
+      type: DataTypes.ENUM(
+        "Azman Hashim International Business School (AHIBS)",
+        "Faculty of Artificial Intelligence (FAI)",
+        "Faculty of Built Environment and Surveying",
+        "Faculty of Chemical & Energy Engineering",
+        "Faculty of Computing",
+        "Faculty of Educational Sciences and Technology (FEST)",
+        "Faculty of Electrical Engineering",
+        "Faculty of Management",
+        "Faculty of Mechanical Engineering",
+        "Faculty of Science",
+        "Faculty of Social Sciences and Humanities",
+        "Malaysia-Japan International Institute of Technology (MJIIT)"
+      ),
+      allowNull: false,
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    avatar_url: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
     is_verified: {
       type: DataTypes.TINYINT,
       defaultValue: 0,

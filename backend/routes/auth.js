@@ -12,6 +12,7 @@ import {
   resetPassword,
   updateProfile,
   changePassword,
+  deleteAccount,
 } from "../controllers/authController.js";
 import { verifyTempToken, verifyToken } from "../middleware/auth.js";
 
@@ -37,5 +38,8 @@ router.put("/profile", verifyToken, updateProfile);
 
 // Change password route
 router.put("/change-password", verifyToken, changePassword);
+
+// Delete account route
+router.delete("/account", verifyToken, deleteAccount);
 
 export default router;

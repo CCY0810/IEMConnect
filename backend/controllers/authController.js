@@ -35,6 +35,8 @@ export const register = async (req, res) => {
       email: Joi.string().email().required(),
       password: Joi.string().min(6).required(),
       membership_number: Joi.string().length(6).required(),
+      matric_number: Joi.string().length(9).required(),
+      faculty: Joi.string().required(),
     });
 
     const { error, value } = schema.validate(req.body);
@@ -47,6 +49,16 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "Email already registered" });
     }
 
+    // Check if matric number already exists
+    const existingMatric = await User.findOne({
+      where: { matric_number: value.matric_number },
+    });
+    if (existingMatric) {
+      return res
+        .status(400)
+        .json({ error: "Matric number already registered" });
+    }
+
     const passwordHash = await bcrypt.hash(value.password, 10);
 
     const user = await User.create({
@@ -54,7 +66,9 @@ export const register = async (req, res) => {
       email: value.email,
       password_hash: passwordHash,
       membership_number: value.membership_number,
-      is_verified: 0, // Changed from false to 0
+      matric_number: value.matric_number,
+      faculty: value.faculty,
+      is_verified: 0,
     });
 
     // Send welcome email
@@ -179,6 +193,10 @@ export const verify2FA = async (req, res) => {
         email: user.email,
         role: user.role,
         membership_number: user.membership_number,
+        matric_number: user.matric_number,
+        faculty: user.faculty,
+        bio: user.bio,
+        avatar_url: user.avatar_url,
       },
     });
   } catch (error) {
@@ -201,7 +219,17 @@ export const logout = async (req, res) => {
 export const verifySession = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: ["id", "name", "email", "role", "membership_number"],
+      attributes: [
+        "id",
+        "name",
+        "email",
+        "role",
+        "membership_number",
+        "matric_number",
+        "faculty",
+        "bio",
+        "avatar_url",
+      ],
     });
 
     if (!user) {
@@ -215,6 +243,10 @@ export const verifySession = async (req, res) => {
         email: user.email,
         role: user.role,
         membership_number: user.membership_number,
+        matric_number: user.matric_number,
+        faculty: user.faculty,
+        bio: user.bio,
+        avatar_url: user.avatar_url,
       },
     });
   } catch (error) {
@@ -451,7 +483,8 @@ export const resetPassword = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const schema = Joi.object({
-      name: Joi.string().min(1).required(),
+      name: Joi.string().min(1).optional(),
+      bio: Joi.string().max(500).allow("", null).optional(),
     });
 
     const { error, value } = schema.validate(req.body);
@@ -464,10 +497,13 @@ export const updateProfile = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Update only the name field
-    await user.update({
-      name: value.name,
-    });
+    // Build update object with only provided fields
+    const updateData = {};
+    if (value.name !== undefined) updateData.name = value.name;
+    if (value.bio !== undefined) updateData.bio = value.bio;
+
+    // Update user
+    await user.update(updateData);
 
     res.status(200).json({
       message: "Profile updated successfully",
@@ -477,6 +513,10 @@ export const updateProfile = async (req, res) => {
         email: user.email,
         role: user.role,
         membership_number: user.membership_number,
+        matric_number: user.matric_number,
+        faculty: user.faculty,
+        bio: user.bio,
+        avatar_url: user.avatar_url,
       },
     });
   } catch (error) {
@@ -529,5 +569,51 @@ export const changePassword = async (req, res) => {
   } catch (error) {
     console.error("Change password error:", error);
     res.status(500).json({ error: "Failed to change password" });
+  }
+};
+
+// Delete account
+export const deleteAccount = async (req, res) => {
+  try {
+    const schema = Joi.object({
+      password: Joi.string().required(),
+      confirmText: Joi.string().valid("DELETE").required(),
+    });
+
+    const { error, value } = schema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(
+      value.password,
+      user.password_hash
+    );
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Incorrect password" });
+    }
+
+    // Store user info before deletion for email
+    const userName = user.name;
+    const userEmail = user.email;
+
+    // Delete the user account
+    await user.destroy();
+
+    // Send account deletion confirmation email
+    await emailService.sendAccountDeletedEmail(userEmail, userName);
+
+    res.status(200).json({
+      message: "Account deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    res.status(500).json({ error: "Failed to delete account" });
   }
 };

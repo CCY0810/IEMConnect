@@ -273,10 +273,8 @@ export default function DashboardPage() {
                 }
               />
               <Info label="Membership Number" value={user.membership_number} />
-              <Info label="Matric Number" value={user.email} />{" "}
-              {/*later nid to add phone number & matric number*/}
-              <Info label="Phone Number" value={user.email} />{" "}
-              {/*for now just leave it, can add when edit profile instead of add at register*/}
+              <Info label="Matric Number" value={user.matric_number} />
+              <Info label="Faculty" value={user.faculty} />
             </CardContent>
           </Card>
 

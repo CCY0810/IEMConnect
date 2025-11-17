@@ -6,9 +6,13 @@ export const getProfile = async () => {
   return response.data;
 };
 
-// Update user profile (only name can be updated)
-export const updateProfile = async (name: string) => {
-  const response = await api.put("/auth/profile", { name });
+// Update user profile (only name and bio can be updated)
+export const updateProfile = async (name?: string, bio?: string) => {
+  const data: any = {};
+  if (name !== undefined) data.name = name;
+  if (bio !== undefined) data.bio = bio;
+
+  const response = await api.put("/auth/profile", data);
   return response.data;
 };
 
@@ -20,6 +24,14 @@ export const changePassword = async (
   const response = await api.put("/auth/change-password", {
     currentPassword,
     newPassword,
+  });
+  return response.data;
+};
+
+// Delete account
+export const deleteAccount = async (password: string, confirmText: string) => {
+  const response = await api.delete("/auth/account", {
+    data: { password, confirmText },
   });
   return response.data;
 };

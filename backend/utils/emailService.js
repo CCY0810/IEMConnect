@@ -181,6 +181,45 @@ class EmailService {
       return { success: false, error: error.message };
     }
   }
+
+  async sendAccountDeletedEmail(to, name) {
+    try {
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject: "IEM Connect - Account Deleted",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Account Deleted</h2>
+            <p>Hello ${name},</p>
+            <p>Your IEM Connect account has been permanently deleted as requested.</p>
+            <p>All your personal data, including profile information, event history, and certificates have been removed from our system.</p>
+            <div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0; color: #166534;"><strong>What happens next?</strong></p>
+              <ul style="color: #166534; margin: 10px 0;">
+                <li>You will no longer be able to log in to IEM Connect</li>
+                <li>Your data has been permanently deleted</li>
+                <li>You can create a new account anytime if you change your mind</li>
+              </ul>
+            </div>
+            <p>If you deleted your account by mistake, please contact support immediately to see if we can help.</p>
+            <p>We're sorry to see you go! If you have any feedback about why you deleted your account, we'd love to hear from you.</p>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+              This is an automated message from IEM Connect. Please do not reply to this email.
+            </p>
+          </div>
+        `,
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log("Account deleted email sent: %s", info.messageId);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error("Error sending account deleted email:", error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export default new EmailService();

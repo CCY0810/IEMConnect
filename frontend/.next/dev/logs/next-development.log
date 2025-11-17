@@ -1,79 +1,11 @@
-[00:00:00.492] Server  WARN     ⚠ "Found lockfile missing swc dependencies," "patching..."
-[00:00:06.450] Server  ERROR    ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
-[00:00:06.456] Server  ERROR   Error: Failed to get registry from "pnpm".
-[00:00:06.695] Server  LOG      ✓ Ready in 6.4s
-[00:00:15.751] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:15.859] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
-
-- A server/client branch `if (typeof window !== 'undefined')`.
-- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
-- Date formatting in a user's locale which doesn't match the server.
-- External changing data without sending a snapshot of it along with the HTML.
-- Invalid HTML tag nesting.
-
-It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
-
-%s%s https://react.dev/link/hydration-mismatch 
-
-  ...
-    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
-      <AppDevOverlayErrorBoundary globalError={[...]}>
-        <ReplaySsrOnlyErrors>
-        <DevRootHTTPAccessFallbackBoundary>
-          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
-              <RedirectBoundary>
-                <RedirectErrorBoundary router={{...}}>
-                  <Head>
-                  <__next_root_layout_boundary__>
-                    <SegmentViewNode type="layout" pagePath="/frontend/...">
-                      <SegmentTrieNode>
-                      <link>
-                      <script>
-                      <script>
-                      <RootLayout>
-                        <html lang="en">
-                          <body
-                            className="inter_5972bc34-module__OU16Qa__className bg-background text-foreground"
--                           __processed_2c27f329-c5ac-43e8-9f7c-7cc5b9ab3e5b__="true"
--                           bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6ImVwcGlvY2VtaG1ubGJoanBsY2drb2ZjaWll..."
-                          >
-                  ...
-
-[00:04:53.380] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:05:49.001] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:05:51.161] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:08:16.452] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:08:25.203] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:10:35.753] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:10:37.792] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:13:59.916] Server  LOG      ✓ Compiled in 53ms
-[00:14:45.370] Server  LOG      ✓ Compiled in 39ms
-[00:15:59.400] Server  LOG      ✓ Compiled in 55ms
-[00:17:05.934] Server  LOG      ✓ Compiled in 39ms
-[00:17:06.126] Server  LOG      ✓ Compiled in 36ms
-[00:17:20.084] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:17:21.745] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:20:58.017] Server  LOG      ✓ Compiled in 57ms
-[00:20:58.102] Browser ERROR   uncaughtError: ReferenceError: error is not defined
-[00:21:34.595] Server  LOG      ✓ Compiled in 49ms
-[00:21:34.596] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:21:34.878] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:25:36.593] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:27:46.705] Server  LOG      ✓ Compiled in 68ms
-[00:30:04.203] Server  LOG      ✓ Compiled in 38ms
-[00:33:07.715] Server  LOG      ✓ Compiled in 54ms
-[00:33:50.341] Server  LOG      ✓ Compiled in 38ms
-[00:33:55.292] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:33:55.438] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763321817214-157470272.jpg
-[00:34:12.843] Browser ERROR   Failed to load poster: /api/v1/events/files/poster_file-1763321817214-157470272.jpg
-[00:37:12.075] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:44:20.299] Server  LOG      ✓ Compiled in 61ms
-[00:44:35.298] Server  LOG      ✓ Compiled in 49ms
-[00:44:54.390] Server  LOG      ✓ Compiled in 31ms
-[00:47:41.961] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:49:57.540] Server  LOG      ✓ Compiled in 29ms
-[00:50:17.879] Server  LOG      ✓ Compiled in 37ms
-[00:51:29.135] Server  LOG      ✓ Compiled in 59ms
-[00:52:08.580] Server  LOG      ✓ Compiled in 51ms
-[00:52:18.159] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:08.128] Server  LOG      ✓ Ready in 7.8s
+[00:01:05.175] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:09.796] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:10:19.346] Server  LOG      ✓ Compiled in 49ms
+[00:12:43.282] Server  LOG      ✓ Compiled in 35ms
+[00:13:04.733] Server  LOG      ✓ Compiled in 42ms
+[00:13:17.121] Server  LOG      ✓ Compiled in 48ms
+[00:13:44.306] Server  LOG      ✓ Compiled in 63ms
+[00:14:32.035] Server  LOG      ✓ Compiled in 50ms
+[00:18:18.746] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:19:11.362] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold

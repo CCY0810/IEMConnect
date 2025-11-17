@@ -19,6 +19,8 @@ export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [membershipNumber, setMembershipNumber] = useState("");
+  const [matricNumber, setMatricNumber] = useState("");
+  const [faculty, setFaculty] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -51,6 +53,16 @@ export default function RegisterForm() {
       return;
     }
 
+    if (matricNumber.length !== 9) {
+      setError("Matric number must be 9 characters");
+      return;
+    }
+
+    if (!faculty) {
+      setError("Please select your faculty");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -60,6 +72,8 @@ export default function RegisterForm() {
         email,
         password,
         membership_number: membershipNumber,
+        matric_number: matricNumber,
+        faculty,
       });
 
       // Show success message
@@ -156,7 +170,73 @@ export default function RegisterForm() {
             required
             disabled={isLoading}
             maxLength={6}
+            placeholder="6 characters"
           />
+        </div>
+
+        <div>
+          <label
+            htmlFor="matricNumber"
+            className="block text-sm font-medium mb-1"
+          >
+            Matric Number
+          </label>
+          <Input
+            id="matricNumber"
+            type="text"
+            value={matricNumber}
+            onChange={(e) => setMatricNumber(e.target.value)}
+            required
+            disabled={isLoading}
+            maxLength={9}
+            placeholder="9 characters"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="faculty" className="block text-sm font-medium mb-1">
+            Faculty
+          </label>
+          <select
+            id="faculty"
+            value={faculty}
+            onChange={(e) => setFaculty(e.target.value)}
+            required
+            disabled={isLoading}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">Select your faculty</option>
+            <option value="Azman Hashim International Business School (AHIBS)">
+              Azman Hashim International Business School (AHIBS)
+            </option>
+            <option value="Faculty of Artificial Intelligence (FAI)">
+              Faculty of Artificial Intelligence (FAI)
+            </option>
+            <option value="Faculty of Built Environment and Surveying">
+              Faculty of Built Environment and Surveying
+            </option>
+            <option value="Faculty of Chemical & Energy Engineering">
+              Faculty of Chemical & Energy Engineering
+            </option>
+            <option value="Faculty of Computing">Faculty of Computing</option>
+            <option value="Faculty of Educational Sciences and Technology (FEST)">
+              Faculty of Educational Sciences and Technology (FEST)
+            </option>
+            <option value="Faculty of Electrical Engineering">
+              Faculty of Electrical Engineering
+            </option>
+            <option value="Faculty of Management">Faculty of Management</option>
+            <option value="Faculty of Mechanical Engineering">
+              Faculty of Mechanical Engineering
+            </option>
+            <option value="Faculty of Science">Faculty of Science</option>
+            <option value="Faculty of Social Sciences and Humanities">
+              Faculty of Social Sciences and Humanities
+            </option>
+            <option value="Malaysia-Japan International Institute of Technology (MJIIT)">
+              Malaysia-Japan International Institute of Technology (MJIIT)
+            </option>
+          </select>
         </div>
 
         <div>
