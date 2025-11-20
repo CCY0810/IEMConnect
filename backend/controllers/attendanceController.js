@@ -5,13 +5,29 @@ import User from "../models/User.js";
 
 // Helper function to check if event is within scheduled time window
 const isEventWithinTimeWindow = (event) => {
+  // Use Kuala Lumpur time (UTC+8) consistently
   const now = new Date();
-  const today = new Date(now);
+  const klTime = new Date(now.getTime() + 8 * 60 * 60 * 1000); // Add 8 hours for KL time
+
+  const today = new Date(klTime);
   today.setHours(0, 0, 0, 0);
 
-  const startDate = new Date(event.start_date);
+  // Parse dates correctly for Kuala Lumpur timezone
+  // Split the date string and create a date in local timezone
+  const [startYear, startMonth, startDay] = event.start_date.split("-");
+  const startDate = new Date(
+    parseInt(startYear),
+    parseInt(startMonth) - 1,
+    parseInt(startDay)
+  );
   startDate.setHours(0, 0, 0, 0);
-  const endDate = new Date(event.end_date);
+
+  const [endYear, endMonth, endDay] = event.end_date.split("-");
+  const endDate = new Date(
+    parseInt(endYear),
+    parseInt(endMonth) - 1,
+    parseInt(endDay)
+  );
   endDate.setHours(0, 0, 0, 0);
 
   // Check if today is within the event date range
@@ -28,8 +44,9 @@ const isEventWithinTimeWindow = (event) => {
 
   // If start_time and end_time are specified, check those too
   if (event.start_time || event.end_time) {
+    // Use KL time for time comparison
     const currentTime =
-      now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      klTime.getHours() * 3600 + klTime.getMinutes() * 60 + klTime.getSeconds();
 
     if (event.start_time) {
       const [startHour, startMin, startSec] = event.start_time.split(":");
@@ -78,6 +95,14 @@ export const startAttendance = async (req, res) => {
     const event = await Event.findByPk(id);
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Check if event status is 'Open'
+    if (event.status !== "Open") {
+      return res.status(400).json({
+        error:
+          "Attendance cannot be started. Please update the event status to 'Open' first.",
+      });
     }
 
     // Check if attendance is already active

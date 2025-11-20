@@ -1,5 +1,7 @@
-[00:00:00.567] Server  WARN     ⚠ "Found lockfile missing swc dependencies," "patching..."
-[00:00:07.336] Server  ERROR    ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
-[00:00:07.343] Server  ERROR   Error: Failed to get registry from "pnpm".
-[00:00:07.613] Server  LOG      ✓ Ready in 7.3s
-[00:01:11.833] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:01.018] Server  WARN     ⚠ "Found lockfile missing swc dependencies," "patching..."
+[00:00:12.602] Server  ERROR    ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+[00:00:12.614] Server  ERROR   Error: Failed to get registry from "pnpm".
+[00:00:13.055] Server  LOG      ✓ Ready in 12.5s
+[00:00:16.745] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:16.762] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:58.088] Server  LOG      ✓ Compiled in 114ms

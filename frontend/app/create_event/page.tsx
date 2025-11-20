@@ -56,6 +56,8 @@ export default function CreateEventPage() {
     targetedParticipants: "",
     startDate: "",
     endDate: "",
+    startTime: "",
+    endTime: "",
   });
 
   const [posterFile, setPosterFile] = useState<File | null>(null);
@@ -115,6 +117,8 @@ export default function CreateEventPage() {
         targeted_participants: formData.targetedParticipants,
         start_date: formData.startDate,
         end_date: formData.endDate,
+        start_time: formData.startTime || undefined,
+        end_time: formData.endTime || undefined,
         poster_file: posterFile || undefined,
         paperwork_file: paperworkFile || undefined,
       });
@@ -469,6 +473,35 @@ export default function CreateEventPage() {
                       setFormData({ ...formData, endDate: e.target.value })
                     }
                     required
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* TIME FIELDS */}
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    Start Time
+                  </span>
+                  <Input
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startTime: e.target.value })
+                    }
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <span className="text-sm font-medium text-slate-600">
+                    End Time
+                  </span>
+                  <Input
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endTime: e.target.value })
+                    }
                     disabled={loading}
                   />
                 </div>

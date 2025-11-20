@@ -81,6 +81,8 @@ export default function ViewEventPage() {
     targetedParticipants: "",
     startDate: "",
     endDate: "",
+    startTime: "",
+    endTime: "",
   });
 
   const [newPoster, setNewPoster] = useState<File | null>(null);
@@ -136,6 +138,8 @@ export default function ViewEventPage() {
           targetedParticipants: data.targeted_participants || "",
           startDate: data.start_date,
           endDate: data.end_date,
+          startTime: data.start_time || "",
+          endTime: data.end_time || "",
         });
         setError("");
       } catch (err: any) {
@@ -169,6 +173,8 @@ export default function ViewEventPage() {
         targeted_participants: formData.targetedParticipants,
         start_date: formData.startDate,
         end_date: formData.endDate,
+        start_time: formData.startTime || undefined,
+        end_time: formData.endTime || undefined,
         poster_file: newPoster || undefined,
         paperwork_file: newPaperwork || undefined,
       });
@@ -973,6 +979,25 @@ export default function ViewEventPage() {
                     value={formData.endDate}
                     onChange={(e: any) =>
                       setFormData({ ...formData, endDate: e.target.value })
+                    }
+                  />
+                  {/* TIME FIELDS */}
+                  <InputField
+                    label="Start Time"
+                    type="time"
+                    editable={editing}
+                    value={formData.startTime}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, startTime: e.target.value })
+                    }
+                  />
+                  <InputField
+                    label="End Time"
+                    type="time"
+                    editable={editing}
+                    value={formData.endTime}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, endTime: e.target.value })
                     }
                   />
                 </CardContent>

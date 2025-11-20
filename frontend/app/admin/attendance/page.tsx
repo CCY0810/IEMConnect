@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { useToast } from "../../../../hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +52,7 @@ interface AttendanceRecord {
 export default function AdminAttendancePage() {
   const router = useRouter();
   const { user, token } = useAuth();
+  const { toast } = useToast();
 
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -157,10 +159,27 @@ export default function AdminAttendancePage() {
       // Fetch attendance list
       await fetchAttendanceList();
     } catch (err: any) {
-      setMessage({
-        type: "error",
-        text: err.response?.data?.error || "Failed to start attendance",
-      });
+      const errorMessage =
+        err.response?.data?.error || "Failed to start attendance";
+
+      // Check if this is the specific business logic error
+      if (
+        errorMessage ===
+        "Attendance cannot be started. Please update the event status to 'Open' first."
+      ) {
+        // Show destructive toast notification
+        toast({
+          title: "Attendance Not Started",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } else {
+        // Use regular message for other errors
+        setMessage({
+          type: "error",
+          text: errorMessage,
+        });
+      }
     } finally {
       setAttendanceLoading(false);
     }
