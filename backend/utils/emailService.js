@@ -220,6 +220,39 @@ class EmailService {
       return { success: false, error: error.message };
     }
   }
+
+  async sendNotificationEmail(to, name, title, message) {
+    try {
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject: `IEM Connect - ${title}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">${title}</h2>
+            <p>Hello ${name},</p>
+            <div style="background-color: #f9fafb; border-left: 4px solid #3b82f6; padding: 20px; margin: 20px 0; border-radius: 4px;">
+              <p style="margin: 0; color: #1f2937; white-space: pre-wrap;">${message}</p>
+            </div>
+            <p style="margin-top: 20px;">
+              <a href="${process.env.FRONTEND_URL || "http://localhost:3000"}/dashboard" style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">View in Dashboard</a>
+            </p>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+              This is an automated message from IEM Connect. Please do not reply to this email.
+            </p>
+          </div>
+        `,
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log("Notification email sent: %s", info.messageId);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error("Error sending notification email:", error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export default new EmailService();

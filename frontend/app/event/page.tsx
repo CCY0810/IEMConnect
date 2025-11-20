@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { getEvents, Event } from "@/lib/event-api";
+import NotificationBell from "@/components/NotificationBell";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,12 +144,6 @@ export default function EventsPage() {
             onClick={() => router.push("/admin/attendance")}
           />
           <SidebarButton
-            icon={<Bell size={18} />}
-            label="Notifications"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/notifications")}
-          />
-          <SidebarButton
             icon={<Settings size={18} />}
             label="Settings"
             open={sidebarOpen}
@@ -180,6 +175,8 @@ export default function EventsPage() {
           </div>
 
           <div className="flex items-center gap-5">
+            <NotificationBell />
+
             <div className="text-right">
               <div className="text-sm font-semibold">{user.name}</div>
               <div className="text-xs text-slate-400 capitalize">

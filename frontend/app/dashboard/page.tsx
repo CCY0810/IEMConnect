@@ -36,6 +36,7 @@ import {
   PieChart,
 } from "lucide-react";
 import React from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 interface UnverifiedUser {
   id: number;
@@ -63,9 +64,9 @@ export default function DashboardPage() {
     if (!token) router.push("/login");
   }, [token, router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  const handleLogout = async () => {
+    await logout();
+    // Logout function handles redirect internally
   };
 
   const fetchUnverifiedUsers = async () => {
@@ -185,12 +186,6 @@ export default function DashboardPage() {
           />
           <SidebarButton
             open={sidebarOpen}
-            icon={<Bell size={18} />}
-            label="Notifications"
-            onClick={() => router.push("/admin/notifications")} //
-          />
-          <SidebarButton
-            open={sidebarOpen}
             icon={<Settings size={18} />}
             label="Settings"
             onClick={() => router.push("/admin/settings")} //
@@ -223,6 +218,9 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-5">
+            {/* Notification Bell */}
+            <NotificationBell />
+
             {/* User Name + Role */}
             <div className="text-right">
               <div className="text-sm font-semibold">{user.name}</div>

@@ -279,6 +279,109 @@ export const updateEvent = async (req, res) => {
   }
 };
 
+// Start event (change status from Upcoming to Open)
+export const startEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const event = await Event.findByPk(id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Check if event status is 'Upcoming'
+    if (event.status !== "Upcoming") {
+      return res.status(400).json({
+        error: `Event cannot be started. Current status is '${event.status}'. Only events with status 'Upcoming' can be started.`,
+      });
+    }
+
+    // Validate time window
+    const now = new Date();
+    const klTime = new Date(now.getTime() + 8 * 60 * 60 * 1000); // Add 8 hours for KL time
+
+    // Check if today is within the event date range
+    const today = new Date(klTime);
+    today.setHours(0, 0, 0, 0);
+
+    const [startYear, startMonth, startDay] = event.start_date.split("-");
+    const startDate = new Date(
+      parseInt(startYear),
+      parseInt(startMonth) - 1,
+      parseInt(startDay)
+    );
+    startDate.setHours(0, 0, 0, 0);
+
+    const [endYear, endMonth, endDay] = event.end_date.split("-");
+    const endDate = new Date(
+      parseInt(endYear),
+      parseInt(endMonth) - 1,
+      parseInt(endDay)
+    );
+    endDate.setHours(0, 0, 0, 0);
+
+    // Check if today is within the event date range
+    if (today < startDate || today > endDate) {
+      return res.status(400).json({
+        error: `Event cannot be started. The event is scheduled for ${startDate.toLocaleDateString()}${
+          startDate.getTime() !== endDate.getTime()
+            ? " to " + endDate.toLocaleDateString()
+            : ""
+        }. Please wait until the scheduled date.`,
+      });
+    }
+
+    // If start_time and end_time are specified, validate them
+    if (event.start_time || event.end_time) {
+      const currentTime =
+        klTime.getHours() * 3600 + klTime.getMinutes() * 60 + klTime.getSeconds();
+
+      if (event.start_time) {
+        const [startHour, startMin, startSec] = event.start_time.split(":");
+        const startTimeSeconds =
+          parseInt(startHour) * 3600 +
+          parseInt(startMin) * 60 +
+          (startSec ? parseInt(startSec) : 0);
+
+        if (currentTime < startTimeSeconds) {
+          return res.status(400).json({
+            error: `Event cannot be started. The event starts at ${event.start_time}. Please wait until the scheduled start time.`,
+          });
+        }
+      }
+
+      if (event.end_time) {
+        const [endHour, endMin, endSec] = event.end_time.split(":");
+        const endTimeSeconds =
+          parseInt(endHour) * 3600 +
+          parseInt(endMin) * 60 +
+          (endSec ? parseInt(endSec) : 0);
+
+        if (currentTime > endTimeSeconds) {
+          return res.status(400).json({
+            error: `Event cannot be started. The event ended at ${event.end_time}.`,
+          });
+        }
+      }
+    }
+
+    // All validations passed - update status to 'Open'
+    await event.update({ status: "Open" });
+
+    res.json({
+      message: "Event started successfully",
+      event: {
+        id: event.id,
+        title: event.title,
+        status: event.status,
+      },
+    });
+  } catch (error) {
+    console.error("Start event error:", error);
+    res.status(500).json({ error: "Failed to start event" });
+  }
+};
+
 // Delete event
 export const deleteEvent = async (req, res) => {
   try {

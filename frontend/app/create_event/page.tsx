@@ -29,7 +29,6 @@ import {
   FileText,
   Calendar,
   CheckSquare,
-  Bell,
   Settings,
   HelpCircle,
   PieChart,
@@ -198,12 +197,6 @@ export default function CreateEventPage() {
             label="Attendance"
             open={sidebarOpen}
             onClick={() => router.push("/admin/attendance")}
-          />
-          <SidebarButton
-            icon={<Bell size={18} />}
-            label="Notifications"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/notifications")}
           />
           <SidebarButton
             icon={<Settings size={18} />}

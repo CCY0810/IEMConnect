@@ -1,33 +1,32 @@
 import express from "express";
 import { verifyToken } from "../middleware/auth.js";
 import { verifyAdmin } from "../middleware/admin.js";
+import {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  getUnreadCount,
+  createNotification,
+} from "../controllers/notificationController.js";
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(verifyToken);
 
-// Placeholder for getting all notifications
-router.get("/", (req, res) => {
-  res.json({
-    message: "Notifications endpoint - Coming soon",
-    notifications: [],
-  });
-});
+// Get all notifications for logged-in user
+router.get("/", getNotifications);
 
-// Placeholder for creating a notification (admin only)
-router.post("/", verifyAdmin, (req, res) => {
-  res.json({
-    message: "Create notification endpoint - Coming soon",
-  });
-});
+// Get unread notification count
+router.get("/unread-count", getUnreadCount);
 
-// Placeholder for marking notification as read
-router.put("/:id/read", (req, res) => {
-  res.json({
-    message: "Mark notification read endpoint - Coming soon",
-    id: req.params.id,
-  });
-});
+// Mark a specific notification as read
+router.put("/:id/read", markAsRead);
+
+// Mark all notifications as read
+router.put("/read-all", markAllAsRead);
+
+// Create a notification (admin only)
+router.post("/", verifyAdmin, createNotification);
 
 export default router;

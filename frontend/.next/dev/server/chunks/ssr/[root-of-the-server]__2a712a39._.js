@@ -147,6 +147,8 @@ __turbopack_context__.s([
     ()=>getFileUrl,
     "registerForEvent",
     ()=>registerForEvent,
+    "startEvent",
+    ()=>startEvent,
     "unregisterFromEvent",
     ()=>unregisterFromEvent,
     "updateEvent",
@@ -218,6 +220,11 @@ const unregisterFromEvent = async (eventId)=>{
 const getEventParticipants = async (eventId)=>{
     const response = await __TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$lib$2f$api$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].get(`/events/${eventId}/participants`);
     return response.data;
+};
+const startEvent = async (eventId)=>{
+    await __TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$lib$2f$api$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].post(`/events/${eventId}/start`);
+    // Refresh event data to get updated status
+    return getEventById(eventId);
 };
 }),
 "[project]/frontend/components/ui/button.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
@@ -378,7 +385,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/file-text.js [app-ssr] (ecmascript) <export default as FileText>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/calendar.js [app-ssr] (ecmascript) <export default as Calendar>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$square$2d$check$2d$big$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckSquare$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/square-check-big.js [app-ssr] (ecmascript) <export default as CheckSquare>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$bell$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Bell$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/bell.js [app-ssr] (ecmascript) <export default as Bell>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$settings$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Settings$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/settings.js [app-ssr] (ecmascript) <export default as Settings>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$help$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__HelpCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-help.js [app-ssr] (ecmascript) <export default as HelpCircle>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chart$2d$pie$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__PieChart$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chart-pie.js [app-ssr] (ecmascript) <export default as PieChart>");
@@ -446,17 +452,17 @@ function CreateEventPage() {
                                 d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 80,
+                                lineNumber: 79,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/frontend/app/create_event/page.tsx",
-                            lineNumber: 74,
+                            lineNumber: 73,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                        lineNumber: 73,
+                        lineNumber: 72,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -464,7 +470,7 @@ function CreateEventPage() {
                         children: "Access Denied"
                     }, void 0, false, {
                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                        lineNumber: 88,
+                        lineNumber: 87,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -472,7 +478,7 @@ function CreateEventPage() {
                         children: "Only administrators can create events. You'll be redirected to the dashboard."
                     }, void 0, false, {
                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                        lineNumber: 91,
+                        lineNumber: 90,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -481,18 +487,18 @@ function CreateEventPage() {
                         children: "Go to Dashboard"
                     }, void 0, false, {
                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                        lineNumber: 95,
+                        lineNumber: 94,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                lineNumber: 72,
+                lineNumber: 71,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/frontend/app/create_event/page.tsx",
-            lineNumber: 71,
+            lineNumber: 70,
             columnNumber: 7
         }, this);
     }
@@ -545,12 +551,12 @@ function CreateEventPage() {
                                             className: `object-contain ${sidebarOpen ? "w-10 h-10" : "w-8 h-8"}`
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/create_event/page.tsx",
-                                            lineNumber: 151,
+                                            lineNumber: 150,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 146,
+                                        lineNumber: 145,
                                         columnNumber: 13
                                     }, this),
                                     sidebarOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -560,7 +566,7 @@ function CreateEventPage() {
                                                 children: "IEM Connect"
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 161,
+                                                lineNumber: 160,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -568,19 +574,19 @@ function CreateEventPage() {
                                                 children: "Admin Panel"
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 162,
+                                                lineNumber: 161,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 160,
+                                        lineNumber: 159,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 145,
+                                lineNumber: 144,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -590,18 +596,18 @@ function CreateEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 171,
+                                    lineNumber: 170,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 167,
+                                lineNumber: 166,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                        lineNumber: 144,
+                        lineNumber: 143,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -612,7 +618,7 @@ function CreateEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 178,
+                                    lineNumber: 177,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Dashboard",
@@ -620,7 +626,7 @@ function CreateEventPage() {
                                 onClick: ()=>router.push("/dashboard")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 177,
+                                lineNumber: 176,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -628,7 +634,7 @@ function CreateEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 184,
+                                    lineNumber: 183,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Reports",
@@ -636,7 +642,7 @@ function CreateEventPage() {
                                 onClick: ()=>router.push("/admin/reports")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 183,
+                                lineNumber: 182,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -644,7 +650,7 @@ function CreateEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 190,
+                                    lineNumber: 189,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Events",
@@ -653,7 +659,7 @@ function CreateEventPage() {
                                 onClick: ()=>router.push("/event")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 189,
+                                lineNumber: 188,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -661,7 +667,7 @@ function CreateEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 197,
+                                    lineNumber: 196,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Attendance",
@@ -669,23 +675,7 @@ function CreateEventPage() {
                                 onClick: ()=>router.push("/admin/attendance")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 196,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
-                                icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$bell$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Bell$3e$__["Bell"], {
-                                    size: 18
-                                }, void 0, false, {
-                                    fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 203,
-                                    columnNumber: 19
-                                }, void 0),
-                                label: "Notifications",
-                                open: sidebarOpen,
-                                onClick: ()=>router.push("/admin/notifications")
-                            }, void 0, false, {
-                                fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 202,
+                                lineNumber: 195,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -693,7 +683,7 @@ function CreateEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 209,
+                                    lineNumber: 202,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Settings",
@@ -701,7 +691,7 @@ function CreateEventPage() {
                                 onClick: ()=>router.push("/admin/settings")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 208,
+                                lineNumber: 201,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarButton, {
@@ -709,7 +699,7 @@ function CreateEventPage() {
                                     size: 18
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 215,
+                                    lineNumber: 208,
                                     columnNumber: 19
                                 }, void 0),
                                 label: "Help",
@@ -717,7 +707,7 @@ function CreateEventPage() {
                                 onClick: ()=>router.push("/admin/help")
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 214,
+                                lineNumber: 207,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -727,7 +717,7 @@ function CreateEventPage() {
                                         size: 18
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 223,
+                                        lineNumber: 216,
                                         columnNumber: 21
                                     }, void 0),
                                     label: "Logout",
@@ -735,24 +725,24 @@ function CreateEventPage() {
                                     onClick: logout
                                 }, void 0, false, {
                                     fileName: "[project]/frontend/app/create_event/page.tsx",
-                                    lineNumber: 222,
+                                    lineNumber: 215,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 221,
+                                lineNumber: 214,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                        lineNumber: 176,
+                        lineNumber: 175,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                lineNumber: 139,
+                lineNumber: 138,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -771,12 +761,12 @@ function CreateEventPage() {
                                             size: 20
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/create_event/page.tsx",
-                                            lineNumber: 239,
+                                            lineNumber: 232,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 235,
+                                        lineNumber: 228,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -786,7 +776,7 @@ function CreateEventPage() {
                                                 children: "Create Event"
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 243,
+                                                lineNumber: 236,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -794,19 +784,19 @@ function CreateEventPage() {
                                                 children: "Fill in event details and save"
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 246,
+                                                lineNumber: 239,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 242,
+                                        lineNumber: 235,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 234,
+                                lineNumber: 227,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -820,7 +810,7 @@ function CreateEventPage() {
                                                 children: user.name
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 254,
+                                                lineNumber: 247,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -828,13 +818,13 @@ function CreateEventPage() {
                                                 children: user.role
                                             }, void 0, false, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 255,
+                                                lineNumber: 248,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 253,
+                                        lineNumber: 246,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -846,24 +836,24 @@ function CreateEventPage() {
                                             className: "w-full h-full object-cover"
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/create_event/page.tsx",
-                                            lineNumber: 265,
+                                            lineNumber: 258,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 260,
+                                        lineNumber: 253,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 252,
+                                lineNumber: 245,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                        lineNumber: 233,
+                        lineNumber: 226,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -874,7 +864,7 @@ function CreateEventPage() {
                                 children: error
                             }, void 0, false, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 275,
+                                lineNumber: 268,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -889,20 +879,20 @@ function CreateEventPage() {
                                                         children: "Director Information"
                                                     }, void 0, false, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 284,
+                                                        lineNumber: 277,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardDescription"], {
                                                         children: "Event director details"
                                                     }, void 0, false, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 285,
+                                                        lineNumber: 278,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 283,
+                                                lineNumber: 276,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -915,7 +905,7 @@ function CreateEventPage() {
                                                                 children: "Full Name *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 290,
+                                                                lineNumber: 283,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -929,13 +919,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 293,
+                                                                lineNumber: 286,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 289,
+                                                        lineNumber: 282,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -945,7 +935,7 @@ function CreateEventPage() {
                                                                 children: "Matric Number *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 305,
+                                                                lineNumber: 298,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -959,13 +949,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 308,
+                                                                lineNumber: 301,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 304,
+                                                        lineNumber: 297,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -975,7 +965,7 @@ function CreateEventPage() {
                                                                 children: "Phone Number *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 320,
+                                                                lineNumber: 313,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -989,13 +979,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 323,
+                                                                lineNumber: 316,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 319,
+                                                        lineNumber: 312,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1005,7 +995,7 @@ function CreateEventPage() {
                                                                 children: "Email Address *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 335,
+                                                                lineNumber: 328,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1020,25 +1010,25 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 338,
+                                                                lineNumber: 331,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 334,
+                                                        lineNumber: 327,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 288,
+                                                lineNumber: 281,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 282,
+                                        lineNumber: 275,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1050,20 +1040,20 @@ function CreateEventPage() {
                                                         children: "Event Information"
                                                     }, void 0, false, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 355,
+                                                        lineNumber: 348,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardDescription"], {
                                                         children: "Event details & files"
                                                     }, void 0, false, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 356,
+                                                        lineNumber: 349,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 354,
+                                                lineNumber: 347,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1077,7 +1067,7 @@ function CreateEventPage() {
                                                                 children: "Event Title *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 361,
+                                                                lineNumber: 354,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1091,13 +1081,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 364,
+                                                                lineNumber: 357,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 360,
+                                                        lineNumber: 353,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1108,7 +1098,7 @@ function CreateEventPage() {
                                                                 children: "Description"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 376,
+                                                                lineNumber: 369,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Textarea, {
@@ -1122,13 +1112,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 379,
+                                                                lineNumber: 372,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 375,
+                                                        lineNumber: 368,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1138,7 +1128,7 @@ function CreateEventPage() {
                                                                 children: "Cost (RM)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 391,
+                                                                lineNumber: 384,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1154,13 +1144,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 394,
+                                                                lineNumber: 387,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 390,
+                                                        lineNumber: 383,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1170,7 +1160,7 @@ function CreateEventPage() {
                                                                 children: "Targeted Participants"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 408,
+                                                                lineNumber: 401,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1183,13 +1173,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 411,
+                                                                lineNumber: 404,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 407,
+                                                        lineNumber: 400,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1199,7 +1189,7 @@ function CreateEventPage() {
                                                                 children: "Upload Paperwork"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 425,
+                                                                lineNumber: 418,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1209,13 +1199,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 428,
+                                                                lineNumber: 421,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 424,
+                                                        lineNumber: 417,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1225,7 +1215,7 @@ function CreateEventPage() {
                                                                 children: "Upload Poster"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 439,
+                                                                lineNumber: 432,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1235,13 +1225,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 442,
+                                                                lineNumber: 435,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 438,
+                                                        lineNumber: 431,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1251,7 +1241,7 @@ function CreateEventPage() {
                                                                 children: "Date From *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 451,
+                                                                lineNumber: 444,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1265,13 +1255,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 454,
+                                                                lineNumber: 447,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 450,
+                                                        lineNumber: 443,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1281,7 +1271,7 @@ function CreateEventPage() {
                                                                 children: "Date Until *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 466,
+                                                                lineNumber: 459,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1295,13 +1285,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 469,
+                                                                lineNumber: 462,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 465,
+                                                        lineNumber: 458,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1311,7 +1301,7 @@ function CreateEventPage() {
                                                                 children: "Start Time"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 482,
+                                                                lineNumber: 475,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1324,13 +1314,13 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 485,
+                                                                lineNumber: 478,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 481,
+                                                        lineNumber: 474,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1340,7 +1330,7 @@ function CreateEventPage() {
                                                                 children: "End Time"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 496,
+                                                                lineNumber: 489,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$frontend$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1353,25 +1343,25 @@ function CreateEventPage() {
                                                                 disabled: loading
                                                             }, void 0, false, {
                                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                                lineNumber: 499,
+                                                                lineNumber: 492,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                        lineNumber: 495,
+                                                        lineNumber: 488,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                                lineNumber: 359,
+                                                lineNumber: 352,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 353,
+                                        lineNumber: 346,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1383,36 +1373,36 @@ function CreateEventPage() {
                                             children: loading ? "Saving..." : "Save Event"
                                         }, void 0, false, {
                                             fileName: "[project]/frontend/app/create_event/page.tsx",
-                                            lineNumber: 513,
+                                            lineNumber: 506,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                                        lineNumber: 512,
+                                        lineNumber: 505,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                                lineNumber: 280,
+                                lineNumber: 273,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/frontend/app/create_event/page.tsx",
-                        lineNumber: 273,
+                        lineNumber: 266,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                lineNumber: 232,
+                lineNumber: 225,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/frontend/app/create_event/page.tsx",
-        lineNumber: 137,
+        lineNumber: 136,
         columnNumber: 5
     }, this);
 }
@@ -1426,20 +1416,20 @@ function SidebarButton({ icon, label, open, active, onClick }) {
                 children: icon
             }, void 0, false, {
                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                lineNumber: 538,
+                lineNumber: 531,
                 columnNumber: 7
             }, this),
             open && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                 children: label
             }, void 0, false, {
                 fileName: "[project]/frontend/app/create_event/page.tsx",
-                lineNumber: 539,
+                lineNumber: 532,
                 columnNumber: 16
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/frontend/app/create_event/page.tsx",
-        lineNumber: 530,
+        lineNumber: 523,
         columnNumber: 5
     }, this);
 }

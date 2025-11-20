@@ -143,3 +143,10 @@ export const getEventParticipants = async (eventId: number): Promise<any> => {
   const response = await api.get(`/events/${eventId}/participants`);
   return response.data;
 };
+
+// Start event - change status from Upcoming to Open (admin only)
+export const startEvent = async (eventId: number): Promise<Event> => {
+  await api.post(`/events/${eventId}/start`);
+  // Refresh event data to get updated status
+  return getEventById(eventId);
+};

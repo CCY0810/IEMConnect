@@ -1,70 +1,225 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      <div
-        className="absolute inset-0 bg-fixed"
-        style={{
-          backgroundImage: "url('/main-page-bg.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      ></div>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
 
-      <div className="absolute inset-0 bg-white/55 "></div>
-
-      <div className="absolute top-20 left-20 w-72 h-72 bg-blue-300/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-400/15 rounded-full blur-3xl"></div>
-
-
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-xl">
-
-        {/*LOGO*/}
-        <div className="mb-10 flex flex-col items-center space-y-4">
-          <div className="p-4 bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/70">
-            <img
-              src="/iem-logo.jpg"
-              alt="IEM Logo"
-              className="w-28 h-28 object-contain drop-shadow-md"
-            />
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-blue-50 to-white">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                  IEM Connect: Streamlining Engineering Excellence
+                </h1>
+                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                  The official platform for IEM UTM to track events, manage
+                  attendance, and generate certificates seamlessly.
+                </p>
+              </div>
+              <div className="space-x-4">
+                <Button asChild size="lg">
+                  <Link href="/register">Get Started</Link>
+                </Button>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <h1 className="text-5xl font-bold tracking-tight text-gray-900">
-            IEM Connect
-          </h1>
+        {/* About the Platform */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
+          <div className="container px-4 md:px-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">
+              About the Platform
+            </h2>
+            <div className="grid gap-6 lg:grid-cols-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Event Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Browse and register for seminars, workshops, and site
+                    visits.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Smart Attendance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Hassle-free check-ins via QR codes or unique pins.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Digital Certificates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Automated certificate generation and storage for your
+                    professional portfolio.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
 
-          <p className="text-black-800 text-lg max-w-md leading-relaxed font-bold">
-            The official secure authentication gateway for IEM UTM Student
-            Section members.
+        {/* About IEM UTM */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-2 items-center">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl mb-4">
+                  About IEM UTM
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  IEM (The Institution of Engineers Malaysia) was formed in
+                  1959. With over 30,000 members, it is a primary qualifying
+                  body for professional engineers in Malaysia.
+                </p>
+              </div>
+              <div className="grid gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Vision</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      To be the premier professional Organisation pivotal
+                      achieving Vision 2020.
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Mission</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Promote sound professional engineering practice, service
+                      the needs of members, and contribute towards nation
+                      building.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Join IEM Student Chapter */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
+          <div className="container px-4 md:px-6">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">
+              Why Join IEM Student Chapter?
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="flex items-start space-x-3">
+                <div className="mt-1 rounded-full bg-blue-100 p-1">
+                  <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                </div>
+                <div>
+                  <h3 className="font-medium">
+                    Gain recognition for engineering experience
+                  </h3>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="mt-1 rounded-full bg-blue-100 p-1">
+                  <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                </div>
+                <div>
+                  <h3 className="font-medium">
+                    Qualify for registration as a Professional Engineer
+                  </h3>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="mt-1 rounded-full bg-blue-100 p-1">
+                  <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                </div>
+                <div>
+                  <h3 className="font-medium">
+                    Network with engineers in private/public sectors
+                  </h3>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="mt-1 rounded-full bg-blue-100 p-1">
+                  <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                </div>
+                <div>
+                  <h3 className="font-medium">
+                    Professional development via talks and site visits
+                  </h3>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="mt-1 rounded-full bg-blue-100 p-1">
+                  <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                </div>
+                <div>
+                  <h3 className="font-medium">
+                    Discounts for IEM UTM Student Section events
+                  </h3>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="mt-1 rounded-full bg-blue-100 p-1">
+                  <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                </div>
+                <div>
+                  <h3 className="font-medium">
+                    Subscription to the IEM Monthly bulletin (Jurutera)
+                  </h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="py-6 md:px-8 md:py-0 border-t">
+        <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+          <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
+            © {new Date().getFullYear()} IEM UTM Student Section — Engineering
+            the Future
           </p>
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/terms"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Privacy
+            </Link>
+          </div>
         </div>
-
-        {/*BUTTONS*/}
-        <div className="flex flex-col gap-5 w-full mt-4">
-          <Button asChild className="py-5 text-lg font-semibold shadow-md">
-            <Link href="/login">Login</Link>
-          </Button>
-
-          <Button
-            variant="outline"
-            asChild
-            className="py-5 text-lg font-semibold border-2 border-blue-600 text-blue-700 hover:bg-blue-50"
-          >
-            <Link href="/register">Register</Link>
-          </Button>
-        </div>
-
-        {/*Footer*/}
-        <p className="mt-10 text-xs text-gray-800">
-          © 2025 IEM UTM Student Section — Engineering the Future
-        </p>
-      </div>
+      </footer>
     </div>
   );
 }
-

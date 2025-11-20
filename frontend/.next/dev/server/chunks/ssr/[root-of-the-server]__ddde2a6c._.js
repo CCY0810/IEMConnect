@@ -67,7 +67,7 @@ const AuthProvider = ({ children })=>{
         children: children
     }, void 0, false, {
         fileName: "[project]/frontend/context/auth-context.tsx",
-        lineNumber: 72,
+        lineNumber: 74,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

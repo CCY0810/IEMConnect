@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { createContext, useContext, useState, useEffect } from "react";
+import { logout as logoutAPI } from "@/lib/auth-api";
 
 interface User {
   id: string;
@@ -36,6 +37,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [tempToken, setTempToken] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if user has explicitly logged out (prevent auto-login after logout)
+    const hasLoggedOut = localStorage.getItem("hasLoggedOut");
+    if (hasLoggedOut === "true") {
+      // Clear the logout flag and don't restore session
+      localStorage.removeItem("hasLoggedOut");
+      setIsLoading(false);
+      return;
+    }
+
+    // Only restore session if user hasn't logged out
     const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
     if (savedToken && savedUser) {
@@ -57,15 +68,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("user", JSON.stringify(newUser));
     localStorage.setItem("token", newToken);
     localStorage.removeItem("tempToken");
+    // Clear logout flag on successful login to allow auto-login on next visit
+    localStorage.removeItem("hasLoggedOut");
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    setTempToken(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("tempToken");
+  const logout = async () => {
+    try {
+      // Call backend logout API to invalidate token on server
+      await logoutAPI();
+    } catch (error) {
+      // Continue with logout even if API call fails
+      console.error("Logout API error:", error);
+    } finally {
+      // Clear all authentication data from state
+      setUser(null);
+      setToken(null);
+      setTempToken(null);
+
+      // Clear all localStorage items related to authentication
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("tempToken");
+      
+      // Set logout flag to prevent auto-login on next page load
+      localStorage.setItem("hasLoggedOut", "true");
+
+      // Force redirect to login page with hard reload to clear all state
+      window.location.href = "/login";
+    }
   };
 
   return (

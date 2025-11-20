@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
+import NotificationBell from "@/components/NotificationBell";
 import {
   getEventById,
   updateEvent,
@@ -11,12 +13,14 @@ import {
   registerForEvent,
   unregisterFromEvent,
   getEventParticipants,
+  startEvent,
 } from "@/lib/event-api";
 import {
   startAttendance,
   stopAttendance,
   getAttendanceList,
 } from "@/lib/attendance-api";
+import { sendEventAnnouncement } from "@/lib/notification-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +64,7 @@ export default function ViewEventPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
+  const { toast } = useToast();
 
   const eventId = parseInt(searchParams.get("id") || "0");
 
@@ -105,6 +110,23 @@ export default function ViewEventPage() {
   const [attendanceList, setAttendanceList] = useState<any[]>([]);
   const [showAttendanceList, setShowAttendanceList] = useState(false);
   const [attendanceMessage, setAttendanceMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  // Announcement state
+  const [announcementSubject, setAnnouncementSubject] = useState("");
+  const [announcementMessage, setAnnouncementMessage] = useState("");
+  const [sendEmail, setSendEmail] = useState(true);
+  const [announcementLoading, setAnnouncementLoading] = useState(false);
+  const [announcementResult, setAnnouncementResult] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  // Start event state
+  const [startEventLoading, setStartEventLoading] = useState(false);
+  const [startEventMessage, setStartEventMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
@@ -276,10 +298,27 @@ export default function ViewEventPage() {
       setShowAttendanceList(true);
       handleRefreshAttendance();
     } catch (err: any) {
-      setAttendanceMessage({
-        type: "error",
-        text: err.response?.data?.error || "Failed to start attendance",
-      });
+      const errorMessage =
+        err.response?.data?.error || "Failed to start attendance";
+
+      // Check if this is the specific business logic error
+      if (
+        errorMessage ===
+        "Attendance cannot be started. Please update the event status to 'Open' first."
+      ) {
+        // Show destructive toast notification
+        toast({
+          title: "Attendance Not Started",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } else {
+        // Use regular message for other errors
+        setAttendanceMessage({
+          type: "error",
+          text: errorMessage,
+        });
+      }
     } finally {
       setAttendanceLoading(false);
     }
@@ -320,6 +359,82 @@ export default function ViewEventPage() {
       setAttendanceList(data.attendance_list || []);
     } catch (err: any) {
       console.error("Failed to refresh attendance:", err);
+    }
+  };
+
+  const handleSendAnnouncement = async () => {
+    if (!eventId || !announcementSubject || !announcementMessage) {
+      setAnnouncementResult({
+        type: "error",
+        text: "Please fill in both subject and message",
+      });
+      return;
+    }
+
+    setAnnouncementLoading(true);
+    setAnnouncementResult(null);
+
+    try {
+      const result = await sendEventAnnouncement(
+        eventId,
+        announcementSubject,
+        announcementMessage,
+        sendEmail
+      );
+      setAnnouncementResult({
+        type: "success",
+        text: `Announcement sent to ${result.sent} participant(s)${
+          result.failed > 0 ? ` (${result.failed} failed)` : ""
+        }`,
+      });
+      setAnnouncementSubject("");
+      setAnnouncementMessage("");
+    } catch (err: any) {
+      setAnnouncementResult({
+        type: "error",
+        text: err.response?.data?.error || "Failed to send announcement",
+      });
+    } finally {
+      setAnnouncementLoading(false);
+    }
+  };
+
+  const handleStartEvent = async () => {
+    if (!eventId) return;
+
+    setStartEventLoading(true);
+    setStartEventMessage(null);
+
+    try {
+      const updatedEvent = await startEvent(eventId);
+      setEvent(updatedEvent);
+      setStartEventMessage({
+        type: "success",
+        text: "Event started successfully! The event status has been changed to 'Open'.",
+      });
+
+      // Show success toast
+      toast({
+        title: "Event Started",
+        description: "The event status has been changed to 'Open'.",
+        variant: "default",
+      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || "Failed to start event";
+
+      setStartEventMessage({
+        type: "error",
+        text: errorMessage,
+      });
+
+      // Show destructive toast for errors
+      toast({
+        title: "Event Not Started",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setStartEventLoading(false);
     }
   };
 
@@ -393,12 +508,6 @@ export default function ViewEventPage() {
             onClick={() => router.push("/admin/attendance")}
           />
           <SidebarButton
-            icon={<Bell size={18} />}
-            label="Notifications"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/notifications")}
-          />
-          <SidebarButton
             icon={<Settings size={18} />}
             label="Settings"
             open={sidebarOpen}
@@ -445,6 +554,8 @@ export default function ViewEventPage() {
           </div>
 
           <div className="flex items-center gap-5">
+            <NotificationBell />
+
             <div className="text-right">
               <div className="text-sm font-semibold">{user.name}</div>
               <div className="text-xs text-slate-400 capitalize">
@@ -491,6 +602,78 @@ export default function ViewEventPage() {
                 >
                   {registrationMessage.text}
                 </div>
+              )}
+
+              {/* START EVENT (ADMIN ONLY - UPCOMING EVENTS) */}
+              {isAdmin && event.status === "Upcoming" && (
+                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-900">
+                      <PlayCircle size={20} />
+                      Start Event
+                    </CardTitle>
+                    <CardDescription className="text-green-700">
+                      Change event status from 'Upcoming' to 'Open' when the
+                      event time arrives
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {startEventMessage && (
+                      <div
+                        className={`px-4 py-3 rounded-lg ${
+                          startEventMessage.type === "success"
+                            ? "bg-green-50 border border-green-200 text-green-800"
+                            : "bg-red-50 border border-red-200 text-red-800"
+                        }`}
+                      >
+                        {startEventMessage.text}
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <div className="bg-white/70 p-4 rounded-lg border border-green-200">
+                        <p className="text-sm text-slate-700 mb-2">
+                          <strong>Event Schedule:</strong>
+                        </p>
+                        <div className="space-y-1 text-sm text-slate-600">
+                          <p>
+                            <strong>Date:</strong>{" "}
+                            {new Date(event.start_date).toLocaleDateString()}
+                            {event.end_date !== event.start_date &&
+                              ` - ${new Date(
+                                event.end_date
+                              ).toLocaleDateString()}`}
+                          </p>
+                          {event.start_time && (
+                            <p>
+                              <strong>Start Time:</strong> {event.start_time}
+                            </p>
+                          )}
+                          {event.end_time && (
+                            <p>
+                              <strong>End Time:</strong> {event.end_time}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleStartEvent}
+                        disabled={startEventLoading}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        <PlayCircle size={18} className="mr-2" />
+                        {startEventLoading
+                          ? "Starting Event..."
+                          : "Start Event"}
+                      </Button>
+                      <p className="text-xs text-slate-500 text-center">
+                        The event can only be started when the current time is
+                        within the scheduled time window.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* EVENT STATISTICS */}
@@ -840,6 +1023,97 @@ export default function ViewEventPage() {
                           )}
                         </div>
                       )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* SEND ANNOUNCEMENT (ADMIN ONLY) */}
+              {isAdmin && (
+                <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg border-blue-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-blue-900">
+                      <Bell size={20} />
+                      Send Announcement
+                    </CardTitle>
+                    <CardDescription className="text-blue-700">
+                      Send a notification to all registered participants
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {announcementResult && (
+                      <div
+                        className={`px-4 py-3 rounded-lg ${
+                          announcementResult.type === "success"
+                            ? "bg-green-50 border border-green-200 text-green-800"
+                            : "bg-red-50 border border-red-200 text-red-800"
+                        }`}
+                      >
+                        {announcementResult.text}
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Subject
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="Announcement subject..."
+                          value={announcementSubject}
+                          onChange={(e) =>
+                            setAnnouncementSubject(e.target.value)
+                          }
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                          Message
+                        </label>
+                        <Textarea
+                          placeholder="Type your announcement message here..."
+                          value={announcementMessage}
+                          onChange={(e) =>
+                            setAnnouncementMessage(e.target.value)
+                          }
+                          rows={4}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="sendEmail"
+                          checked={sendEmail}
+                          onChange={(e) => setSendEmail(e.target.checked)}
+                          className="rounded"
+                        />
+                        <label
+                          htmlFor="sendEmail"
+                          className="text-sm text-slate-700 cursor-pointer"
+                        >
+                          Also send via email
+                        </label>
+                      </div>
+
+                      <Button
+                        onClick={handleSendAnnouncement}
+                        disabled={
+                          announcementLoading ||
+                          !announcementSubject ||
+                          !announcementMessage
+                        }
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        {announcementLoading
+                          ? "Sending..."
+                          : `Send to All Participants (${
+                              event.participant_count || 0
+                            })`}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}

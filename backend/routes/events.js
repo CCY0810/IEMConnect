@@ -9,7 +9,9 @@ import {
   registerForEvent,
   unregisterFromEvent,
   getEventParticipants,
+  startEvent,
 } from "../controllers/eventController.js";
+import { sendEventAnnouncement } from "../controllers/notificationController.js";
 import { verifyToken } from "../middleware/auth.js";
 import { verifyAdmin } from "../middleware/admin.js";
 import upload from "../middleware/upload.js";
@@ -37,6 +39,12 @@ router.delete("/:id/unregister", unregisterFromEvent);
 
 // Get participants for an event (admin only)
 router.get("/:id/participants", verifyAdmin, getEventParticipants);
+
+// Send announcement to event participants (admin only)
+router.post("/:id/announce", verifyAdmin, sendEventAnnouncement);
+
+// Start event - change status from Upcoming to Open (admin only)
+router.post("/:id/start", verifyAdmin, startEvent);
 
 // Create event (admin only)
 router.post(

@@ -24,4 +24,25 @@ api.interceptors.request.use(
   }
 );
 
+// Add a response interceptor to handle token expiration and unauthorized errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // If we get a 401 (Unauthorized), the token is invalid or expired
+    if (error.response?.status === 401) {
+      // Clear all auth data
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("tempToken");
+      localStorage.setItem("hasLoggedOut", "true");
+      
+      // Redirect to login page
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
