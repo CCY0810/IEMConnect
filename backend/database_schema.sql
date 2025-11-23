@@ -4,6 +4,9 @@
 -- This file contains the complete database schema for IEM Connect
 -- It includes all tables, indexes, foreign keys, and constraints
 -- Run this file to create a fresh database with all tables
+-- 
+-- Last Updated: 2025-11-23
+-- Database: MySQL/MariaDB
 -- =====================================================
 
 -- Create database
@@ -52,9 +55,10 @@ CREATE TABLE IF NOT EXISTS users (
   
   -- Indexes for performance
   INDEX idx_membership_number (membership_number),
-  INDEX idx_faculty (faculty),
+  INDEX idx_users_faculty (faculty), -- For reports: faculty distribution queries (GROUP BY faculty)
   INDEX idx_role (role),
-  INDEX idx_is_verified (is_verified)
+  INDEX idx_users_is_verified (is_verified), -- For reports: pending approvals queries (WHERE is_verified = 0)
+  INDEX idx_users_created_at (created_at) -- For reports: user growth over time (WHERE createdAt <= date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -86,11 +90,13 @@ CREATE TABLE IF NOT EXISTS events (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
   -- Indexes for performance
-  INDEX idx_status (status),
-  INDEX idx_start_date (start_date),
-  INDEX idx_end_date (end_date),
+  INDEX idx_events_status (status), -- For reports: event status queries (GROUP BY status)
+  INDEX idx_events_start_date (start_date), -- For reports: event date range queries (WHERE start_date BETWEEN)
+  INDEX idx_end_date (end_date), -- For date range filtering
   INDEX idx_attendance_status (attendance_status),
-  INDEX idx_attendance_code (attendance_code)
+  INDEX idx_attendance_code (attendance_code),
+  INDEX idx_events_created_at (created_at), -- For reports: recent events, event growth over time
+  INDEX idx_director_email (director_email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -114,10 +120,12 @@ CREATE TABLE IF NOT EXISTS event_registrations (
   UNIQUE KEY unique_user_event_registration (user_id, event_id),
   
   -- Indexes for performance
-  INDEX idx_event_id (event_id),
-  INDEX idx_user_id (user_id),
-  INDEX idx_status (status),
-  INDEX idx_registration_date (registration_date)
+  INDEX idx_event_registration_event_id (event_id),
+  INDEX idx_event_registration_user_id (user_id),
+  INDEX idx_event_registration_status (status),
+  INDEX idx_event_registration_date (registration_date),
+  -- Composite index for common query patterns
+  INDEX idx_registration_user_event (user_id, event_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -139,8 +147,11 @@ CREATE TABLE IF NOT EXISTS attendance (
   UNIQUE KEY unique_registration_attendance (registration_id),
   
   -- Indexes for performance
-  INDEX idx_marked_at (marked_at),
-  INDEX idx_method (method)
+  INDEX idx_attendance_marked_at (marked_at),
+  INDEX idx_attendance_method (method),
+  INDEX idx_attendance_registration_id (registration_id),
+  -- Composite index for common query patterns
+  INDEX idx_attendance_registration_marked_at (registration_id, marked_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -170,13 +181,48 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- =====================================================
 -- 
 -- Summary of tables created:
--- 1. users - User accounts and profiles
--- 2. events - Event information
--- 3. event_registrations - User event registrations
--- 4. attendance - Attendance records
--- 5. notifications - User notifications
+-- 1. users - User accounts and profiles (with 2FA, password reset, verification)
+-- 2. events - Event information (with attendance tracking)
+-- 3. event_registrations - User event registrations (with status tracking)
+-- 4. attendance - Attendance records (linked to registrations)
+-- 5. notifications - User notifications (in-app messaging)
 --
 -- All foreign keys are set with ON DELETE CASCADE
--- All tables use InnoDB engine with utf8mb4 charset
+-- All tables use InnoDB engine with utf8mb4 charset for full Unicode support
+-- All timestamps use DATETIME with automatic defaults
+--
+-- Time Fields Included:
+-- - Events: start_date, start_time, end_date, end_time, attendance_started_at, attendance_stopped_at
+-- - Event Registrations: registration_date, created_at, updated_at
+-- - Attendance: marked_at, created_at, updated_at
+-- - Users: created_at, updated_at, two_fa_code_expiry, reset_password_expiry
+-- - Notifications: created_at
+--
+-- Performance Indexes for Reports & Analytics:
+-- Users Table:
+--   - idx_users_faculty: For faculty distribution queries (GROUP BY faculty)
+--   - idx_users_is_verified: For pending approvals queries (WHERE is_verified = 0)
+--   - idx_users_created_at: For user growth over time (WHERE createdAt <= date)
+--
+-- Events Table:
+--   - idx_events_status: For event status queries (GROUP BY status)
+--   - idx_events_start_date: For event date range queries (WHERE start_date BETWEEN)
+--   - idx_events_created_at: For recent events, event growth over time
+--
+-- Event Registrations Table:
+--   - idx_event_registration_status: For filtering by registration status
+--   - idx_event_registration_date: For time-based registration queries
+--   - idx_registration_user_event: Composite index (user_id, event_id, status) for joins
+--
+-- Attendance Table:
+--   - idx_attendance_marked_at: For time-based attendance queries
+--   - idx_attendance_method: For method distribution queries (GROUP BY method)
+--   - idx_attendance_registration_marked_at: Composite index for attendance time queries
+--
+-- Indexes included:
+-- - Unique indexes: email, matric_number, user+event registration, registration attendance
+-- - Performance indexes: All foreign keys, commonly queried fields, composite indexes for joins
+-- - All indexes from add_performance_indexes.sql migration are included
+-- - Full-text search ready: Can add FULLTEXT indexes on title, description, message fields if needed
+--
 -- =====================================================
-

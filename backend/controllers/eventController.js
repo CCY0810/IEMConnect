@@ -5,6 +5,7 @@ import { Op } from "sequelize";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import Joi from "joi";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +13,38 @@ const __dirname = path.dirname(__filename);
 // Create a new event
 export const createEvent = async (req, res) => {
   try {
+    // Validation schema
+    const schema = Joi.object({
+      director_name: Joi.string().min(1).required(),
+      director_matric: Joi.string().length(9).required()
+        .messages({
+          'string.length': 'Matric number must be exactly 9 characters',
+          'any.required': 'Matric number is required'
+        }),
+      director_phone: Joi.string().min(1).required(),
+      director_email: Joi.string().email().required()
+        .messages({
+          'string.email': 'Please enter a valid email address',
+          'any.required': 'Email is required'
+        }),
+      title: Joi.string().min(1).required(),
+      description: Joi.string().allow("", null).optional(),
+      cost: Joi.number().min(0).optional(),
+      targeted_participants: Joi.string().allow("", null).optional(),
+      start_date: Joi.date().required(),
+      end_date: Joi.date().required(),
+      start_time: Joi.string().allow("", null).optional(),
+      end_time: Joi.string().allow("", null).optional(),
+      status: Joi.string().valid("Upcoming", "Open", "Completed").optional(),
+    });
+
+    const { error, value } = schema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+      const errorMessages = error.details.map(detail => detail.message).join(', ');
+      return res.status(400).json({ error: errorMessages });
+    }
+
     const {
       director_name,
       director_matric,
@@ -24,20 +57,7 @@ export const createEvent = async (req, res) => {
       start_date,
       end_date,
       status,
-    } = req.body;
-
-    // Validate required fields
-    if (
-      !director_name ||
-      !director_matric ||
-      !director_phone ||
-      !director_email ||
-      !title ||
-      !start_date ||
-      !end_date
-    ) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    } = value;
 
     // Handle file uploads
     const poster_file = req.files?.poster_file?.[0]?.filename || null;
@@ -195,6 +215,36 @@ export const getEventById = async (req, res) => {
 export const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
+    // Validation schema for update (all fields optional except validation rules)
+    const schema = Joi.object({
+      director_name: Joi.string().min(1).optional(),
+      director_matric: Joi.string().length(9).optional()
+        .messages({
+          'string.length': 'Matric number must be exactly 9 characters'
+        }),
+      director_phone: Joi.string().min(1).optional(),
+      director_email: Joi.string().email().optional()
+        .messages({
+          'string.email': 'Please enter a valid email address'
+        }),
+      title: Joi.string().min(1).optional(),
+      description: Joi.string().allow("", null).optional(),
+      cost: Joi.number().min(0).optional(),
+      targeted_participants: Joi.string().allow("", null).optional(),
+      start_date: Joi.date().optional(),
+      end_date: Joi.date().optional(),
+      start_time: Joi.string().allow("", null).optional(),
+      end_time: Joi.string().allow("", null).optional(),
+      status: Joi.string().valid("Upcoming", "Open", "Completed").optional(),
+    });
+
+    const { error, value: validatedData } = schema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+      const errorMessages = error.details.map(detail => detail.message).join(', ');
+      return res.status(400).json({ error: errorMessages });
+    }
+
     const {
       director_name,
       director_matric,
@@ -207,7 +257,7 @@ export const updateEvent = async (req, res) => {
       start_date,
       end_date,
       status,
-    } = req.body;
+    } = validatedData;
 
     const event = await Event.findByPk(id);
 
