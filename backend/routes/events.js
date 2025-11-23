@@ -10,6 +10,7 @@ import {
   unregisterFromEvent,
   getEventParticipants,
   startEvent,
+  endEvent,
 } from "../controllers/eventController.js";
 import { sendEventAnnouncement } from "../controllers/notificationController.js";
 import { verifyToken } from "../middleware/auth.js";
@@ -45,6 +46,9 @@ router.post("/:id/announce", verifyAdmin, sendEventAnnouncement);
 
 // Start event - change status from Upcoming to Open (admin only)
 router.post("/:id/start", verifyAdmin, startEvent);
+
+// End event - change status from Open to Completed (admin only)
+router.post("/:id/end", verifyAdmin, endEvent);
 
 // Create event (admin only)
 router.post(

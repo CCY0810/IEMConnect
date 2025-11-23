@@ -432,6 +432,45 @@ export const startEvent = async (req, res) => {
   }
 };
 
+// End event (change status from Open to Completed)
+export const endEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const event = await Event.findByPk(id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Check if event status is 'Open'
+    if (event.status !== "Open") {
+      return res.status(400).json({
+        error: `Event cannot be ended. Current status is '${event.status}'. Only events with status 'Open' can be ended.`,
+      });
+    }
+
+    // All validations passed - update status to 'Completed'
+    // Also close attendance and clear attendance code
+    await event.update({
+      status: "Completed",
+      attendance_status: "Closed",
+      attendance_code: null,
+    });
+
+    res.json({
+      message: "Event ended successfully",
+      event: {
+        id: event.id,
+        title: event.title,
+        status: event.status,
+      },
+    });
+  } catch (error) {
+    console.error("End event error:", error);
+    res.status(500).json({ error: "Failed to end event" });
+  }
+};
+
 // Delete event
 export const deleteEvent = async (req, res) => {
   try {
@@ -525,6 +564,13 @@ export const registerForEvent = async (req, res) => {
       return res.status(404).json({ error: "Event not found" });
     }
 
+    // Prevent registration for completed events
+    if (event.status === "Completed") {
+      return res.status(400).json({
+        error: "Cannot register for completed events",
+      });
+    }
+
     // Check if already registered
     const existingRegistration = await EventRegistration.findOne({
       where: {
@@ -575,6 +621,19 @@ export const unregisterFromEvent = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+
+    // Check if event exists
+    const event = await Event.findByPk(id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Prevent unregistration from completed events
+    if (event.status === "Completed") {
+      return res.status(400).json({
+        error: "Cannot unregister from completed events",
+      });
+    }
 
     // Find registration
     const registration = await EventRegistration.findOne({

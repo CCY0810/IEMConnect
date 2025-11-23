@@ -280,14 +280,18 @@ export default function AdminAttendancePage() {
                         <div className="flex items-center gap-2">
                           <span
                             className={`px-2 py-1 rounded text-xs font-medium ${
-                              event.attendance_status === "Active"
+                              event.status === "Completed"
+                                ? "bg-slate-200 text-slate-700"
+                                : event.attendance_status === "Active"
                                 ? "bg-green-100 text-green-700"
                                 : event.attendance_status === "Closed"
                                 ? "bg-slate-100 text-slate-700"
                                 : "bg-yellow-100 text-yellow-700"
                             }`}
                           >
-                            {event.attendance_status}
+                            {event.status === "Completed"
+                              ? "Completed"
+                              : event.attendance_status}
                           </span>
                           {event.participant_count !== undefined && (
                             <span className="text-xs text-slate-500">
@@ -333,61 +337,70 @@ export default function AdminAttendancePage() {
                     )}
 
                     {/* Control Buttons */}
-                    <div className="space-y-3">
-                      {/* Event timing status message */}
-                      {!canStart &&
-                        selectedEvent.attendance_status === "Pending" && (
-                          <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
-                            <p className="text-sm text-amber-800 font-medium">
-                              ⏰ {canStartMessage}
-                            </p>
-                          </div>
-                        )}
-
-                      <div className="flex gap-3">
-                        {selectedEvent.attendance_status === "Pending" && (
-                          <Button
-                            onClick={handleStartAttendance}
-                            disabled={attendanceLoading || !canStart}
-                            className={`flex-1 gap-2 h-12 ${
-                              canStart
-                                ? "bg-green-600 hover:bg-green-700"
-                                : "bg-slate-400 cursor-not-allowed"
-                            }`}
-                          >
-                            <PlayCircle size={18} />
-                            {attendanceLoading
-                              ? "Starting..."
-                              : canStart
-                              ? "Start Attendance"
-                              : "Not Ready"}
-                          </Button>
-                        )}
-
-                        {selectedEvent.attendance_status === "Active" && (
-                          <Button
-                            onClick={handleStopAttendance}
-                            disabled={attendanceLoading}
-                            variant="destructive"
-                            className="flex-1 gap-2 h-12"
-                          >
-                            <StopCircle size={18} />
-                            {attendanceLoading
-                              ? "Stopping..."
-                              : "Stop Attendance"}
-                          </Button>
-                        )}
-
-                        {selectedEvent.attendance_status === "Closed" && (
-                          <div className="flex-1 px-4 py-3 bg-slate-100 rounded-md text-center text-slate-600 font-medium">
-                            Attendance Closed
-                          </div>
-                        )}
+                    {selectedEvent.status === "Completed" ? (
+                      <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <p className="text-sm text-slate-700 font-medium">
+                          This event has been completed. Attendance management is no longer available.
+                        </p>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* Event timing status message */}
+                        {!canStart &&
+                          selectedEvent.attendance_status === "Pending" && (
+                            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
+                              <p className="text-sm text-amber-800 font-medium">
+                                ⏰ {canStartMessage}
+                              </p>
+                            </div>
+                          )}
+
+                        <div className="flex gap-3">
+                          {selectedEvent.attendance_status === "Pending" && (
+                            <Button
+                              onClick={handleStartAttendance}
+                              disabled={attendanceLoading || !canStart}
+                              className={`flex-1 gap-2 h-12 ${
+                                canStart
+                                  ? "bg-green-600 hover:bg-green-700"
+                                  : "bg-slate-400 cursor-not-allowed"
+                              }`}
+                            >
+                              <PlayCircle size={18} />
+                              {attendanceLoading
+                                ? "Starting..."
+                                : canStart
+                                ? "Start Attendance"
+                                : "Not Ready"}
+                            </Button>
+                          )}
+
+                          {selectedEvent.attendance_status === "Active" && (
+                            <Button
+                              onClick={handleStopAttendance}
+                              disabled={attendanceLoading}
+                              variant="destructive"
+                              className="flex-1 gap-2 h-12"
+                            >
+                              <StopCircle size={18} />
+                              {attendanceLoading
+                                ? "Stopping..."
+                                : "Stop Attendance"}
+                            </Button>
+                          )}
+
+                          {selectedEvent.attendance_status === "Closed" && (
+                            <div className="flex-1 px-4 py-3 bg-slate-100 rounded-md text-center text-slate-600 font-medium">
+                              Attendance Closed
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* QR CODE & CODE DISPLAY */}
-                    {selectedEvent.attendance_status === "Active" &&
+                    {selectedEvent.status !== "Completed" &&
+                      selectedEvent.attendance_status === "Active" &&
                       selectedEvent.attendance_code && (
                         <div className="grid md:grid-cols-2 gap-6 p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
                           {/* QR Code */}
@@ -442,7 +455,8 @@ export default function AdminAttendancePage() {
                 </Card>
 
                 {/* LIVE ATTENDANCE LIST */}
-                {selectedEvent.attendance_status === "Active" && (
+                {selectedEvent.status !== "Completed" &&
+                  selectedEvent.attendance_status === "Active" && (
                   <Card className="shadow-lg">
                     <CardHeader>
                       <div className="flex items-center justify-between">

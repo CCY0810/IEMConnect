@@ -14,6 +14,7 @@ import {
   unregisterFromEvent,
   getEventParticipants,
   startEvent,
+  endEvent,
   deleteEvent,
 } from "@/lib/event-api";
 import {
@@ -23,9 +24,11 @@ import {
   checkInToEvent,
 } from "@/lib/attendance-api";
 import { sendEventAnnouncement } from "@/lib/notification-api";
+import { downloadCertificate } from "@/lib/certificate-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,6 +76,8 @@ import {
   RefreshCw,
   QrCode,
   Trash2,
+  Download,
+  Award,
 } from "lucide-react";
 
 export default function ViewEventPage() {
@@ -146,6 +151,15 @@ export default function ViewEventPage() {
     text: string;
   } | null>(null);
 
+  // End event state
+  const [endEventLoading, setEndEventLoading] = useState(false);
+  const [endEventMessage, setEndEventMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [endEventDialogOpen, setEndEventDialogOpen] = useState(false);
+  const [endEventConfirmText, setEndEventConfirmText] = useState("");
+
   // Delete event state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -158,6 +172,7 @@ export default function ViewEventPage() {
     text: string;
   } | null>(null);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
+  const [downloadingCertificate, setDownloadingCertificate] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
@@ -250,8 +265,27 @@ export default function ViewEventPage() {
     isAdmin,
   ]);
 
+  // Clear attendance state when event is completed
+  useEffect(() => {
+    if (event?.status === "Completed") {
+      setAttendanceMessage(null);
+      setShowAttendanceList(false);
+    }
+  }, [event?.status]);
+
   const handleUpdate = async () => {
     if (!eventId) return;
+
+    // Prevent updating completed events
+    if (event?.status === "Completed") {
+      toast({
+        title: "Cannot Edit",
+        description: "Completed events cannot be edited.",
+        variant: "destructive",
+      });
+      setEditing(false);
+      return;
+    }
 
     setError("");
     setLoading(true);
@@ -357,6 +391,27 @@ export default function ViewEventPage() {
       setError(err.response?.data?.error || "Failed to load participants");
     } finally {
       setLoadingParticipants(false);
+    }
+  };
+
+  const handleDownloadCertificate = async () => {
+    if (!eventId) return;
+
+    setDownloadingCertificate(true);
+    try {
+      await downloadCertificate(eventId);
+      toast({
+        title: "Certificate Downloaded",
+        description: "Your certificate has been downloaded successfully.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Download Failed",
+        description: err.message || "Failed to download certificate",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingCertificate(false);
     }
   };
 
@@ -519,6 +574,51 @@ export default function ViewEventPage() {
       });
     } finally {
       setAnnouncementLoading(false);
+    }
+  };
+
+  const handleEndEvent = async () => {
+    if (!eventId) return;
+
+    // Validate confirmation text
+    if (endEventConfirmText !== "CLOSE") {
+      setEndEventMessage({
+        type: "error",
+        text: 'Please type "CLOSE" (in capitals) to confirm',
+      });
+      return;
+    }
+
+    setEndEventLoading(true);
+    setEndEventMessage(null);
+
+    try {
+      const updatedEvent = await endEvent(eventId);
+      setEvent(updatedEvent);
+      setEndEventMessage({
+        type: "success",
+        text: "Event ended successfully. Certificates are now available for download.",
+      });
+      setEndEventDialogOpen(false);
+      setEndEventConfirmText("");
+
+      toast({
+        title: "Event Ended",
+        description: "The event has been marked as completed.",
+      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || "Failed to end event";
+      setEndEventMessage({
+        type: "error",
+        text: errorMessage,
+      });
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setEndEventLoading(false);
     }
   };
 
@@ -745,6 +845,34 @@ export default function ViewEventPage() {
             </div>
           ) : (
             <>
+              {/* COMPLETED EVENT BANNER */}
+              {event.status === "Completed" && (
+                <Card className="bg-slate-50 border-slate-200 shadow">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                          <CheckCircle size={20} className="text-slate-600" />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className="bg-slate-200 text-slate-700">
+                            Event Completed
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-700">
+                          This event has been completed. Registration and
+                          check-in are no longer available.
+                          {hasCheckedIn &&
+                            " You can download your certificate below."}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {registrationMessage && (
                 <div
                   className={`px-4 py-3 rounded-lg ${
@@ -829,6 +957,188 @@ export default function ViewEventPage() {
                 </Card>
               )}
 
+              {/* END EVENT (ADMIN ONLY - OPEN EVENTS) */}
+              {isAdmin && event.status === "Open" && (
+                <Card className="bg-gradient-to-br from-red-50 to-orange-50 shadow-lg border-red-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-red-900">
+                      <StopCircle size={20} />
+                      End Event
+                    </CardTitle>
+                    <CardDescription className="text-red-700">
+                      Change event status from 'Open' to 'Completed'. This will
+                      make certificates available for download.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {endEventMessage && (
+                      <div
+                        className={`px-4 py-3 rounded-lg ${
+                          endEventMessage.type === "success"
+                            ? "bg-green-50 border border-green-200 text-green-800"
+                            : "bg-red-50 border border-red-200 text-red-800"
+                        }`}
+                      >
+                        {endEventMessage.text}
+                      </div>
+                    )}
+
+                    <AlertDialog
+                      open={endEventDialogOpen}
+                      onOpenChange={setEndEventDialogOpen}
+                    >
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          className="w-full bg-red-600 hover:bg-red-700"
+                          onClick={() => {
+                            setEndEventConfirmText("");
+                            setEndEventMessage(null);
+                          }}
+                        >
+                          <StopCircle size={18} className="mr-2" />
+                          End Event
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>End Event</AlertDialogTitle>
+                          <AlertDialogDescription asChild>
+                            <div>
+                              <p>
+                                Are you sure you want to end this event? This
+                                action will:
+                              </p>
+                              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                                <li>Change the event status to 'Completed'</li>
+                                <li>
+                                  Make certificates available for download to
+                                  all participants who attended
+                                </li>
+                                <li>
+                                  Prevent further attendance check-ins for this
+                                  event
+                                </li>
+                              </ul>
+                              <p className="mt-3 font-semibold text-red-600">
+                                This action cannot be undone.
+                              </p>
+                            </div>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Type <span className="font-mono">CLOSE</span> to
+                              confirm:
+                            </label>
+                            <Input
+                              value={endEventConfirmText}
+                              onChange={(e) => {
+                                setEndEventConfirmText(e.target.value);
+                                setEndEventMessage(null);
+                              }}
+                              placeholder="Type CLOSE"
+                              disabled={endEventLoading}
+                              className="font-mono"
+                            />
+                            {endEventConfirmText &&
+                              endEventConfirmText !== "CLOSE" && (
+                                <p className="text-sm text-red-600 mt-1">
+                                  Please type "CLOSE" exactly to confirm
+                                </p>
+                              )}
+                          </div>
+                          {endEventMessage && (
+                            <div
+                              className={`px-3 py-2 rounded ${
+                                endEventMessage.type === "error"
+                                  ? "bg-red-50 text-red-800"
+                                  : "bg-green-50 text-green-800"
+                              }`}
+                            >
+                              {endEventMessage.text}
+                            </div>
+                          )}
+                        </div>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel
+                            disabled={endEventLoading}
+                            onClick={() => {
+                              setEndEventConfirmText("");
+                              setEndEventMessage(null);
+                            }}
+                          >
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleEndEvent}
+                            disabled={
+                              endEventLoading || endEventConfirmText !== "CLOSE"
+                            }
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {endEventLoading ? "Ending..." : "End Event"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <p className="text-xs text-slate-500 text-center">
+                      Ending the event will mark it as completed and enable
+                      certificate downloads for all participants who attended.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* CERTIFICATE DOWNLOAD (FOR COMPLETED EVENTS) */}
+              {event.status === "Completed" &&
+                hasCheckedIn &&
+                event.is_registered && (
+                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg border-blue-200">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-blue-900">
+                        <Award size={20} />
+                        Certificate of Participation
+                      </CardTitle>
+                      <CardDescription className="text-blue-700">
+                        Download your certificate of participation for this
+                        event
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="text-center py-6 space-y-4">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full font-semibold">
+                          <CheckCircle size={20} />
+                          Event Completed - Certificate Available
+                        </div>
+                        <div>
+                          <Button
+                            onClick={handleDownloadCertificate}
+                            disabled={downloadingCertificate}
+                            className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg gap-2"
+                            size="lg"
+                          >
+                            {downloadingCertificate ? (
+                              <>
+                                <RefreshCw size={18} className="animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Award size={18} />
+                                Download Certificate
+                              </>
+                            )}
+                          </Button>
+                          <p className="text-xs text-blue-700 mt-2">
+                            Download your certificate of participation
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
               {/* EVENT STATISTICS */}
               <Card className="bg-white/70 shadow">
                 <CardHeader>
@@ -864,30 +1174,34 @@ export default function ViewEventPage() {
                   </div>
 
                   {/* REGISTRATION ACTION BUTTON */}
-                  <div className="mt-6 pt-4 border-t border-slate-200">
-                    {event.is_registered ? (
-                      <Button
-                        onClick={handleUnregister}
-                        disabled={registering}
-                        variant="destructive"
-                        className="w-full gap-2"
-                      >
-                        <UserX size={18} />
-                        {registering
-                          ? "Unregistering..."
-                          : "Unregister from Event"}
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleRegister}
-                        disabled={registering}
-                        className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
-                      >
-                        <UserCheck size={18} />
-                        {registering ? "Registering..." : "Register for Event"}
-                      </Button>
-                    )}
-                  </div>
+                  {event.status !== "Completed" && (
+                    <div className="mt-6 pt-4 border-t border-slate-200">
+                      {event.is_registered ? (
+                        <Button
+                          onClick={handleUnregister}
+                          disabled={registering}
+                          variant="destructive"
+                          className="w-full gap-2"
+                        >
+                          <UserX size={18} />
+                          {registering
+                            ? "Unregistering..."
+                            : "Unregister from Event"}
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={handleRegister}
+                          disabled={registering}
+                          className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                        >
+                          <UserCheck size={18} />
+                          {registering
+                            ? "Registering..."
+                            : "Register for Event"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
 
                   {/* ADMIN VIEW PARTICIPANTS BUTTON */}
                   {isAdmin && (
@@ -900,6 +1214,8 @@ export default function ViewEventPage() {
                         <Users size={18} />
                         {loadingParticipants
                           ? "Loading..."
+                          : event.status === "Completed"
+                          ? "View Past Participants"
                           : "View Participant List"}
                       </Button>
                     </div>
@@ -908,7 +1224,8 @@ export default function ViewEventPage() {
               </Card>
 
               {/* CHECK-IN SECTION (FOR REGISTERED USERS INCLUDING ADMINS) */}
-              {event.is_registered &&
+              {event.status !== "Completed" &&
+                event.is_registered &&
                 event.attendance_status === "Active" &&
                 event.attendance_code && (
                   <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
@@ -1086,7 +1403,7 @@ export default function ViewEventPage() {
               )}
 
               {/* ATTENDANCE MANAGEMENT (ADMIN ONLY) */}
-              {isAdmin && (
+              {isAdmin && event.status !== "Completed" && (
                 <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg border-indigo-200">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-indigo-900">
@@ -1261,7 +1578,7 @@ export default function ViewEventPage() {
               )}
 
               {/* SEND ANNOUNCEMENT (ADMIN ONLY) */}
-              {isAdmin && (
+              {isAdmin && event.status !== "Completed" && (
                 <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg border-blue-200">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-blue-900">
@@ -1513,19 +1830,26 @@ export default function ViewEventPage() {
               {/* FOOTER BUTTONS */}
               {isAdmin && (
                 <div className="flex justify-between items-center mt-6 gap-4">
-                  <Button
-                    className="px-6 py-2 bg-blue-600 text-white"
-                    onClick={() =>
-                      editing ? handleUpdate() : setEditing(true)
-                    }
-                    disabled={loading}
-                  >
-                    {loading
-                      ? "Saving..."
-                      : editing
-                      ? "Save Changes"
-                      : "Edit Event"}
-                  </Button>
+                  {event.status !== "Completed" && (
+                    <Button
+                      className="px-6 py-2 bg-blue-600 text-white"
+                      onClick={() =>
+                        editing ? handleUpdate() : setEditing(true)
+                      }
+                      disabled={loading}
+                    >
+                      {loading
+                        ? "Saving..."
+                        : editing
+                        ? "Save Changes"
+                        : "Edit Event"}
+                    </Button>
+                  )}
+                  {event.status === "Completed" && (
+                    <div className="text-sm text-slate-500 italic">
+                      Completed events cannot be edited
+                    </div>
+                  )}
 
                   <div className="flex gap-3">
                     <Button className="px-6 py-2 bg-slate-700 text-white">
@@ -1551,6 +1875,14 @@ export default function ViewEventPage() {
                           <AlertDialogTitle>Delete Event</AlertDialogTitle>
                           <AlertDialogDescription>
                             Are you sure you want to delete "{event?.title}"?
+                            {event?.status === "Completed" && (
+                              <span className="block mt-2 text-red-600 font-semibold">
+                                Warning: This is a completed event. Deleting it
+                                will permanently remove all historical data,
+                                including attendance records and participant
+                                information.
+                              </span>
+                            )}
                             This action cannot be undone and will permanently
                             remove the event, all registrations, and attendance
                             records.

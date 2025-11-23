@@ -9,6 +9,7 @@ import eventRoutes from "./routes/events.js";
 import reportsRoutes from "./routes/reports.js";
 import attendanceRoutes from "./routes/attendance.js";
 import notificationsRoutes from "./routes/notifications.js";
+import certificatesRoutes from "./routes/certificates.js";
 import { apiRateLimit } from "./middleware/rateLimiter.js";
 
 dotenv.config();
@@ -48,6 +49,7 @@ app.use("/api/v1/events", eventRoutes);
 app.use("/api/v1/reports", reportsRoutes);
 app.use("/api/v1/attendance", attendanceRoutes);
 app.use("/api/v1/notifications", notificationsRoutes);
+app.use("/api/v1/certificates", certificatesRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

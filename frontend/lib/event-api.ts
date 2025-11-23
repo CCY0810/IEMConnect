@@ -150,3 +150,10 @@ export const startEvent = async (eventId: number): Promise<Event> => {
   // Refresh event data to get updated status
   return getEventById(eventId);
 };
+
+// End event - change status from Open to Completed (admin only)
+export const endEvent = async (eventId: number): Promise<Event> => {
+  await api.post(`/events/${eventId}/end`);
+  // Refresh event data to get updated status
+  return getEventById(eventId);
+};
