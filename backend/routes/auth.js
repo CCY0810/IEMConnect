@@ -14,6 +14,16 @@ import {
   changePassword,
   deleteAccount,
 } from "../controllers/authController.js";
+import {
+  getUserPreferences,
+  updateUserPreferences,
+  get2FAStatus,
+  update2FA,
+  getActiveSessions,
+  logoutSession,
+  exportUserData,
+  getAdminSystemStats,
+} from "../controllers/settingsController.js";
 import { verifyTempToken, verifyToken } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -41,5 +51,15 @@ router.put("/change-password", verifyToken, changePassword);
 
 // Delete account route
 router.delete("/account", verifyToken, deleteAccount);
+
+// Settings routes
+router.get("/preferences", verifyToken, getUserPreferences);
+router.put("/preferences", verifyToken, updateUserPreferences);
+router.get("/2fa", verifyToken, get2FAStatus);
+router.put("/2fa", verifyToken, update2FA);
+router.get("/sessions", verifyToken, getActiveSessions);
+router.delete("/sessions/:sessionId", verifyToken, logoutSession);
+router.get("/export-data", verifyToken, exportUserData);
+router.get("/admin/system-stats", verifyToken, getAdminSystemStats);
 
 export default router;

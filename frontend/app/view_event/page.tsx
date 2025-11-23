@@ -664,7 +664,7 @@ export default function ViewEventPage() {
             icon={<Settings size={18} />}
             label="Settings"
             open={sidebarOpen}
-            onClick={() => router.push("/admin/settings")}
+            onClick={() => router.push("/settings")}
           />
           <SidebarButton
             icon={<HelpCircle size={18} />}

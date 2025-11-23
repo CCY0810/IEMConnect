@@ -338,6 +338,20 @@ export const checkIn = async (req, res) => {
     // Update registration status to 'attended'
     await registration.update({ status: "attended" });
 
+    // Send notification to user about successful attendance
+    try {
+      const NotificationService = (await import("../services/notificationService.js")).default;
+      await NotificationService.notifyUser(
+        userId,
+        "Attendance Confirmed",
+        `Your attendance has been successfully recorded for "${event.title}". Thank you for participating!`,
+        "attendance"
+      );
+    } catch (notifError) {
+      // Log but don't fail attendance if notification fails
+      console.error("Failed to send attendance notification:", notifError);
+    }
+
     res.status(201).json({
       message: "Attendance marked successfully!",
       event: {

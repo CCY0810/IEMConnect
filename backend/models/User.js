@@ -79,10 +79,75 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    // 2FA enabled flag (for quick access)
+    two_fa_enabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    // User preferences stored as JSON
+    preferences: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {
+        notifications: {
+          email: {
+            reminders: true,
+            announcements: true,
+            registrations: true,
+            attendance: true,
+            system: true,
+            admin: true,
+          },
+          in_app: true,
+          frequency: "immediate",
+        },
+        privacy: {
+          profile_visible: true,
+          email_visible: false,
+          data_sharing: true,
+        },
+        app: {
+          theme: "system",
+          date_format: "DD/MM/YYYY",
+          time_format: "24h",
+        },
+      },
+    },
   },
   {
     tableName: "users",
     timestamps: true,
+    hooks: {
+      beforeCreate: (user) => {
+        // Ensure preferences has default value if not provided
+        if (!user.preferences) {
+          user.preferences = {
+            notifications: {
+              email: {
+                reminders: true,
+                announcements: true,
+                registrations: true,
+                attendance: true,
+                system: true,
+                admin: true,
+              },
+              in_app: true,
+              frequency: "immediate",
+            },
+            privacy: {
+              profile_visible: true,
+              email_visible: false,
+              data_sharing: true,
+            },
+            app: {
+              theme: "system",
+              date_format: "DD/MM/YYYY",
+              time_format: "24h",
+            },
+          };
+        }
+      },
+    },
     // IMPORTANT: Indexes are defined here for documentation/reference only
     // They should NOT be auto-created by Sequelize
     // All indexes must be created via SQL migrations to prevent duplicates

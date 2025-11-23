@@ -546,6 +546,20 @@ export const registerForEvent = async (req, res) => {
       status: "registered",
     });
 
+    // Send notification to user about successful registration
+    try {
+      const NotificationService = (await import("../services/notificationService.js")).default;
+      await NotificationService.notifyUser(
+        userId,
+        "Event Registration Confirmed",
+        `You have successfully registered for "${event.title}". We look forward to seeing you at the event!`,
+        "registrations"
+      );
+    } catch (notifError) {
+      // Log but don't fail registration if notification fails
+      console.error("Failed to send registration notification:", notifError);
+    }
+
     res.status(201).json({
       message: "Successfully registered for event",
       registration,

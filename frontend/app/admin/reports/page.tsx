@@ -267,7 +267,7 @@ export default function ReportsPage() {
             open={sidebarOpen}
             icon={<Settings size={18} />}
             label="Settings"
-            onClick={() => router.push("/admin/settings")}
+            onClick={() => router.push("/settings")}
           />
           <SidebarButton
             open={sidebarOpen}

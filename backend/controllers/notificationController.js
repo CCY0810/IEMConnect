@@ -146,11 +146,13 @@ export const sendEventAnnouncement = async (req, res) => {
     const userIds = registrations.map((reg) => reg.user_id);
 
     // Send notifications to all participants
+    // Check if admin announcements should be sent (respect user preferences)
     const result = await NotificationService.notifyUsers(
       userIds,
       subject,
       message,
-      sendEmail
+      "announcements", // notification type
+      sendEmail // force email if explicitly requested by admin
     );
 
     res.json({
@@ -187,7 +189,8 @@ export const createNotification = async (req, res) => {
       user_id,
       title,
       message,
-      sendEmail
+      "system", // notification type
+      sendEmail // force email if explicitly requested
     );
 
     res.status(201).json({
