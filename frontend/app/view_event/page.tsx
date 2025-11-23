@@ -20,6 +20,7 @@ import {
   startAttendance,
   stopAttendance,
   getAttendanceList,
+  checkInToEvent,
 } from "@/lib/attendance-api";
 import { sendEventAnnouncement } from "@/lib/notification-api";
 
@@ -58,6 +59,7 @@ import {
   FileText,
   Calendar,
   CheckSquare,
+  CheckCircle,
   Bell,
   Settings,
   HelpCircle,
@@ -148,6 +150,15 @@ export default function ViewEventPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Check-in state (for admins and all registered users)
+  const [checkInCode, setCheckInCode] = useState("");
+  const [checkInLoading, setCheckInLoading] = useState(false);
+  const [checkInMessage, setCheckInMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [hasCheckedIn, setHasCheckedIn] = useState(false);
+
   // Check if user is admin
   const isAdmin = user?.role === "admin";
 
@@ -193,6 +204,51 @@ export default function ViewEventPage() {
       fetchEvent();
     }
   }, [eventId, user]);
+
+  // Check if user has already checked in when event data changes
+  useEffect(() => {
+    if (!event?.is_registered) {
+      setHasCheckedIn(false);
+      return;
+    }
+
+    // Use registration_status from event if available (check as string to avoid type issues)
+    const registrationStatus = event.registration_status as string | undefined;
+    if (registrationStatus === "attended") {
+      setHasCheckedIn(true);
+      return;
+    }
+
+    // For admins, also check participants list for more accurate status
+    if (isAdmin && eventId) {
+      const checkUserAttendance = async () => {
+        try {
+          const data = await getEventParticipants(eventId);
+          const currentUserParticipant = data.participants?.find(
+            (p: any) => p.user.id === user?.id
+          );
+          if (currentUserParticipant?.status === "attended") {
+            setHasCheckedIn(true);
+          } else {
+            setHasCheckedIn(false);
+          }
+        } catch (err) {
+          // Silently fail - not critical, will rely on registration_status
+          console.error("Error checking attendance:", err);
+        }
+      };
+      checkUserAttendance();
+    } else {
+      // For non-admins, rely on registration_status
+      setHasCheckedIn(registrationStatus === "attended");
+    }
+  }, [
+    eventId,
+    user?.id,
+    event?.is_registered,
+    event?.registration_status,
+    isAdmin,
+  ]);
 
   const handleUpdate = async () => {
     if (!eventId) return;
@@ -289,10 +345,60 @@ export default function ViewEventPage() {
       const data = await getEventParticipants(eventId);
       setParticipants(data.participants || []);
       setShowParticipants(true);
+
+      // Check if current user has already checked in
+      const currentUserParticipant = data.participants?.find(
+        (p: any) => p.user.id === user?.id
+      );
+      if (currentUserParticipant?.status === "attended") {
+        setHasCheckedIn(true);
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to load participants");
     } finally {
       setLoadingParticipants(false);
+    }
+  };
+
+  const handleCheckIn = async () => {
+    if (!checkInCode.trim()) {
+      setCheckInMessage({
+        type: "error",
+        text: "Please enter the attendance code",
+      });
+      return;
+    }
+
+    setCheckInLoading(true);
+    setCheckInMessage(null);
+
+    try {
+      await checkInToEvent(checkInCode.trim(), "Code");
+      setCheckInMessage({
+        type: "success",
+        text: "Attendance marked successfully!",
+      });
+      setHasCheckedIn(true);
+      setCheckInCode("");
+
+      // Refresh event data and participants
+      if (eventId) {
+        const data = await getEventById(eventId);
+        setEvent(data);
+        handleViewParticipants();
+      }
+
+      toast({
+        title: "Check-in Successful",
+        description: "Your attendance has been recorded.",
+      });
+    } catch (err: any) {
+      setCheckInMessage({
+        type: "error",
+        text: err.response?.data?.error || "Failed to check in",
+      });
+    } finally {
+      setCheckInLoading(false);
     }
   };
 
@@ -800,6 +906,90 @@ export default function ViewEventPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* CHECK-IN SECTION (FOR REGISTERED USERS INCLUDING ADMINS) */}
+              {event.is_registered &&
+                event.attendance_status === "Active" &&
+                event.attendance_code && (
+                  <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-green-900">
+                        <CheckSquare size={20} />
+                        Check In to Event
+                      </CardTitle>
+                      <CardDescription className="text-green-700">
+                        Enter the attendance code to mark your attendance
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {hasCheckedIn ? (
+                        <div className="text-center py-6">
+                          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
+                            <CheckCircle size={20} />
+                            You have already checked in for this event
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-3">
+                            <label
+                              htmlFor="checkInCode"
+                              className="text-sm font-semibold text-green-900 block"
+                            >
+                              Attendance Code
+                            </label>
+                            <div className="flex gap-3">
+                              <Input
+                                id="checkInCode"
+                                type="text"
+                                placeholder="1234-5678"
+                                value={checkInCode}
+                                onChange={(e) => setCheckInCode(e.target.value)}
+                                maxLength={9}
+                                className="text-xl font-mono tracking-wider text-center h-12 text-green-700"
+                                onKeyPress={(e) => {
+                                  if (e.key === "Enter") handleCheckIn();
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-green-600">
+                              Enter the 8-digit code provided by the event
+                              organizer
+                            </p>
+                          </div>
+
+                          {checkInMessage && (
+                            <div
+                              className={`px-4 py-3 rounded-lg border ${
+                                checkInMessage.type === "success"
+                                  ? "bg-green-50 border-green-200 text-green-800"
+                                  : "bg-red-50 border-red-200 text-red-800"
+                              }`}
+                            >
+                              {checkInMessage.text}
+                            </div>
+                          )}
+
+                          <Button
+                            onClick={handleCheckIn}
+                            disabled={checkInLoading || !checkInCode.trim()}
+                            className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                          >
+                            {checkInLoading ? "Checking In..." : "Check In"}
+                          </Button>
+
+                          {isAdmin && (
+                            <p className="text-xs text-center text-green-600">
+                              As an admin, you can check in using the code above
+                              or scan the QR code in the Attendance Management
+                              section.
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
               {/* PARTICIPANTS LIST (ADMIN ONLY) */}
               {isAdmin && showParticipants && (
