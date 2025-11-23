@@ -14,6 +14,7 @@ import {
   unregisterFromEvent,
   getEventParticipants,
   startEvent,
+  deleteEvent,
 } from "@/lib/event-api";
 import {
   startAttendance,
@@ -24,6 +25,17 @@ import { sendEventAnnouncement } from "@/lib/notification-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Textarea = (props: any) => (
   <textarea
@@ -58,6 +70,7 @@ import {
   StopCircle,
   RefreshCw,
   QrCode,
+  Trash2,
 } from "lucide-react";
 
 export default function ViewEventPage() {
@@ -130,6 +143,10 @@ export default function ViewEventPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  // Delete event state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
@@ -438,6 +455,34 @@ export default function ViewEventPage() {
     }
   };
 
+  const handleDeleteEvent = async () => {
+    if (!eventId) return;
+
+    setDeleting(true);
+
+    try {
+      await deleteEvent(eventId);
+      toast({
+        title: "Event Deleted",
+        description: "Event has been deleted successfully.",
+        variant: "default",
+      });
+      // Redirect to events list after successful deletion
+      router.push("/event");
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.error || "Failed to delete event";
+      toast({
+        title: "Delete Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setDeleteDialogOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -488,12 +533,14 @@ export default function ViewEventPage() {
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
-          <SidebarButton
-            icon={<FileText size={18} />}
-            label="Reports"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/reports")}
-          />
+          {isAdmin && (
+            <SidebarButton
+              icon={<FileText size={18} />}
+              label="Reports"
+              open={sidebarOpen}
+              onClick={() => router.push("/admin/reports")}
+            />
+          )}
           <SidebarButton
             icon={<Calendar size={18} />}
             label="Events"
@@ -711,34 +758,30 @@ export default function ViewEventPage() {
                   </div>
 
                   {/* REGISTRATION ACTION BUTTON */}
-                  {!isAdmin && (
-                    <div className="mt-6 pt-4 border-t border-slate-200">
-                      {event.is_registered ? (
-                        <Button
-                          onClick={handleUnregister}
-                          disabled={registering}
-                          variant="destructive"
-                          className="w-full gap-2"
-                        >
-                          <UserX size={18} />
-                          {registering
-                            ? "Unregistering..."
-                            : "Unregister from Event"}
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={handleRegister}
-                          disabled={registering}
-                          className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
-                        >
-                          <UserCheck size={18} />
-                          {registering
-                            ? "Registering..."
-                            : "Register for Event"}
-                        </Button>
-                      )}
-                    </div>
-                  )}
+                  <div className="mt-6 pt-4 border-t border-slate-200">
+                    {event.is_registered ? (
+                      <Button
+                        onClick={handleUnregister}
+                        disabled={registering}
+                        variant="destructive"
+                        className="w-full gap-2"
+                      >
+                        <UserX size={18} />
+                        {registering
+                          ? "Unregistering..."
+                          : "Unregister from Event"}
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleRegister}
+                        disabled={registering}
+                        className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                      >
+                        <UserCheck size={18} />
+                        {registering ? "Registering..." : "Register for Event"}
+                      </Button>
+                    )}
+                  </div>
 
                   {/* ADMIN VIEW PARTICIPANTS BUTTON */}
                   {isAdmin && (
@@ -1279,7 +1322,7 @@ export default function ViewEventPage() {
 
               {/* FOOTER BUTTONS */}
               {isAdmin && (
-                <div className="flex justify-between mt-6">
+                <div className="flex justify-between items-center mt-6 gap-4">
                   <Button
                     className="px-6 py-2 bg-blue-600 text-white"
                     onClick={() =>
@@ -1294,9 +1337,50 @@ export default function ViewEventPage() {
                       : "Edit Event"}
                   </Button>
 
-                  <Button className="px-6 py-2 bg-slate-700 text-white">
-                    Generate Report
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button className="px-6 py-2 bg-slate-700 text-white">
+                      Generate Report
+                    </Button>
+
+                    <AlertDialog
+                      open={deleteDialogOpen}
+                      onOpenChange={setDeleteDialogOpen}
+                    >
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          className="px-6 py-2 gap-2"
+                          disabled={deleting}
+                        >
+                          <Trash2 size={18} />
+                          Delete Event
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{event?.title}"?
+                            This action cannot be undone and will permanently
+                            remove the event, all registrations, and attendance
+                            records.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={deleting}>
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteEvent}
+                            disabled={deleting}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {deleting ? "Deleting..." : "Delete Event"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               )}
             </>

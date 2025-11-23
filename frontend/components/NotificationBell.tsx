@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Bell, Check, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/auth-context";
 import {
   getNotifications,
   getUnreadCount,
@@ -24,6 +25,7 @@ const formatTimeAgo = (date: string) => {
 };
 
 export default function NotificationBell() {
+  const { token } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -32,28 +34,52 @@ export default function NotificationBell() {
 
   // Fetch notifications and unread count
   const fetchNotifications = async () => {
+    // Only fetch if user is authenticated
+    if (!token) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
     try {
       setLoading(true);
       const [notificationsData, unreadData] = await Promise.all([
         getNotifications(20, 0),
         getUnreadCount(),
       ]);
-      setNotifications(notificationsData.notifications);
-      setUnreadCount(unreadData.unread_count);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+      setNotifications(notificationsData.notifications || []);
+      setUnreadCount(unreadData.unread_count || 0);
+    } catch (error: any) {
+      // Handle network errors gracefully
+      // Don't show errors if it's just a network issue (backend might be down)
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+        console.warn("Network error fetching notifications - backend may be unavailable");
+        // Keep existing notifications, don't clear them
+      } else if (error.response?.status === 401) {
+        // Unauthorized - token expired, will be handled by interceptor
+        setNotifications([]);
+        setUnreadCount(0);
+      } else {
+        console.error("Failed to fetch notifications:", error);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial fetch and polling
+  // Initial fetch and polling - only if authenticated
   useEffect(() => {
-    fetchNotifications();
-    // Poll every 30 seconds for new notifications
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (token) {
+      fetchNotifications();
+      // Poll every 30 seconds for new notifications
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    } else {
+      // Clear notifications if user logs out
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }, [token]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

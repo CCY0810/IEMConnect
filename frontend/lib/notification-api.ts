@@ -23,7 +23,16 @@ export const getNotifications = async (
   const response = await api.get("/notifications", {
     params: { limit, offset },
   });
-  return response.data;
+  // Handle both response formats
+  if (response.data.notifications) {
+    return response.data;
+  }
+  // If response is just an array, wrap it
+  return {
+    notifications: Array.isArray(response.data) ? response.data : [],
+    unread_count: 0,
+    total: Array.isArray(response.data) ? response.data.length : 0,
+  };
 };
 
 // Get unread notification count

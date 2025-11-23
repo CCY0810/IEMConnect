@@ -433,7 +433,30 @@ export const getFile = (req, res) => {
       return res.status(404).json({ error: "File not found" });
     }
 
-    res.sendFile(filePath);
+    // Get file extension to determine MIME type
+    const ext = path.extname(filename).toLowerCase();
+    const mimeTypes = {
+      ".png": "image/png",
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".gif": "image/gif",
+      ".webp": "image/webp",
+      ".pdf": "application/pdf",
+      ".doc": "application/msword",
+      ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    };
+
+    // Set Content-Type header explicitly based on extension
+    const mimeType = mimeTypes[ext] || "application/octet-stream";
+    res.setHeader("Content-Type", mimeType);
+    
+    // Set cache headers for images
+    if (mimeType.startsWith("image/")) {
+      res.setHeader("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
+    }
+    
+    // Send file - Express will handle the rest
+    res.sendFile(path.resolve(filePath));
   } catch (error) {
     console.error("Get file error:", error);
     res.status(500).json({ error: "Failed to retrieve file" });

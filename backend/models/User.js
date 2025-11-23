@@ -83,18 +83,27 @@ const User = sequelize.define(
   {
     tableName: "users",
     timestamps: true,
+    // IMPORTANT: Indexes are defined here for documentation/reference only
+    // They should NOT be auto-created by Sequelize
+    // All indexes must be created via SQL migrations to prevent duplicates
     indexes: [
       {
         unique: true,
         fields: ["email"],
         name: "unique_email",
+        // Prevent Sequelize from trying to create this automatically
+        // The index should already exist in the database via migration
       },
       {
         unique: true,
         fields: ["matric_number"],
         name: "unique_matric_number",
+        // Prevent Sequelize from trying to create this automatically
+        // The index should already exist in the database via migration
       },
     ],
+    // Explicitly tell Sequelize not to modify the schema
+    freezeTableName: true,
   }
 );
 

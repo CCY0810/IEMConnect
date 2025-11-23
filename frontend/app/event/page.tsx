@@ -39,6 +39,8 @@ import {
   Plus,
   Search,
   Eye,
+  UserCheck,
+  List,
 } from "lucide-react";
 
 export default function EventsPage() {
@@ -50,6 +52,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "registered">("all");
 
   // Fetch events from backend
   useEffect(() => {
@@ -125,12 +128,14 @@ export default function EventsPage() {
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
-          <SidebarButton
-            icon={<FileText size={18} />}
-            label="Reports"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/reports")}
-          />
+          {isAdmin && (
+            <SidebarButton
+              icon={<FileText size={18} />}
+              label="Reports"
+              open={sidebarOpen}
+              onClick={() => router.push("/admin/reports")}
+            />
+          )}
           <SidebarButton
             icon={<Calendar size={18} />}
             label="Events"
@@ -223,10 +228,34 @@ export default function EventsPage() {
             )}
           </div>
 
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-4">
+            <Button
+              variant={filterType === "all" ? "default" : "outline"}
+              onClick={() => setFilterType("all")}
+              className="flex items-center gap-2"
+            >
+              <List size={18} />
+              All Events
+            </Button>
+            <Button
+              variant={filterType === "registered" ? "default" : "outline"}
+              onClick={() => setFilterType("registered")}
+              className="flex items-center gap-2"
+            >
+              <UserCheck size={18} />
+              My Registered Events
+            </Button>
+          </div>
+
           <Card className="bg-white/70 shadow">
             <CardHeader>
               <CardTitle className="text-lg">Search Events</CardTitle>
-              <CardDescription>Find events by name</CardDescription>
+              <CardDescription>
+                {filterType === "registered"
+                  ? "Search your registered events"
+                  : "Find events by name"}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="relative w-full">
@@ -247,7 +276,16 @@ export default function EventsPage() {
           {/*table*/}
           <Card className="bg-white/70 shadow">
             <CardHeader>
-              <CardTitle className="text-lg">Event List</CardTitle>
+              <CardTitle className="text-lg">
+                {filterType === "registered"
+                  ? "My Registered Events"
+                  : "Event List"}
+              </CardTitle>
+              <CardDescription>
+                {filterType === "registered"
+                  ? `Showing ${events.filter((e) => e.is_registered).length} registered event(s)`
+                  : `Total: ${events.length} event(s)`}
+              </CardDescription>
             </CardHeader>
 
             <CardContent>
@@ -255,67 +293,116 @@ export default function EventsPage() {
                 <div className="text-center py-8 text-gray-500">
                   Loading events...
                 </div>
-              ) : events.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No events found. {isAdmin && "Create your first event!"}
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Director</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Participants</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
+              ) : (() => {
+                // Filter events based on filterType
+                const filteredEvents =
+                  filterType === "registered"
+                    ? events.filter((event) => event.is_registered)
+                    : events;
 
-                  <TableBody>
-                    {events.map((event) => (
-                      <TableRow key={event.id}>
-                        <TableCell>{event.title}</TableCell>
-                        <TableCell>{event.director_name}</TableCell>
-                        <TableCell>
-                          {new Date(event.start_date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-slate-600">
-                            {event.participant_count || 0} registered
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              event.status === "Upcoming"
-                                ? "bg-blue-100 text-blue-600"
-                                : event.status === "Open"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-slate-200 text-slate-600"
-                            }`}
-                          >
-                            {event.status}
-                          </span>
-                        </TableCell>
+                // Apply search filter
+                const searchFilteredEvents = search
+                  ? filteredEvents.filter(
+                      (event) =>
+                        event.title
+                          .toLowerCase()
+                          .includes(search.toLowerCase()) ||
+                        event.director_name
+                          .toLowerCase()
+                          .includes(search.toLowerCase())
+                    )
+                  : filteredEvents;
 
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex items-center gap-1"
-                            onClick={() =>
-                              router.push(`/view_event?id=${event.id}`)
-                            }
-                          >
-                            <Eye size={16} /> View
-                          </Button>
-                        </TableCell>
+                if (searchFilteredEvents.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-gray-500">
+                      {filterType === "registered"
+                        ? search
+                          ? "No registered events match your search."
+                          : "You haven't registered for any events yet."
+                        : search
+                        ? "No events match your search."
+                        : "No events found. " + (isAdmin ? "Create your first event!" : "")}
+                    </div>
+                  );
+                }
+
+                return (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Director</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Participants</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Registration</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                    </TableHeader>
+
+                    <TableBody>
+                      {searchFilteredEvents.map((event) => (
+                        <TableRow key={event.id}>
+                          <TableCell className="font-medium">
+                            {event.title}
+                          </TableCell>
+                          <TableCell>{event.director_name}</TableCell>
+                          <TableCell>
+                            {new Date(event.start_date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-slate-600">
+                              {event.participant_count || 0} registered
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                event.status === "Upcoming"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : event.status === "Open"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-slate-200 text-slate-600"
+                              }`}
+                            >
+                              {event.status}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {event.is_registered ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                <UserCheck size={14} />
+                                Registered
+                                {event.registration_status === "attended" && (
+                                  <span className="ml-1">• Attended</span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-400">
+                                Not registered
+                              </span>
+                            )}
+                          </TableCell>
+
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-1"
+                              onClick={() =>
+                                router.push(`/view_event?id=${event.id}`)
+                              }
+                            >
+                              <Eye size={16} /> View
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                );
+              })()}
             </CardContent>
           </Card>
         </main>

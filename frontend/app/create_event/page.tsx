@@ -62,10 +62,12 @@ export default function CreateEventPage() {
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [paperworkFile, setPaperworkFile] = useState<File | null>(null);
 
+  const isAdmin = user?.role === "admin";
+
   if (!user) return null;
 
   // Redirect non-admin users
-  if (user.role !== "admin") {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <div className="bg-white/80 backdrop-blur-lg border border-white/60 rounded-2xl shadow-2xl p-12 max-w-md text-center">
@@ -179,12 +181,14 @@ export default function CreateEventPage() {
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
-          <SidebarButton
-            icon={<FileText size={18} />}
-            label="Reports"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/reports")}
-          />
+          {isAdmin && (
+            <SidebarButton
+              icon={<FileText size={18} />}
+              label="Reports"
+              open={sidebarOpen}
+              onClick={() => router.push("/admin/reports")}
+            />
+          )}
           <SidebarButton
             icon={<Calendar size={18} />}
             label="Events"

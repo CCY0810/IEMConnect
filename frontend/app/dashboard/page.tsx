@@ -33,7 +33,7 @@ import {
   Bell,
   Settings,
   HelpCircle,
-  PieChart,
+  PieChart as PieChartIcon,
 } from "lucide-react";
 import React from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -159,17 +159,19 @@ export default function DashboardPage() {
         <nav className="px-3 py-6 space-y-2">
           <SidebarButton
             open={sidebarOpen}
-            icon={<PieChart size={18} />}
+            icon={<PieChartIcon size={18} />}
             label="Dashboard"
             onClick={() => router.push("/dashboard")}
             active
           />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<FileText size={18} />}
-            label="Reports"
-            onClick={() => router.push("/admin/reports")} //alll link here change later when the page is created
-          />
+          {isAdmin && (
+            <SidebarButton
+              open={sidebarOpen}
+              icon={<FileText size={18} />}
+              label="Reports"
+              onClick={() => router.push("/admin/reports")}
+            />
+          )}
           <SidebarButton
             open={sidebarOpen}
             icon={<Calendar size={18} />}
@@ -296,7 +298,7 @@ export default function DashboardPage() {
               </CardHeader>
 
               {showApprovalPanel && (
-                <CardContent className="mt-4">
+                <CardContent className="mt-4" id="approvals-panel">
                   <h3 className="text-lg font-semibold mb-4">
                     Pending User Approvals
                   </h3>

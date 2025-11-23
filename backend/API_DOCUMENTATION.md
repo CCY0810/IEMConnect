@@ -387,7 +387,7 @@ CREATE TABLE events (
    npm run dev
    ```
 
-4. **Database will auto-sync** on server start.
+4. **Database schema is managed via migrations** - No automatic sync. Run migrations manually.
 
 ---
 
