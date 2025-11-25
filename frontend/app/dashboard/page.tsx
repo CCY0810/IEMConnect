@@ -168,7 +168,7 @@ export default function DashboardPage() {
             <SidebarButton
               open={sidebarOpen}
               icon={<FileText size={18} />}
-              label="Reports"
+              label="Analytics"
               onClick={() => router.push("/admin/reports")}
             />
           )}
@@ -182,9 +182,7 @@ export default function DashboardPage() {
             open={sidebarOpen}
             icon={<CheckSquare size={18} />}
             label="Attendance"
-            onClick={() =>
-              router.push(isAdmin ? "/admin/attendance" : "/attendance")
-            }
+            onClick={() => router.push("/attendance")}
           />
           <SidebarButton
             open={sidebarOpen}

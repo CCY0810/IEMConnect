@@ -396,9 +396,7 @@ export default function SettingsPage() {
             open={sidebarOpen}
             icon={<CheckSquare size={18} />}
             label="Attendance"
-            onClick={() =>
-              router.push(isAdmin ? "/admin/attendance" : "/attendance")
-            }
+            onClick={() => router.push("/attendance")}
           />
           <SidebarButton
             open={sidebarOpen}

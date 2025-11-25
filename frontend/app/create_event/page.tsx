@@ -29,6 +29,7 @@ import {
   FileText,
   Calendar,
   CheckSquare,
+  Bell,
   Settings,
   HelpCircle,
   PieChart,
@@ -59,21 +60,13 @@ export default function CreateEventPage() {
     endTime: "",
   });
 
-  // Validation errors
-  const [validationErrors, setValidationErrors] = useState({
-    matric: "",
-    email: "",
-  });
-
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [paperworkFile, setPaperworkFile] = useState<File | null>(null);
-
-  const isAdmin = user?.role === "admin";
 
   if (!user) return null;
 
   // Redirect non-admin users
-  if (!isAdmin) {
+  if (user.role !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <div className="bg-white/80 backdrop-blur-lg border border-white/60 rounded-2xl shadow-2xl p-12 max-w-md text-center">
@@ -107,44 +100,9 @@ export default function CreateEventPage() {
     );
   }
 
-  // Validation functions
-  const validateMatric = (matric: string): string => {
-    if (!matric) return "";
-    if (matric.length !== 9) {
-      return "Matric number must be exactly 9 characters";
-    }
-    return "";
-  };
-
-  const validateEmail = (email: string): string => {
-    if (!email) return "";
-    // Basic email format check - validate proper email structure
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return "Please enter a valid email address";
-    }
-    // No domain restriction - any valid email format is accepted
-    return "";
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
-    setValidationErrors({ matric: "", email: "" });
-
-    // Validate matric and email
-    const matricError = validateMatric(formData.matric);
-    const emailError = validateEmail(formData.email);
-
-    if (matricError || emailError) {
-      setValidationErrors({
-        matric: matricError,
-        email: emailError,
-      });
-      setError("Please fix the validation errors before submitting");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -222,14 +180,12 @@ export default function CreateEventPage() {
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
-          {isAdmin && (
-            <SidebarButton
-              icon={<FileText size={18} />}
-              label="Reports"
-              open={sidebarOpen}
-              onClick={() => router.push("/admin/reports")}
-            />
-          )}
+          <SidebarButton
+            icon={<FileText size={18} />}
+            label="Reports"
+            open={sidebarOpen}
+            onClick={() => router.push("/admin/reports")}
+          />
           <SidebarButton
             icon={<Calendar size={18} />}
             label="Events"
@@ -241,13 +197,19 @@ export default function CreateEventPage() {
             icon={<CheckSquare size={18} />}
             label="Attendance"
             open={sidebarOpen}
-            onClick={() => router.push("/admin/attendance")}
+            onClick={() => router.push("/attendance")}
+          />
+          <SidebarButton
+            icon={<Bell size={18} />}
+            label="Notifications"
+            open={sidebarOpen}
+            onClick={() => router.push("/admin/notifications")}
           />
           <SidebarButton
             icon={<Settings size={18} />}
             label="Settings"
             open={sidebarOpen}
-            onClick={() => router.push("/settings")}
+            onClick={() => router.push("/admin/settings")}
           />
           <SidebarButton
             icon={<HelpCircle size={18} />}
@@ -344,27 +306,14 @@ export default function CreateEventPage() {
                     Matric Number *
                   </span>
                   <Input
-                    placeholder="Enter matric number (9 characters)"
+                    placeholder="Enter matric number"
                     value={formData.matric}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setFormData({ ...formData, matric: value });
-                      // Real-time validation
-                      setValidationErrors({
-                        ...validationErrors,
-                        matric: validateMatric(value),
-                      });
-                    }}
-                    maxLength={9}
+                    onChange={(e) =>
+                      setFormData({ ...formData, matric: e.target.value })
+                    }
                     required
                     disabled={loading}
-                    className={validationErrors.matric ? "border-red-500" : ""}
                   />
-                  {validationErrors.matric && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {validationErrors.matric}
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -388,26 +337,14 @@ export default function CreateEventPage() {
                   </span>
                   <Input
                     type="email"
-                    placeholder="Enter email address"
+                    placeholder="Enter email"
                     value={formData.email}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setFormData({ ...formData, email: value });
-                      // Real-time validation
-                      setValidationErrors({
-                        ...validationErrors,
-                        email: validateEmail(value),
-                      });
-                    }}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     required
                     disabled={loading}
-                    className={validationErrors.email ? "border-red-500" : ""}
                   />
-                  {validationErrors.email && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {validationErrors.email}
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>

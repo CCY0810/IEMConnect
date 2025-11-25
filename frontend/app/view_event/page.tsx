@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
-import NotificationBell from "@/components/NotificationBell";
 import {
   getEventById,
   updateEvent,
@@ -23,12 +21,11 @@ import {
   getAttendanceList,
   checkInToEvent,
 } from "@/lib/attendance-api";
+import { useToast } from "@/hooks/use-toast";
 import { sendEventAnnouncement } from "@/lib/notification-api";
-import { downloadCertificate } from "@/lib/certificate-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,7 +73,6 @@ import {
   RefreshCw,
   QrCode,
   Trash2,
-  Download,
   Award,
 } from "lucide-react";
 
@@ -89,6 +85,7 @@ export default function ViewEventPage() {
   const eventId = parseInt(searchParams.get("id") || "0");
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
   const [editing, setEditing] = useState(false);
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,16 +131,6 @@ export default function ViewEventPage() {
     text: string;
   } | null>(null);
 
-  // Announcement state
-  const [announcementSubject, setAnnouncementSubject] = useState("");
-  const [announcementMessage, setAnnouncementMessage] = useState("");
-  const [sendEmail, setSendEmail] = useState(true);
-  const [announcementLoading, setAnnouncementLoading] = useState(false);
-  const [announcementResult, setAnnouncementResult] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
-
   // Start event state
   const [startEventLoading, setStartEventLoading] = useState(false);
   const [startEventMessage, setStartEventMessage] = useState<{
@@ -164,15 +151,15 @@ export default function ViewEventPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Check-in state (for admins and all registered users)
-  const [checkInCode, setCheckInCode] = useState("");
-  const [checkInLoading, setCheckInLoading] = useState(false);
-  const [checkInMessage, setCheckInMessage] = useState<{
+  // Announcement state
+  const [announcementSubject, setAnnouncementSubject] = useState("");
+  const [announcementMessage, setAnnouncementMessage] = useState("");
+  const [sendEmail, setSendEmail] = useState(true);
+  const [announcementLoading, setAnnouncementLoading] = useState(false);
+  const [announcementResult, setAnnouncementResult] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
-  const [hasCheckedIn, setHasCheckedIn] = useState(false);
-  const [downloadingCertificate, setDownloadingCertificate] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.role === "admin";
@@ -220,6 +207,15 @@ export default function ViewEventPage() {
     }
   }, [eventId, user]);
 
+  // Check-in state (for admins and all registered users)
+  const [checkInCode, setCheckInCode] = useState("");
+  const [checkInLoading, setCheckInLoading] = useState(false);
+  const [checkInMessage, setCheckInMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [hasCheckedIn, setHasCheckedIn] = useState(false);
+
   // Check if user has already checked in when event data changes
   useEffect(() => {
     if (!event?.is_registered) {
@@ -264,14 +260,6 @@ export default function ViewEventPage() {
     event?.registration_status,
     isAdmin,
   ]);
-
-  // Clear attendance state when event is completed
-  useEffect(() => {
-    if (event?.status === "Completed") {
-      setAttendanceMessage(null);
-      setShowAttendanceList(false);
-    }
-  }, [event?.status]);
 
   const handleUpdate = async () => {
     if (!eventId) return;
@@ -394,27 +382,6 @@ export default function ViewEventPage() {
     }
   };
 
-  const handleDownloadCertificate = async () => {
-    if (!eventId) return;
-
-    setDownloadingCertificate(true);
-    try {
-      await downloadCertificate(eventId);
-      toast({
-        title: "Certificate Downloaded",
-        description: "Your certificate has been downloaded successfully.",
-      });
-    } catch (err: any) {
-      toast({
-        title: "Download Failed",
-        description: err.message || "Failed to download certificate",
-        variant: "destructive",
-      });
-    } finally {
-      setDownloadingCertificate(false);
-    }
-  };
-
   const handleCheckIn = async () => {
     if (!checkInCode.trim()) {
       setCheckInMessage({
@@ -478,25 +445,10 @@ export default function ViewEventPage() {
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.error || "Failed to start attendance";
-
-      // Check if this is the specific business logic error
-      if (
-        errorMessage ===
-        "Attendance cannot be started. Please update the event status to 'Open' first."
-      ) {
-        // Show destructive toast notification
-        toast({
-          title: "Attendance Not Started",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      } else {
-        // Use regular message for other errors
-        setAttendanceMessage({
-          type: "error",
-          text: errorMessage,
-        });
-      }
+      setAttendanceMessage({
+        type: "error",
+        text: errorMessage,
+      });
     } finally {
       setAttendanceLoading(false);
     }
@@ -577,6 +529,43 @@ export default function ViewEventPage() {
     }
   };
 
+  const handleStartEvent = async () => {
+    if (!eventId) return;
+
+    setStartEventLoading(true);
+    setStartEventMessage(null);
+
+    try {
+      const updatedEvent = await startEvent(eventId);
+      setEvent(updatedEvent);
+      setStartEventMessage({
+        type: "success",
+        text: "Event started successfully! The event status has been changed to 'Open'.",
+      });
+
+      toast({
+        title: "Event Started",
+        description: "The event status has been changed to 'Open'.",
+        variant: "default",
+      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || "Failed to start event";
+
+      setStartEventMessage({
+        type: "error",
+        text: errorMessage,
+      });
+
+      toast({
+        title: "Event Not Started",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setStartEventLoading(false);
+    }
+  };
+
   const handleEndEvent = async () => {
     if (!eventId) return;
 
@@ -619,45 +608,6 @@ export default function ViewEventPage() {
       });
     } finally {
       setEndEventLoading(false);
-    }
-  };
-
-  const handleStartEvent = async () => {
-    if (!eventId) return;
-
-    setStartEventLoading(true);
-    setStartEventMessage(null);
-
-    try {
-      const updatedEvent = await startEvent(eventId);
-      setEvent(updatedEvent);
-      setStartEventMessage({
-        type: "success",
-        text: "Event started successfully! The event status has been changed to 'Open'.",
-      });
-
-      // Show success toast
-      toast({
-        title: "Event Started",
-        description: "The event status has been changed to 'Open'.",
-        variant: "default",
-      });
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || "Failed to start event";
-
-      setStartEventMessage({
-        type: "error",
-        text: errorMessage,
-      });
-
-      // Show destructive toast for errors
-      toast({
-        title: "Event Not Started",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setStartEventLoading(false);
     }
   };
 
@@ -739,14 +689,12 @@ export default function ViewEventPage() {
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
-          {isAdmin && (
-            <SidebarButton
-              icon={<FileText size={18} />}
-              label="Reports"
-              open={sidebarOpen}
-              onClick={() => router.push("/admin/reports")}
-            />
-          )}
+          <SidebarButton
+            icon={<FileText size={18} />}
+            label="Reports"
+            open={sidebarOpen}
+            onClick={() => router.push("/admin/reports")}
+          />
           <SidebarButton
             icon={<Calendar size={18} />}
             label="Events"
@@ -758,13 +706,19 @@ export default function ViewEventPage() {
             icon={<CheckSquare size={18} />}
             label="Attendance"
             open={sidebarOpen}
-            onClick={() => router.push("/admin/attendance")}
+            onClick={() => router.push("/attendance")}
+          />
+          <SidebarButton
+            icon={<Bell size={18} />}
+            label="Notifications"
+            open={sidebarOpen}
+            onClick={() => router.push("/admin/notifications")}
           />
           <SidebarButton
             icon={<Settings size={18} />}
             label="Settings"
             open={sidebarOpen}
-            onClick={() => router.push("/settings")}
+            onClick={() => router.push("/admin/settings")}
           />
           <SidebarButton
             icon={<HelpCircle size={18} />}
@@ -807,8 +761,6 @@ export default function ViewEventPage() {
           </div>
 
           <div className="flex items-center gap-5">
-            <NotificationBell />
-
             <div className="text-right">
               <div className="text-sm font-semibold">{user.name}</div>
               <div className="text-xs text-slate-400 capitalize">
@@ -857,15 +809,13 @@ export default function ViewEventPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge className="bg-slate-200 text-slate-700">
+                          <span className="px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-sm font-medium">
                             Event Completed
-                          </Badge>
+                          </span>
                         </div>
                         <p className="text-sm text-slate-700">
                           This event has been completed. Registration and
                           check-in are no longer available.
-                          {hasCheckedIn &&
-                            " You can download your certificate below."}
                         </p>
                       </div>
                     </div>
@@ -1090,55 +1040,6 @@ export default function ViewEventPage() {
                 </Card>
               )}
 
-              {/* CERTIFICATE DOWNLOAD (FOR COMPLETED EVENTS) */}
-              {event.status === "Completed" &&
-                hasCheckedIn &&
-                event.is_registered && (
-                  <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg border-blue-200">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-blue-900">
-                        <Award size={20} />
-                        Certificate of Participation
-                      </CardTitle>
-                      <CardDescription className="text-blue-700">
-                        Download your certificate of participation for this
-                        event
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="text-center py-6 space-y-4">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full font-semibold">
-                          <CheckCircle size={20} />
-                          Event Completed - Certificate Available
-                        </div>
-                        <div>
-                          <Button
-                            onClick={handleDownloadCertificate}
-                            disabled={downloadingCertificate}
-                            className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg gap-2"
-                            size="lg"
-                          >
-                            {downloadingCertificate ? (
-                              <>
-                                <RefreshCw size={18} className="animate-spin" />
-                                Generating...
-                              </>
-                            ) : (
-                              <>
-                                <Award size={18} />
-                                Download Certificate
-                              </>
-                            )}
-                          </Button>
-                          <p className="text-xs text-blue-700 mt-2">
-                            Download your certificate of participation
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
               {/* EVENT STATISTICS */}
               <Card className="bg-white/70 shadow">
                 <CardHeader>
@@ -1214,99 +1115,12 @@ export default function ViewEventPage() {
                         <Users size={18} />
                         {loadingParticipants
                           ? "Loading..."
-                          : event.status === "Completed"
-                          ? "View Past Participants"
                           : "View Participant List"}
                       </Button>
                     </div>
                   )}
                 </CardContent>
               </Card>
-
-              {/* CHECK-IN SECTION (FOR REGISTERED USERS INCLUDING ADMINS) */}
-              {event.status !== "Completed" &&
-                event.is_registered &&
-                event.attendance_status === "Active" &&
-                event.attendance_code && (
-                  <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-green-900">
-                        <CheckSquare size={20} />
-                        Check In to Event
-                      </CardTitle>
-                      <CardDescription className="text-green-700">
-                        Enter the attendance code to mark your attendance
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {hasCheckedIn ? (
-                        <div className="text-center py-6">
-                          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
-                            <CheckCircle size={20} />
-                            You have already checked in for this event
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="space-y-3">
-                            <label
-                              htmlFor="checkInCode"
-                              className="text-sm font-semibold text-green-900 block"
-                            >
-                              Attendance Code
-                            </label>
-                            <div className="flex gap-3">
-                              <Input
-                                id="checkInCode"
-                                type="text"
-                                placeholder="1234-5678"
-                                value={checkInCode}
-                                onChange={(e) => setCheckInCode(e.target.value)}
-                                maxLength={9}
-                                className="text-xl font-mono tracking-wider text-center h-12 text-green-700"
-                                onKeyPress={(e) => {
-                                  if (e.key === "Enter") handleCheckIn();
-                                }}
-                              />
-                            </div>
-                            <p className="text-xs text-green-600">
-                              Enter the 8-digit code provided by the event
-                              organizer
-                            </p>
-                          </div>
-
-                          {checkInMessage && (
-                            <div
-                              className={`px-4 py-3 rounded-lg border ${
-                                checkInMessage.type === "success"
-                                  ? "bg-green-50 border-green-200 text-green-800"
-                                  : "bg-red-50 border-red-200 text-red-800"
-                              }`}
-                            >
-                              {checkInMessage.text}
-                            </div>
-                          )}
-
-                          <Button
-                            onClick={handleCheckIn}
-                            disabled={checkInLoading || !checkInCode.trim()}
-                            className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                          >
-                            {checkInLoading ? "Checking In..." : "Check In"}
-                          </Button>
-
-                          {isAdmin && (
-                            <p className="text-xs text-center text-green-600">
-                              As an admin, you can check in using the code above
-                              or scan the QR code in the Attendance Management
-                              section.
-                            </p>
-                          )}
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
 
               {/* PARTICIPANTS LIST (ADMIN ONLY) */}
               {isAdmin && showParticipants && (
@@ -1403,7 +1217,7 @@ export default function ViewEventPage() {
               )}
 
               {/* ATTENDANCE MANAGEMENT (ADMIN ONLY) */}
-              {isAdmin && event.status !== "Completed" && (
+              {isAdmin && (
                 <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg border-indigo-200">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-indigo-900">
@@ -1511,6 +1325,96 @@ export default function ViewEventPage() {
                             </div>
                           </div>
                         </div>
+                      )}
+
+                    {/* CHECK-IN SECTION (FOR REGISTERED USERS INCLUDING ADMINS) */}
+                    {event.is_registered &&
+                      event.attendance_status === "Active" &&
+                      event.attendance_code && (
+                        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-900">
+                              <CheckSquare size={20} />
+                              Check In to Event
+                            </CardTitle>
+                            <CardDescription className="text-green-700">
+                              Enter the attendance code to mark your attendance
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {hasCheckedIn ? (
+                              <div className="text-center py-6">
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
+                                  <CheckCircle size={20} />
+                                  You have already checked in for this event
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="space-y-3">
+                                  <label
+                                    htmlFor="checkInCode"
+                                    className="text-sm font-semibold text-green-900 block"
+                                  >
+                                    Attendance Code
+                                  </label>
+                                  <div className="flex gap-3">
+                                    <Input
+                                      id="checkInCode"
+                                      type="text"
+                                      placeholder="1234-5678"
+                                      value={checkInCode}
+                                      onChange={(e) =>
+                                        setCheckInCode(e.target.value)
+                                      }
+                                      maxLength={9}
+                                      className="text-xl font-mono tracking-wider text-center h-12 text-green-700"
+                                      onKeyPress={(e) => {
+                                        if (e.key === "Enter") handleCheckIn();
+                                      }}
+                                    />
+                                  </div>
+                                  <p className="text-xs text-green-600">
+                                    Enter the 8-digit code provided by the event
+                                    organizer
+                                  </p>
+                                </div>
+
+                                {checkInMessage && (
+                                  <div
+                                    className={`px-4 py-3 rounded-lg border ${
+                                      checkInMessage.type === "success"
+                                        ? "bg-green-50 border-green-200 text-green-800"
+                                        : "bg-red-50 border-red-200 text-red-800"
+                                    }`}
+                                  >
+                                    {checkInMessage.text}
+                                  </div>
+                                )}
+
+                                <Button
+                                  onClick={handleCheckIn}
+                                  disabled={
+                                    checkInLoading || !checkInCode.trim()
+                                  }
+                                  className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                >
+                                  {checkInLoading
+                                    ? "Checking In..."
+                                    : "Check In"}
+                                </Button>
+
+                                {isAdmin && (
+                                  <p className="text-xs text-center text-green-600">
+                                    As an admin, you can check in using the code
+                                    above or scan the QR code in the Attendance
+                                    Management section.
+                                  </p>
+                                )}
+                              </>
+                            )}
+                          </CardContent>
+                        </Card>
                       )}
 
                     {/* LIVE ATTENDANCE LIST */}

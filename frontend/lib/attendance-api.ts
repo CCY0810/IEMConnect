@@ -32,3 +32,9 @@ export const checkInToEvent = async (code: string, method: string = "Code") => {
   });
   return response.data;
 };
+
+// Get all events the current user has attended
+export const getMyAttendedEvents = async () => {
+  const response = await api.get("/attendance/my-attended-events");
+  return response.data;
+};

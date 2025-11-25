@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,8 +13,25 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { checkInToEvent } from "@/lib/attendance-api";
-import { CheckCircle, QrCode, Keyboard, Calendar, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
+import { checkInToEvent, getMyAttendedEvents } from "@/lib/attendance-api";
+import { downloadCertificate } from "@/lib/certificate-api";
+import {
+  CheckCircle,
+  QrCode,
+  Keyboard,
+  Calendar,
+  Clock,
+  Award,
+  Eye,
+  RefreshCw,
+} from "lucide-react";
 
 interface AttendanceResult {
   event: {
@@ -29,10 +47,29 @@ interface AttendanceResult {
   };
 }
 
+interface AttendedEvent {
+  id: number;
+  title: string;
+  description: string | null;
+  start_date: string;
+  end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  status: "Upcoming" | "Open" | "Completed";
+  poster_url: string | null;
+  director_name: string;
+  registration_status: "attended";
+  attendance: {
+    marked_at: string;
+    method: "QR" | "Code" | "Manual";
+  };
+}
+
 export default function AttendancePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, token } = useAuth();
+  const { toast } = useToast();
 
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,6 +79,14 @@ export default function AttendancePage() {
   } | null>(null);
   const [attendanceResult, setAttendanceResult] =
     useState<AttendanceResult | null>(null);
+  
+  // Attended events state
+  const [attendedEvents, setAttendedEvents] = useState<AttendedEvent[]>([]);
+  const [loadingAttendedEvents, setLoadingAttendedEvents] = useState(false);
+  const [downloadingCertificates, setDownloadingCertificates] = useState<{
+    [eventId: number]: boolean;
+  }>({});
+  const [activeTab, setActiveTab] = useState("give-attendance");
 
   // Pre-fill code from URL parameter if provided (QR code scan)
   useEffect(() => {
@@ -50,6 +95,30 @@ export default function AttendancePage() {
       setCode(codeFromUrl);
     }
   }, [searchParams]);
+
+  // Fetch attended events on mount
+  useEffect(() => {
+    if (token) {
+      fetchAttendedEvents();
+    }
+  }, [token]);
+
+  const fetchAttendedEvents = async () => {
+    setLoadingAttendedEvents(true);
+    try {
+      const data = await getMyAttendedEvents();
+      setAttendedEvents(data.events || []);
+    } catch (err: any) {
+      console.error("Failed to fetch attended events:", err);
+      toast({
+        title: "Error",
+        description: "Failed to load attended events",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAttendedEvents(false);
+    }
+  };
 
   // Redirect if not logged in
   if (!token) {
@@ -76,6 +145,12 @@ export default function AttendancePage() {
         type: "success",
         text: result.message || "Attendance marked successfully!",
       });
+      // Refresh attended events list after successful check-in
+      await fetchAttendedEvents();
+      // Switch to attended tab after a short delay
+      setTimeout(() => {
+        setActiveTab("attended");
+      }, 2000);
     } catch (err: any) {
       setMessage({
         type: "error",
@@ -83,6 +158,25 @@ export default function AttendancePage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadCertificate = async (eventId: number) => {
+    setDownloadingCertificates((prev) => ({ ...prev, [eventId]: true }));
+    try {
+      await downloadCertificate(eventId);
+      toast({
+        title: "Certificate Downloaded",
+        description: "Your certificate has been downloaded successfully.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Download Failed",
+        description: err.message || "Failed to download certificate",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingCertificates((prev) => ({ ...prev, [eventId]: false }));
     }
   };
 
@@ -94,19 +188,30 @@ export default function AttendancePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
             Event Attendance
           </h1>
           <p className="text-slate-600">
-            Enter the attendance code to check in to your event
+            Check in to events or view your attendance history
           </p>
         </div>
 
-        {/* Main Card */}
-        <Card className="shadow-2xl border-2 border-indigo-100">
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-2 mb-6">
+            <TabsTrigger value="give-attendance">Give Attendance</TabsTrigger>
+            <TabsTrigger value="attended">
+              Attended ({attendedEvents.length})
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Give Attendance Tab */}
+          <TabsContent value="give-attendance">
+            <div className="max-w-2xl mx-auto">
+              <Card className="shadow-2xl border-2 border-indigo-100">
           <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
             <CardTitle className="flex items-center gap-2 text-2xl">
               <QrCode size={28} />
@@ -263,16 +368,183 @@ export default function AttendancePage() {
           </CardContent>
         </Card>
 
-        {/* Back to Dashboard */}
-        <div className="text-center mt-6">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/dashboard")}
-            className="text-slate-600"
-          >
-            ← Back to Dashboard
-          </Button>
-        </div>
+              {/* Back to Dashboard */}
+              <div className="text-center mt-6">
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push("/dashboard")}
+                  className="text-slate-600"
+                >
+                  ← Back to Dashboard
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Attended Tab */}
+          <TabsContent value="attended">
+            <div className="space-y-6">
+              <div className="flex justify-end mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchAttendedEvents}
+                  disabled={loadingAttendedEvents}
+                  className="gap-2"
+                >
+                  <RefreshCw
+                    size={16}
+                    className={loadingAttendedEvents ? "animate-spin" : ""}
+                  />
+                  Refresh
+                </Button>
+              </div>
+              {loadingAttendedEvents ? (
+                <Card className="shadow-lg">
+                  <CardContent className="py-12 text-center">
+                    <RefreshCw className="mx-auto h-8 w-8 animate-spin text-slate-400 mb-4" />
+                    <p className="text-slate-500">Loading attended events...</p>
+                  </CardContent>
+                </Card>
+              ) : attendedEvents.length === 0 ? (
+                <Card className="shadow-lg">
+                  <CardContent className="py-12 text-center">
+                    <Calendar className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                      No Events Attended Yet
+                    </h3>
+                    <p className="text-slate-500">
+                      You haven't attended any events yet. Check in to events to
+                      see them here.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {attendedEvents.map((event) => (
+                    <Card
+                      key={event.id}
+                      className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onClick={() => router.push(`/view_event?id=${event.id}`)}
+                    >
+                      {event.poster_url && (
+                        <div className="relative h-48 overflow-hidden rounded-t-lg">
+                          <img
+                            src={`http://localhost:5000${event.poster_url}`}
+                            alt={event.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-lg line-clamp-2">
+                            {event.title}
+                          </CardTitle>
+                          <Badge
+                            className={`shrink-0 ${
+                              event.status === "Completed"
+                                ? "bg-slate-200 text-slate-700"
+                                : event.status === "Open"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {event.status}
+                          </Badge>
+                        </div>
+                        <CardDescription className="line-clamp-2">
+                          {event.description || "No description available"}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <Calendar size={16} />
+                            <span>
+                              {new Date(event.start_date).toLocaleDateString()}
+                              {event.end_date !== event.start_date &&
+                                ` - ${new Date(
+                                  event.end_date
+                                ).toLocaleDateString()}`}
+                            </span>
+                          </div>
+                          {event.start_time && (
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <Clock size={16} />
+                              <span>
+                                {event.start_time}
+                                {event.end_time && ` - ${event.end_time}`}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <CheckCircle size={16} className="text-green-600" />
+                            <span>
+                              Attended:{" "}
+                              {new Date(
+                                event.attendance.marked_at
+                              ).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                              {event.attendance.method}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-2 border-t border-slate-200">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/view_event?id=${event.id}`);
+                            }}
+                          >
+                            <Eye size={16} className="mr-2" />
+                            View Event
+                          </Button>
+                          {event.status === "Completed" && (
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-blue-600 hover:bg-blue-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadCertificate(event.id);
+                              }}
+                              disabled={downloadingCertificates[event.id]}
+                            >
+                              {downloadingCertificates[event.id] ? (
+                                <>
+                                  <RefreshCw
+                                    size={16}
+                                    className="mr-2 animate-spin"
+                                  />
+                                  Downloading...
+                                </>
+                              ) : (
+                                <>
+                                  <Award size={16} className="mr-2" />
+                                  Certificate
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

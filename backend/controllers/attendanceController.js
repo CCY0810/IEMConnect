@@ -338,20 +338,6 @@ export const checkIn = async (req, res) => {
     // Update registration status to 'attended'
     await registration.update({ status: "attended" });
 
-    // Send notification to user about successful attendance
-    try {
-      const NotificationService = (await import("../services/notificationService.js")).default;
-      await NotificationService.notifyUser(
-        userId,
-        "Attendance Confirmed",
-        `Your attendance has been successfully recorded for "${event.title}". Thank you for participating!`,
-        "attendance"
-      );
-    } catch (notifError) {
-      // Log but don't fail attendance if notification fails
-      console.error("Failed to send attendance notification:", notifError);
-    }
-
     res.status(201).json({
       message: "Attendance marked successfully!",
       event: {
@@ -369,5 +355,85 @@ export const checkIn = async (req, res) => {
   } catch (error) {
     console.error("Check-in error:", error);
     res.status(500).json({ error: "Failed to mark attendance" });
+  }
+};
+
+// Get all events the current user has attended
+export const getMyAttendedEvents = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get all attendance records for this user by joining through EventRegistration
+    const attendanceRecords = await Attendance.findAll({
+      include: [
+        {
+          model: EventRegistration,
+          as: "registration",
+          where: { user_id: userId, status: "attended" },
+          include: [
+            {
+              model: Event,
+              as: "event",
+              attributes: [
+                "id",
+                "title",
+                "description",
+                "start_date",
+                "end_date",
+                "start_time",
+                "end_time",
+                "status",
+                "poster_file",
+                "director_name",
+              ],
+            },
+          ],
+        },
+      ],
+      order: [
+        [
+          { model: EventRegistration, as: "registration" },
+          { model: Event, as: "event" },
+          "start_date",
+          "DESC",
+        ],
+      ],
+    });
+
+    // Format the response
+    const events = attendanceRecords.map((attendance) => {
+      const eventData = attendance.registration.event.toJSON();
+
+      // Add file URLs
+      if (eventData.poster_file) {
+        eventData.poster_url = `/api/v1/events/files/${eventData.poster_file}`;
+      }
+
+      return {
+        id: eventData.id,
+        title: eventData.title,
+        description: eventData.description,
+        start_date: eventData.start_date,
+        end_date: eventData.end_date,
+        start_time: eventData.start_time,
+        end_time: eventData.end_time,
+        status: eventData.status,
+        poster_url: eventData.poster_url || null,
+        director_name: eventData.director_name,
+        registration_status: "attended",
+        attendance: {
+          marked_at: attendance.marked_at,
+          method: attendance.method,
+        },
+      };
+    });
+
+    res.json({
+      events,
+      total: events.length,
+    });
+  } catch (error) {
+    console.error("Get my attended events error:", error);
+    res.status(500).json({ error: "Failed to fetch attended events" });
   }
 };
