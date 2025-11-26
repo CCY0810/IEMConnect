@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { getEvents, Event } from "@/lib/event-api";
+import NotificationBell from "@/components/NotificationBell";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,6 +181,9 @@ export default function EventsPage() {
           </div>
 
           <div className="flex items-center gap-5">
+            {/* Notification Bell */}
+            <NotificationBell />
+
             <div className="text-right">
               <div className="text-sm font-semibold">{user.name}</div>
               <div className="text-xs text-slate-400 capitalize">

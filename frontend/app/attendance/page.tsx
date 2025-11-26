@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tabs";
 import { checkInToEvent, getMyAttendedEvents } from "@/lib/attendance-api";
 import { downloadCertificate } from "@/lib/certificate-api";
+import NotificationBell from "@/components/NotificationBell";
 import {
   CheckCircle,
   QrCode,
@@ -190,13 +191,19 @@ export default function AttendancePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Event Attendance
-          </h1>
-          <p className="text-slate-600">
-            Check in to events or view your attendance history
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex-1"></div>
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">
+              Event Attendance
+            </h1>
+            <p className="text-slate-600">
+              Check in to events or view your attendance history
+            </p>
+          </div>
+          <div className="flex-1 flex justify-end">
+            <NotificationBell />
+          </div>
         </div>
 
         {/* Tabs */}

@@ -23,6 +23,7 @@ import {
 } from "@/lib/attendance-api";
 import { useToast } from "@/hooks/use-toast";
 import { sendEventAnnouncement } from "@/lib/notification-api";
+import NotificationBell from "@/components/NotificationBell";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -767,6 +768,9 @@ export default function ViewEventPage() {
           </div>
 
           <div className="flex items-center gap-5">
+            {/* Notification Bell */}
+            <NotificationBell />
+
             <div className="text-right">
               <div className="text-sm font-semibold">{user.name}</div>
               <div className="text-xs text-slate-400 capitalize">

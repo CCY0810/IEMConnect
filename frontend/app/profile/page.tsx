@@ -29,6 +29,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -247,6 +248,9 @@ export default function ProfilePage() {
                 View and manage your account information
               </p>
             </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
           </div>
         </div>
       </header>

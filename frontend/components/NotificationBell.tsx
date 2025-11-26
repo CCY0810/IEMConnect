@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Check, CheckCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
@@ -26,6 +27,7 @@ const formatTimeAgo = (date: string) => {
 };
 
 export default function NotificationBell() {
+  const router = useRouter();
   const { token } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -248,7 +250,7 @@ export default function NotificationBell() {
                 className="text-xs text-slate-600"
                 onClick={() => {
                   setIsOpen(false);
-                  // Navigate to a full notifications page if you have one
+                  router.push("/notifications");
                 }}
               >
                 View all notifications
