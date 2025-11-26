@@ -39,7 +39,9 @@ import {
   Plus,
   Search,
   Eye,
+  X,
 } from "lucide-react";
+import { getFileUrl } from "@/lib/event-api";
 
 export default function EventsPage() {
   const router = useRouter();
@@ -50,6 +52,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [modalImage, setModalImage] = useState<string | null>(null);
 
   // Fetch events from backend
   useEffect(() => {
@@ -270,6 +273,7 @@ export default function EventsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Poster</TableHead>
                       <TableHead>Title</TableHead>
                       <TableHead>Director</TableHead>
                       <TableHead>Date</TableHead>
@@ -282,6 +286,12 @@ export default function EventsPage() {
                   <TableBody>
                     {events.map((event) => (
                       <TableRow key={event.id}>
+                        <TableCell>
+                          <PosterImage
+                            poster={event.poster_url}
+                            onClick={() => event.poster_url && setModalImage(event.poster_url)}
+                          />
+                        </TableCell>
                         <TableCell>{event.title}</TableCell>
                         <TableCell>{event.director_name}</TableCell>
                         <TableCell>
@@ -327,6 +337,14 @@ export default function EventsPage() {
           </Card>
         </main>
       </div>
+
+      {/* Image Modal */}
+      {modalImage && (
+        <ImageModal
+          imageUrl={modalImage}
+          onClose={() => setModalImage(null)}
+        />
+      )}
     </div>
   );
 }
@@ -356,5 +374,240 @@ function SidebarButton({
       <div className="w-6 h-6 flex items-center justify-center">{icon}</div>
       {open && <span className="truncate">{label}</span>}
     </button>
+  );
+}
+
+// Poster Image Component - Displays uniform-sized poster thumbnails
+function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: () => void }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!poster) {
+      setImageUrl(null);
+      setImageError(false);
+      setLoading(false);
+      return;
+    }
+
+    // Construct the full URL
+    let url = "";
+    if (poster.startsWith("http")) {
+      url = poster;
+    } else if (poster.startsWith("/api/v1")) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = apiUrl.replace("/api/v1", "");
+      url = `${baseUrl}${poster}`;
+    } else {
+      url = getFileUrl(poster);
+    }
+
+    // Fetch image as blob with auth token
+    const token = localStorage.getItem("token");
+    if (token) {
+      setLoading(true);
+      fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load image: ${response.status}`);
+          }
+          return response.blob();
+        })
+        .then((blob) => {
+          const objectUrl = URL.createObjectURL(blob);
+          setImageUrl(objectUrl);
+          setImageError(false);
+        })
+        .catch((error) => {
+          console.error("Failed to load poster:", error);
+          setImageError(true);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setImageUrl(url);
+      setLoading(false);
+    }
+
+    // Cleanup
+    return () => {
+      if (imageUrl && imageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [poster]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (imageUrl && imageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
+
+  if (!poster) {
+    return (
+      <div className="w-[150px] h-[100px] bg-slate-100 rounded border flex items-center justify-center">
+        <span className="text-xs text-slate-400">No poster</span>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="w-[150px] h-[100px] bg-slate-100 rounded border flex items-center justify-center">
+        <span className="text-xs text-slate-400">Loading...</span>
+      </div>
+    );
+  }
+
+  if (imageError || !imageUrl) {
+    return (
+      <div className="w-[150px] h-[100px] bg-slate-100 rounded border flex items-center justify-center">
+        <span className="text-xs text-slate-400">Error loading</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="w-[150px] h-[100px] rounded border overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
+      <img
+        src={imageUrl}
+        alt="Event Poster"
+        className="w-full h-full object-cover"
+      />
+    </div>
+  );
+}
+
+// Image Modal Component - Full-screen image viewer
+function ImageModal({ imageUrl, onClose }: { imageUrl: string; onClose: () => void }) {
+  const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    // Construct the full URL
+    let url = "";
+    if (imageUrl.startsWith("http")) {
+      url = imageUrl;
+    } else if (imageUrl.startsWith("/api/v1")) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = apiUrl.replace("/api/v1", "");
+      url = `${baseUrl}${imageUrl}`;
+    } else {
+      url = getFileUrl(imageUrl);
+    }
+
+    // Fetch image as blob with auth token
+    const token = localStorage.getItem("token");
+    if (token) {
+      setLoading(true);
+      fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load image: ${response.status}`);
+          }
+          return response.blob();
+        })
+        .then((blob) => {
+          const objectUrl = URL.createObjectURL(blob);
+          setModalImageUrl(objectUrl);
+          setError(false);
+        })
+        .catch((error) => {
+          console.error("Failed to load modal image:", error);
+          setError(true);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setModalImageUrl(url);
+      setLoading(false);
+    }
+
+    // Cleanup
+    return () => {
+      if (modalImageUrl && modalImageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(modalImageUrl);
+      }
+    };
+  }, [imageUrl]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (modalImageUrl && modalImageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(modalImageUrl);
+      }
+    };
+  }, [modalImageUrl]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in-0 duration-200"
+      onClick={onClose}
+    >
+      {/* Close Button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-[101] p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors"
+        aria-label="Close modal"
+      >
+        <X size={24} className="text-slate-900" />
+      </button>
+
+      {/* Modal Content - 90% of screen */}
+      <div
+        className="relative w-[90vw] h-[90vh] flex items-center justify-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {loading ? (
+          <div className="text-white text-lg">Loading image...</div>
+        ) : error || !modalImageUrl ? (
+          <div className="text-white text-lg">Failed to load image</div>
+        ) : (
+          <img
+            src={modalImageUrl}
+            alt="Event Poster"
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+          />
+        )}
+      </div>
+    </div>
   );
 }

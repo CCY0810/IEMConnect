@@ -23,6 +23,7 @@ import {
 import { checkInToEvent, getMyAttendedEvents } from "@/lib/attendance-api";
 import { downloadCertificate } from "@/lib/certificate-api";
 import NotificationBell from "@/components/NotificationBell";
+import { getFileUrl } from "@/lib/event-api";
 import {
   CheckCircle,
   QrCode,
@@ -436,14 +437,7 @@ export default function AttendancePage() {
                     >
                       {event.poster_url && (
                         <div className="relative h-48 overflow-hidden rounded-t-lg">
-                          <img
-                            src={`http://localhost:5000${event.poster_url}`}
-                            alt={event.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
+                          <AttendedEventPoster posterUrl={event.poster_url} />
                         </div>
                       )}
                       <CardHeader>
@@ -554,5 +548,105 @@ export default function AttendancePage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+// Attended Event Poster Component - Loads poster with authentication
+function AttendedEventPoster({ posterUrl }: { posterUrl: string }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!posterUrl) {
+      setImageUrl(null);
+      setImageError(false);
+      setLoading(false);
+      return;
+    }
+
+    // Construct the full URL
+    let url = "";
+    if (posterUrl.startsWith("http")) {
+      url = posterUrl;
+    } else if (posterUrl.startsWith("/api/v1")) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = apiUrl.replace("/api/v1", "");
+      url = `${baseUrl}${posterUrl}`;
+    } else {
+      url = getFileUrl(posterUrl);
+    }
+
+    // Fetch image as blob with auth token
+    const token = localStorage.getItem("token");
+    if (token) {
+      setLoading(true);
+      fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load image: ${response.status}`);
+          }
+          return response.blob();
+        })
+        .then((blob) => {
+          const objectUrl = URL.createObjectURL(blob);
+          setImageUrl(objectUrl);
+          setImageError(false);
+        })
+        .catch((error) => {
+          console.error("Failed to load poster:", error);
+          setImageError(true);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      setImageUrl(url);
+      setLoading(false);
+    }
+
+    // Cleanup
+    return () => {
+      if (imageUrl && imageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [posterUrl]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (imageUrl && imageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
+
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+        <span className="text-xs text-slate-400">Loading...</span>
+      </div>
+    );
+  }
+
+  if (imageError || !imageUrl) {
+    return (
+      <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+        <span className="text-xs text-slate-400">Failed to load poster</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt="Event Poster"
+      className="w-full h-full object-cover"
+    />
   );
 }

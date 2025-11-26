@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { sendEventAnnouncement } from "@/lib/notification-api";
 import NotificationBell from "@/components/NotificationBell";
+import { getFileUrl } from "@/lib/event-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1920,7 +1921,19 @@ function FileField({ label, file, editable, onChange }: any) {
         <Input type="file" className="mt-2" onChange={onChange} />
       ) : file ? (
         <a
-          href={`http://localhost:5000${file}`}
+          href={
+            file.startsWith("http")
+              ? file
+              : file.startsWith("/api/v1")
+              ? (() => {
+                  const apiUrl =
+                    process.env.NEXT_PUBLIC_API_URL ||
+                    "http://localhost:5000/api/v1";
+                  const baseUrl = apiUrl.replace("/api/v1", "");
+                  return `${baseUrl}${file}`;
+                })()
+              : getFileUrl(file)
+          }
           download
           className="text-blue-600 underline text-sm block mt-1"
         >
@@ -1934,6 +1947,70 @@ function FileField({ label, file, editable, onChange }: any) {
 }
 
 function PosterField({ poster, editable, onChange }: any) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    if (!poster || editable) {
+      setImageUrl(null);
+      setImageError(false);
+      return;
+    }
+
+    // Construct the full URL
+    let url = "";
+    if (poster.startsWith("http")) {
+      url = poster;
+    } else if (poster.startsWith("/api/v1")) {
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = apiUrl.replace("/api/v1", "");
+      url = `${baseUrl}${poster}`;
+    } else {
+      url = getFileUrl(poster);
+    }
+
+    // Since the route requires authentication, we need to fetch with auth token
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Fetch image as blob with auth header
+      fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load image: ${response.status}`);
+          }
+          return response.blob();
+        })
+        .then((blob) => {
+          const objectUrl = URL.createObjectURL(blob);
+          setImageUrl(objectUrl);
+          setImageError(false);
+        })
+        .catch((error) => {
+          console.error("Failed to load poster:", error, "URL:", url);
+          setImageError(true);
+        });
+    } else {
+      // No token, try direct URL (might fail if auth required)
+      setImageUrl(url);
+    }
+
+    // Cleanup function will be set up below
+  }, [poster, editable]);
+
+  // Cleanup object URL on unmount or when imageUrl changes
+  useEffect(() => {
+    return () => {
+      if (imageUrl && imageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
+
   return (
     <div>
       <span className="text-sm font-medium text-slate-600">Poster</span>
@@ -1945,20 +2022,19 @@ function PosterField({ poster, editable, onChange }: any) {
           className="mt-2"
           onChange={onChange}
         />
-      ) : poster ? (
+      ) : imageUrl && !imageError ? (
         <img
-          src={`http://localhost:5000${poster}`}
+          src={imageUrl}
           alt="Event Poster"
           className="w-full max-w-sm h-auto object-cover rounded-md border mt-2"
           onError={(e) => {
-            console.error("Failed to load poster:", poster);
+            console.error("Failed to display poster image");
+            setImageError(true);
             e.currentTarget.style.display = "none";
-            if (e.currentTarget.nextSibling) {
-              (e.currentTarget.nextSibling as HTMLElement).style.display =
-                "block";
-            }
           }}
         />
+      ) : imageError ? (
+        <p className="text-slate-500 text-sm mt-1">Failed to load poster</p>
       ) : (
         <p className="text-slate-500 text-sm mt-1">No poster uploaded</p>
       )}
