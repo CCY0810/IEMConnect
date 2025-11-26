@@ -12,6 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { getUnverifiedUsers, verifyUser } from "@/lib/admin-api";
+import { getEvents, Event } from "@/lib/event-api";
 import {
   Table,
   TableBody,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import EventCalendar from "@/components/EventCalendar";
 
 import {
   Menu,
@@ -34,6 +36,9 @@ import {
   Settings,
   HelpCircle,
   PieChart as PieChartIcon,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import React from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -59,10 +64,29 @@ export default function DashboardPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
 
   useEffect(() => {
     if (!token) router.push("/login");
   }, [token, router]);
+
+  // Fetch events for stats and calendar
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!token) return;
+      try {
+        setEventsLoading(true);
+        const data = await getEvents();
+        setEvents(data);
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+    fetchEvents();
+  }, [token]);
 
   const handleLogout = async () => {
     await logout();
@@ -109,6 +133,28 @@ export default function DashboardPage() {
   };
 
   const isAdmin = user?.role === "admin";
+
+  // Calculate stats
+  const totalEvents = events.length;
+  const upcomingEvents = events.filter(
+    (e) => e.status === "Upcoming" || e.status === "Open"
+  ).length;
+  const registeredEvents = events.filter((e) => e.is_registered === true).length;
+  const completedEvents = events.filter((e) => e.status === "Completed").length;
+
+  // Admin stats
+  const pendingApprovals = unverifiedUsers.length;
+  const totalParticipants = events.reduce(
+    (sum, e) => sum + (e.participant_count || 0),
+    0
+  );
+
+  const handleCalendarDateClick = (date: Date, dateEvents: Event[]) => {
+    if (dateEvents.length > 0) {
+      // Navigate to the first event
+      router.push(`/view_event?id=${dateEvents[0].id}`);
+    }
+  };
 
   if (!user) return null;
 
@@ -253,30 +299,185 @@ export default function DashboardPage() {
 
         {/* content */}
         <main className="px-8 py-10 space-y-8 max-w-7xl mx-auto">
-          {/* PROFILE CARD */}
-          <Card className="bg-white/70 shadow">
-            <CardHeader>
-              <CardTitle>Profile Overview</CardTitle>
-              <CardDescription>
-                Your authenticated profile details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <Info label="Full Name" value={user.name} />
-              <Info label="Email" value={user.email} />
-              <Info
-                label="Role"
-                value={
-                  <span className="flex items-center gap-2 capitalize">
-                    {user.role} {user.role === "admin" && <Badge>Admin</Badge>}
-                  </span>
-                }
+          {/* STATS CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatsCard
+              title="Total Events"
+              value={totalEvents}
+              icon={<Calendar className="h-5 w-5" />}
+              description="All events"
+              loading={eventsLoading}
+            />
+            <StatsCard
+              title="Upcoming Events"
+              value={upcomingEvents}
+              icon={<Clock className="h-5 w-5" />}
+              description="Events coming soon"
+              loading={eventsLoading}
+            />
+            <StatsCard
+              title="My Registrations"
+              value={registeredEvents}
+              icon={<CheckCircle2 className="h-5 w-5" />}
+              description="Events you're registered for"
+              loading={eventsLoading}
+            />
+            {isAdmin ? (
+              <StatsCard
+                title="Pending Approvals"
+                value={pendingApprovals}
+                icon={<Users className="h-5 w-5" />}
+                description="Users awaiting verification"
+                loading={false}
               />
-              <Info label="Membership Number" value={user.membership_number} />
-              <Info label="Matric Number" value={user.matric_number} />
-              <Info label="Faculty" value={user.faculty} />
-            </CardContent>
-          </Card>
+            ) : (
+              <StatsCard
+                title="Completed"
+                value={completedEvents}
+                icon={<TrendingUp className="h-5 w-5" />}
+                description="Past events"
+                loading={eventsLoading}
+              />
+            )}
+          </div>
+
+          {/* MAIN CONTENT GRID */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* LEFT COLUMN - Calendar */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* CALENDAR VIEW */}
+              <Card className="bg-white/70 shadow">
+                <CardHeader>
+                  <CardTitle>Event Calendar</CardTitle>
+                  <CardDescription>
+                    Click on a date to view events
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {eventsLoading ? (
+                    <div className="flex items-center justify-center h-64">
+                      <p className="text-slate-500">Loading calendar...</p>
+                    </div>
+                  ) : (
+                    <EventCalendar
+                      events={events}
+                      onDateClick={handleCalendarDateClick}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* PROFILE CARD */}
+              <Card className="bg-white/70 shadow">
+                <CardHeader>
+                  <CardTitle>Profile Overview</CardTitle>
+                  <CardDescription>
+                    Your authenticated profile details
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Info label="Full Name" value={user.name} />
+                  <Info label="Email" value={user.email} />
+                  <Info
+                    label="Role"
+                    value={
+                      <span className="flex items-center gap-2 capitalize">
+                        {user.role} {user.role === "admin" && <Badge>Admin</Badge>}
+                      </span>
+                    }
+                  />
+                  <Info label="Membership Number" value={user.membership_number} />
+                  <Info label="Matric Number" value={user.matric_number} />
+                  <Info label="Faculty" value={user.faculty} />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* RIGHT COLUMN - Quick Actions & Recent Events */}
+            <div className="space-y-6">
+              {/* QUICK ACTIONS */}
+              <Card className="bg-white/70 shadow">
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => router.push("/event")}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Browse Events
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => router.push("/create_event")}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Create Event
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => router.push("/attendance")}
+                  >
+                    <CheckSquare className="mr-2 h-4 w-4" />
+                    View Attendance
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => router.push("/settings")}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* UPCOMING EVENTS */}
+              <Card className="bg-white/70 shadow">
+                <CardHeader>
+                  <CardTitle>Upcoming Events</CardTitle>
+                  <CardDescription>Your next events</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {eventsLoading ? (
+                    <p className="text-slate-500 text-sm">Loading...</p>
+                  ) : upcomingEvents === 0 ? (
+                    <p className="text-slate-500 text-sm">No upcoming events</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {events
+                        .filter((e) => e.status === "Upcoming" || e.status === "Open")
+                        .slice(0, 5)
+                        .map((event) => (
+                          <button
+                            key={event.id}
+                            onClick={() => router.push(`/view_event?id=${event.id}`)}
+                            className="w-full text-left p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="font-medium text-sm">{event.title}</div>
+                            <div className="text-xs text-slate-500 mt-1">
+                              {new Date(event.start_date).toLocaleDateString()}
+                              {event.start_time && ` at ${event.start_time}`}
+                            </div>
+                            {event.is_registered && (
+                              <Badge variant="secondary" className="mt-2 text-xs">
+                                Registered
+                              </Badge>
+                            )}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
           {/* ADMIN PANEL */}
           {user.role === "admin" && (
@@ -373,6 +574,37 @@ function Info({ label, value }: { label: string; value: any }) {
       <p className="text-sm text-slate-500">{label}</p>
       <p className="text-lg font-medium">{value}</p>
     </div>
+  );
+}
+
+function StatsCard({
+  title,
+  value,
+  icon,
+  description,
+  loading,
+}: {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  description: string;
+  loading?: boolean;
+}) {
+  return (
+    <Card className="bg-white/70 shadow">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-600">{title}</p>
+            <p className="text-3xl font-bold mt-2">
+              {loading ? "..." : value}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">{description}</p>
+          </div>
+          <div className="text-blue-500">{icon}</div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

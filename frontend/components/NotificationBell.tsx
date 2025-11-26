@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, Check, CheckCheck } from "lucide-react";
+import { Bell, Check, CheckCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -9,6 +9,7 @@ import {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
+  deleteNotification,
   Notification,
 } from "@/lib/notification-api";
 // Helper function to format time ago
@@ -122,6 +123,21 @@ export default function NotificationBell() {
     }
   };
 
+  const handleDeleteNotification = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent marking as read when clicking delete
+    try {
+      const notification = notifications.find((n) => n.id === id);
+      await deleteNotification(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      // Update unread count if deleted notification was unread
+      if (notification && !notification.is_read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error("Failed to delete notification:", error);
+    }
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <Button
@@ -177,7 +193,7 @@ export default function NotificationBell() {
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 hover:bg-slate-50 transition-colors cursor-pointer ${
+                    className={`group p-4 hover:bg-slate-50 transition-colors cursor-pointer relative ${
                       !notification.is_read ? "bg-blue-50/50" : "bg-white"
                     }`}
                     onClick={() => {
@@ -204,11 +220,18 @@ export default function NotificationBell() {
                           {formatTimeAgo(notification.created_at)}
                         </p>
                       </div>
-                      {!notification.is_read && (
-                        <div className="flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {!notification.is_read && (
                           <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                        </div>
-                      )}
+                        )}
+                        <button
+                          onClick={(e) => handleDeleteNotification(notification.id, e)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded text-slate-400 hover:text-red-600"
+                          title="Delete notification"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

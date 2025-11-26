@@ -74,3 +74,9 @@ export const sendEventAnnouncement = async (
   return response.data;
 };
 
+// Delete a notification
+export const deleteNotification = async (id: number): Promise<{ message: string }> => {
+  const response = await api.delete(`/notifications/${id}`);
+  return response.data;
+};
+

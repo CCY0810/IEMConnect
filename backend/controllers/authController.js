@@ -11,6 +11,7 @@ import {
   isTwoFACodeExpired,
 } from "../utils/twofa.js";
 import emailService from "../utils/emailService.js";
+import NotificationService from "../services/notificationService.js";
 
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
@@ -562,6 +563,20 @@ export const changePassword = async (req, res) => {
 
     // Send confirmation email
     await emailService.sendPasswordChangedEmail(user.email, user.name);
+
+    // Send in-app notification + email (force email for security)
+    try {
+      await NotificationService.notifyUser(
+        user.id,
+        "Password Changed",
+        "Your password was successfully changed. If you didn't make this change, please contact support immediately.",
+        "system",
+        true // Force email for security notifications
+      );
+    } catch (notificationError) {
+      // Log error but don't fail password change
+      console.error("Failed to send password change notification:", notificationError);
+    }
 
     res.status(200).json({
       message: "Password changed successfully",

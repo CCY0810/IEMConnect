@@ -1,6 +1,7 @@
 import Event from "../models/Event.js";
 import EventRegistration from "../models/EventRegistration.js";
 import User from "../models/User.js";
+import NotificationService from "../services/notificationService.js";
 import { Op } from "sequelize";
 import fs from "fs";
 import path from "path";
@@ -79,6 +80,36 @@ export const createEvent = async (req, res) => {
       poster_file,
       paperwork_file,
     });
+
+    // Notify all verified users about the new event
+    try {
+      const verifiedUsers = await User.findAll({
+        where: {
+          is_verified: 1,
+        },
+        attributes: ["id"],
+      });
+
+      if (verifiedUsers.length > 0) {
+        const userIds = verifiedUsers.map((u) => u.id);
+        const eventDate = start_date ? new Date(start_date).toLocaleDateString() : "TBA";
+        const eventTime = start_time ? start_time : "";
+        const eventDateTime = eventTime ? `${eventDate} at ${eventTime}` : eventDate;
+
+        const message = `A new event "${title}" has been created. ${description ? `\n\n${description}` : ""}\n\nDate: ${eventDateTime}${cost > 0 ? `\nCost: RM ${cost}` : "\nCost: Free"}`;
+
+        await NotificationService.notifyUsers(
+          userIds,
+          `New Event: ${title}`,
+          message,
+          "announcements",
+          false // Don't force email, respect user preferences
+        );
+      }
+    } catch (notificationError) {
+      // Log error but don't fail event creation
+      console.error("Failed to send event creation notifications:", notificationError);
+    }
 
     res.status(201).json({
       message: "Event created successfully",

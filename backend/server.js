@@ -11,6 +11,7 @@ import attendanceRoutes from "./routes/attendance.js";
 import notificationsRoutes from "./routes/notifications.js";
 import certificatesRoutes from "./routes/certificates.js";
 import { apiRateLimit } from "./middleware/rateLimiter.js";
+import eventReminderScheduler from "./utils/eventReminderScheduler.js";
 
 dotenv.config();
 
@@ -69,4 +70,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
+  
+  // Start event reminder scheduler
+  eventReminderScheduler.start();
 });

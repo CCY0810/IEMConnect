@@ -203,3 +203,31 @@ export const createNotification = async (req, res) => {
   }
 };
 
+/**
+ * Delete a notification
+ * DELETE /api/v1/notifications/:id
+ */
+export const deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const notification = await Notification.findOne({
+      where: { id, user_id: userId },
+    });
+
+    if (!notification) {
+      return res.status(404).json({ error: "Notification not found" });
+    }
+
+    await notification.destroy();
+
+    res.json({
+      message: "Notification deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete notification error:", error);
+    res.status(500).json({ error: "Failed to delete notification" });
+  }
+};
+
