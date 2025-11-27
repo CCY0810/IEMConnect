@@ -48,11 +48,12 @@ CREATE TABLE IF NOT EXISTS users (
   reset_password_expiry DATETIME DEFAULT NULL,
   two_fa_enabled BOOLEAN DEFAULT FALSE,
   preferences JSON DEFAULT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
   -- Unique constraints
   UNIQUE KEY unique_email (email),
+  UNIQUE KEY unique_membership_number (membership_number),
   UNIQUE KEY unique_matric_number (matric_number),
   
   -- Indexes for performance
@@ -60,7 +61,7 @@ CREATE TABLE IF NOT EXISTS users (
   INDEX idx_users_faculty (faculty), -- For reports: faculty distribution queries (GROUP BY faculty)
   INDEX idx_role (role),
   INDEX idx_users_is_verified (is_verified), -- For reports: pending approvals queries (WHERE is_verified = 0)
-  INDEX idx_users_created_at (created_at) -- For reports: user growth over time (WHERE createdAt <= date)
+  INDEX idx_users_created_at (createdAt) -- For reports: user growth over time (WHERE createdAt <= date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
