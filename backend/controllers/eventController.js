@@ -162,9 +162,12 @@ export const getEvents = async (req, res) => {
           eventData.paperwork_url = `/api/v1/events/files/${eventData.paperwork_file}`;
         }
 
-        // Get participant count
+        // Get participant count (include both registered and attended, exclude cancelled)
         const participantCount = await EventRegistration.count({
-          where: { event_id: event.id, status: "registered" },
+          where: { 
+            event_id: event.id, 
+            status: { [Op.in]: ["registered", "attended"] }
+          },
         });
         eventData.participant_count = participantCount;
 
@@ -215,9 +218,12 @@ export const getEventById = async (req, res) => {
       eventData.paperwork_url = `/api/v1/events/files/${eventData.paperwork_file}`;
     }
 
-    // Get participant count
+    // Get participant count (include both registered and attended, exclude cancelled)
     const participantCount = await EventRegistration.count({
-      where: { event_id: id, status: "registered" },
+      where: { 
+        event_id: id, 
+        status: { [Op.in]: ["registered", "attended"] }
+      },
     });
     eventData.participant_count = participantCount;
 
@@ -614,6 +620,28 @@ export const registerForEvent = async (req, res) => {
       return res
         .status(400)
         .json({ error: "Already registered for this event" });
+    }
+
+    // Check registration capacity
+    if (event.targeted_participants) {
+      // Extract number from targeted_participants string (e.g., "100 students" -> 100)
+      const targetedCount = parseInt(event.targeted_participants.match(/\d+/)?.[0] || "0");
+      
+      if (targetedCount > 0) {
+        // Count current registered participants (include both registered and attended, exclude cancelled)
+        const currentRegistrations = await EventRegistration.count({
+          where: {
+            event_id: id,
+            status: { [Op.in]: ["registered", "attended"] },
+          },
+        });
+
+        if (currentRegistrations >= targetedCount) {
+          return res.status(400).json({
+            error: "Event registration is full. No more participants can be registered.",
+          });
+        }
+      }
     }
 
     // Create registration

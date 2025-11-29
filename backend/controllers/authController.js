@@ -550,7 +550,7 @@ export const changePassword = async (req, res) => {
       user.password_hash
     );
     if (!isCurrentPasswordValid) {
-      return res.status(401).json({ error: "Current password is incorrect" });
+      return res.status(400).json({ error: "Current password is incorrect" });
     }
 
     // Hash new password
@@ -611,7 +611,7 @@ export const deleteAccount = async (req, res) => {
       user.password_hash
     );
     if (!isPasswordValid) {
-      return res.status(401).json({ error: "Incorrect password" });
+      return res.status(400).json({ error: "Incorrect password" });
     }
 
     // Store user info before deletion for email

@@ -458,11 +458,21 @@ export default function CreateEventPage() {
                   <Input
                     type="date"
                     value={formData.startDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startDate: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Validate year is 4 digits
+                      if (value) {
+                        const year = new Date(value).getFullYear();
+                        if (year.toString().length !== 4) {
+                          return; // Don't update if year is not 4 digits
+                        }
+                      }
+                      setFormData({ ...formData, startDate: value });
+                    }}
                     required
                     disabled={loading}
+                    min="1000-01-01"
+                    max="9999-12-31"
                   />
                 </div>
 
@@ -473,11 +483,21 @@ export default function CreateEventPage() {
                   <Input
                     type="date"
                     value={formData.endDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endDate: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Validate year is 4 digits
+                      if (value) {
+                        const year = new Date(value).getFullYear();
+                        if (year.toString().length !== 4) {
+                          return; // Don't update if year is not 4 digits
+                        }
+                      }
+                      setFormData({ ...formData, endDate: value });
+                    }}
                     required
                     disabled={loading}
+                    min="1000-01-01"
+                    max="9999-12-31"
                   />
                 </div>
 

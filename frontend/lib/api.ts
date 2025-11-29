@@ -29,7 +29,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     // If we get a 401 (Unauthorized), the token is invalid or expired
-    if (error.response?.status === 401) {
+    // BUT: Don't log out for password validation errors (they should return 400, but be defensive)
+    const errorMessage = error.response?.data?.error?.toLowerCase() || "";
+    const isPasswordError = 
+      errorMessage.includes("password is incorrect") ||
+      errorMessage.includes("incorrect password") ||
+      errorMessage.includes("current password");
+    
+    if (error.response?.status === 401 && !isPasswordError) {
       // Clear all auth data
       localStorage.removeItem("token");
       localStorage.removeItem("user");

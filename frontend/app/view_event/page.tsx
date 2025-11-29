@@ -697,12 +697,14 @@ export default function ViewEventPage() {
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
-          <SidebarButton
-            icon={<FileText size={18} />}
-            label="Reports"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/reports")}
-          />
+          {isAdmin && (
+            <SidebarButton
+              icon={<FileText size={18} />}
+              label="Reports"
+              open={sidebarOpen}
+              onClick={() => router.push("/admin/reports")}
+            />
+          )}
           <SidebarButton
             icon={<Calendar size={18} />}
             label="Events"
@@ -1263,13 +1265,15 @@ export default function ViewEventPage() {
                         setNewPaperwork(e.target.files?.[0] || null)
                       }
                     />
-                    <PosterField
-                      poster={event.poster_url}
-                      editable={editing}
-                      onChange={(e: any) =>
-                        setNewPoster(e.target.files?.[0] || null)
-                      }
-                    />
+                    {editing && (
+                      <PosterField
+                        poster={event.poster_url}
+                        editable={editing}
+                        onChange={(e: any) =>
+                          setNewPoster(e.target.files?.[0] || null)
+                        }
+                      />
+                    )}
 
                     <InputField
                       label="Date From"
@@ -1728,8 +1732,9 @@ export default function ViewEventPage() {
                           </div>
                         )}
 
-                      {/* CHECK-IN SECTION (FOR REGISTERED USERS INCLUDING ADMINS) */}
-                      {event.is_registered &&
+                      {/* CHECK-IN SECTION (FOR REGISTERED USERS - NOT ADMINS) */}
+                      {!isAdmin &&
+                        event.is_registered &&
                         event.attendance_status === "Active" &&
                         event.attendance_code && (
                           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
@@ -1806,14 +1811,6 @@ export default function ViewEventPage() {
                                       ? "Checking In..."
                                       : "Check In"}
                                   </Button>
-
-                                  {isAdmin && (
-                                    <p className="text-xs text-center text-green-600">
-                                      As an admin, you can check in using the
-                                      code above or scan the QR code in the
-                                      Attendance Management section.
-                                    </p>
-                                  )}
                                 </>
                               )}
                             </CardContent>
@@ -1900,11 +1897,29 @@ function InputField({
   type = "text",
   className = "",
 }: any) {
+  const handleDateChange = (e: any) => {
+    const value = e.target.value;
+    // Validate year is 4 digits for date inputs
+    if (type === "date" && value) {
+      const year = new Date(value).getFullYear();
+      if (year.toString().length !== 4) {
+        return; // Don't update if year is not 4 digits
+      }
+    }
+    onChange(e);
+  };
+
   return (
     <div className={className}>
       <span className="text-sm font-medium text-slate-600">{label}</span>
       {editable ? (
-        <Input type={type} value={value} onChange={onChange} />
+        <Input
+          type={type}
+          value={value}
+          onChange={type === "date" ? handleDateChange : onChange}
+          min={type === "date" ? "1000-01-01" : undefined}
+          max={type === "date" ? "9999-12-31" : undefined}
+        />
       ) : (
         <p className="text-slate-700">{value}</p>
       )}
@@ -1913,6 +1928,60 @@ function InputField({
 }
 
 function FileField({ label, file, editable, onChange }: any) {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!file) return;
+
+    setDownloading(true);
+    try {
+      // Construct the full URL
+      let url = "";
+      if (file.startsWith("http")) {
+        url = file;
+      } else if (file.startsWith("/api/v1")) {
+        const apiUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+        const baseUrl = apiUrl.replace("/api/v1", "");
+        url = `${baseUrl}${file}`;
+      } else {
+        url = getFileUrl(file);
+      }
+
+      // Get auth token
+      const token = localStorage.getItem("token");
+
+      // Fetch file with auth header
+      const response = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download file: ${response.status}`);
+      }
+
+      // Get blob and create download link
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+
+      // Extract filename from URL or use default
+      const filename = file.split("/").pop() || "download";
+      link.download = filename;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("Failed to download file. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div>
       <span className="text-sm font-medium text-slate-600">{label}</span>
@@ -1920,25 +1989,13 @@ function FileField({ label, file, editable, onChange }: any) {
       {editable ? (
         <Input type="file" className="mt-2" onChange={onChange} />
       ) : file ? (
-        <a
-          href={
-            file.startsWith("http")
-              ? file
-              : file.startsWith("/api/v1")
-              ? (() => {
-                  const apiUrl =
-                    process.env.NEXT_PUBLIC_API_URL ||
-                    "http://localhost:5000/api/v1";
-                  const baseUrl = apiUrl.replace("/api/v1", "");
-                  return `${baseUrl}${file}`;
-                })()
-              : getFileUrl(file)
-          }
-          download
-          className="text-blue-600 underline text-sm block mt-1"
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="text-blue-600 underline text-sm block mt-1 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Download File
-        </a>
+          {downloading ? "Downloading..." : "Download File"}
+        </button>
       ) : (
         <p className="text-slate-500 text-sm mt-1">No file uploaded</p>
       )}
