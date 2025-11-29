@@ -128,12 +128,14 @@ export default function EventsPage() {
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
-          <SidebarButton
-            icon={<FileText size={18} />}
-            label="Reports"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/reports")}
-          />
+          {isAdmin && (
+            <SidebarButton
+              icon={<FileText size={18} />}
+              label="Analytics"
+              open={sidebarOpen}
+              onClick={() => router.push("/admin/reports")}
+            />
+          )}
           <SidebarButton
             icon={<Calendar size={18} />}
             label="Events"

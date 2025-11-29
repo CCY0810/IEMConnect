@@ -382,7 +382,7 @@ export default function SettingsPage() {
             <SidebarButton
               open={sidebarOpen}
               icon={<FileText size={18} />}
-              label="Reports"
+              label="Analytics"
               onClick={() => router.push("/admin/reports")}
             />
           )}

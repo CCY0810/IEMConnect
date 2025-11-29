@@ -5,6 +5,21 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { createEvent } from "@/lib/event-api";
 import NotificationBell from "@/components/NotificationBell";
+import {
+  validateName,
+  validateEmail,
+  validateMatricNumber,
+  validatePhone,
+  validateTitle,
+  validateDescription,
+  validateCost,
+  validateTargetedParticipants,
+  validateDate,
+  validateEndDate,
+  validateTime,
+  validateEndTime,
+  validateFile,
+} from "@/lib/validation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,10 +79,17 @@ export default function CreateEventPage() {
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [paperworkFile, setPaperworkFile] = useState<File | null>(null);
 
+  // Validation state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
   if (!user) return null;
 
+  // Check if user is admin
+  const isAdmin = user.role === "admin";
+
   // Redirect non-admin users
-  if (user.role !== "admin") {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <div className="bg-white/80 backdrop-blur-lg border border-white/60 rounded-2xl shadow-2xl p-12 max-w-md text-center">
@@ -101,21 +123,177 @@ export default function CreateEventPage() {
     );
   }
 
+  // Validate all fields
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    const nameValidation = validateName(formData.directorName);
+    if (!nameValidation.isValid)
+      newErrors.directorName = nameValidation.error || "";
+
+    const matricValidation = validateMatricNumber(formData.matric);
+    if (!matricValidation.isValid)
+      newErrors.matric = matricValidation.error || "";
+
+    const phoneValidation = validatePhone(formData.phone);
+    if (!phoneValidation.isValid) newErrors.phone = phoneValidation.error || "";
+
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.isValid) newErrors.email = emailValidation.error || "";
+
+    const titleValidation = validateTitle(formData.title);
+    if (!titleValidation.isValid) newErrors.title = titleValidation.error || "";
+
+    const descriptionValidation = validateDescription(formData.description);
+    if (!descriptionValidation.isValid)
+      newErrors.description = descriptionValidation.error || "";
+
+    const costValidation = validateCost(formData.cost);
+    if (!costValidation.isValid) newErrors.cost = costValidation.error || "";
+
+    const targetedValidation = validateTargetedParticipants(
+      formData.targetedParticipants
+    );
+    if (!targetedValidation.isValid)
+      newErrors.targetedParticipants = targetedValidation.error || "";
+
+    const startDateValidation = validateDate(formData.startDate, "Start date");
+    if (!startDateValidation.isValid)
+      newErrors.startDate = startDateValidation.error || "";
+
+    const endDateValidation = validateEndDate(
+      formData.startDate,
+      formData.endDate
+    );
+    if (!endDateValidation.isValid)
+      newErrors.endDate = endDateValidation.error || "";
+
+    const startTimeValidation = validateTime(formData.startTime, "Start time");
+    if (!startTimeValidation.isValid)
+      newErrors.startTime = startTimeValidation.error || "";
+
+    const endTimeValidation = validateEndTime(
+      formData.startDate,
+      formData.endDate,
+      formData.startTime,
+      formData.endTime
+    );
+    if (!endTimeValidation.isValid)
+      newErrors.endTime = endTimeValidation.error || "";
+
+    if (posterFile) {
+      const posterValidation = validateFile(posterFile, ["image/*"], 10);
+      if (!posterValidation.isValid)
+        newErrors.posterFile = posterValidation.error || "";
+    }
+
+    if (paperworkFile) {
+      const paperworkValidation = validateFile(
+        paperworkFile,
+        [".pdf", ".doc", ".docx"],
+        10
+      );
+      if (!paperworkValidation.isValid)
+        newErrors.paperworkFile = paperworkValidation.error || "";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateField = (fieldName: string, value: string) => {
+    let validation;
+
+    switch (fieldName) {
+      case "directorName":
+        validation = validateName(value);
+        break;
+      case "matric":
+        validation = validateMatricNumber(value);
+        break;
+      case "phone":
+        validation = validatePhone(value);
+        break;
+      case "email":
+        validation = validateEmail(value);
+        break;
+      case "title":
+        validation = validateTitle(value);
+        break;
+      case "description":
+        validation = validateDescription(value);
+        break;
+      case "cost":
+        validation = validateCost(value);
+        break;
+      case "targetedParticipants":
+        validation = validateTargetedParticipants(value);
+        break;
+      case "startDate":
+        validation = validateDate(value, "Start date");
+        break;
+      case "endDate":
+        validation = validateEndDate(formData.startDate, value);
+        break;
+      case "startTime":
+        validation = validateTime(value, "Start time");
+        break;
+      case "endTime":
+        validation = validateEndTime(
+          formData.startDate,
+          formData.endDate,
+          formData.startTime,
+          value
+        );
+        break;
+      default:
+        return;
+    }
+
+    if (!validation.isValid) {
+      setErrors((prev) => ({ ...prev, [fieldName]: validation.error || "" }));
+    } else {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    // Mark all required fields as touched
+    setTouched({
+      directorName: true,
+      matric: true,
+      phone: true,
+      email: true,
+      title: true,
+      startDate: true,
+      endDate: true,
+    });
+
+    // Validate form
+    if (!validateForm()) {
+      setError("Please fix all errors before submitting");
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     try {
       await createEvent({
-        director_name: formData.directorName,
-        director_matric: formData.matric,
-        director_phone: formData.phone,
-        director_email: formData.email,
-        title: formData.title,
-        description: formData.description,
+        director_name: formData.directorName.trim(),
+        director_matric: formData.matric.trim(),
+        director_phone: formData.phone.trim(),
+        director_email: formData.email.trim().toLowerCase(),
+        title: formData.title.trim(),
+        description: formData.description.trim(),
         cost: formData.cost ? parseFloat(formData.cost) : 0,
-        targeted_participants: formData.targetedParticipants,
+        targeted_participants: formData.targetedParticipants.trim(),
         start_date: formData.startDate,
         end_date: formData.endDate,
         start_time: formData.startTime || undefined,
@@ -132,6 +310,19 @@ export default function CreateEventPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const isFormValid = () => {
+    return (
+      formData.directorName.trim() !== "" &&
+      formData.matric.trim() !== "" &&
+      formData.phone.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      formData.title.trim() !== "" &&
+      formData.startDate !== "" &&
+      formData.endDate !== "" &&
+      Object.keys(errors).length === 0
+    );
   };
 
   return (
@@ -181,12 +372,14 @@ export default function CreateEventPage() {
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
-          <SidebarButton
-            icon={<FileText size={18} />}
-            label="Reports"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/reports")}
-          />
+          {isAdmin && (
+            <SidebarButton
+              icon={<FileText size={18} />}
+              label="Analytics"
+              open={sidebarOpen}
+              onClick={() => router.push("/admin/reports")}
+            />
+          )}
           <SidebarButton
             icon={<Calendar size={18} />}
             label="Events"
@@ -297,12 +490,31 @@ export default function CreateEventPage() {
                   <Input
                     placeholder="Enter director name"
                     value={formData.directorName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, directorName: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        directorName: e.target.value,
+                      });
+                      if (touched.directorName)
+                        validateField("directorName", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, directorName: true }));
+                      validateField("directorName", formData.directorName);
+                    }}
                     required
                     disabled={loading}
+                    className={
+                      touched.directorName && errors.directorName
+                        ? "border-red-500"
+                        : ""
+                    }
                   />
+                  {touched.directorName && errors.directorName && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.directorName}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -310,14 +522,27 @@ export default function CreateEventPage() {
                     Matric Number *
                   </span>
                   <Input
-                    placeholder="Enter matric number"
+                    placeholder="Enter matric number (9 characters)"
                     value={formData.matric}
-                    onChange={(e) =>
-                      setFormData({ ...formData, matric: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.toUpperCase();
+                      setFormData({ ...formData, matric: value });
+                      if (touched.matric) validateField("matric", value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, matric: true }));
+                      validateField("matric", formData.matric);
+                    }}
                     required
                     disabled={loading}
+                    maxLength={9}
+                    className={
+                      touched.matric && errors.matric ? "border-red-500" : ""
+                    }
                   />
+                  {touched.matric && errors.matric && (
+                    <p className="text-sm text-red-500 mt-1">{errors.matric}</p>
+                  )}
                 </div>
 
                 <div>
@@ -327,12 +552,23 @@ export default function CreateEventPage() {
                   <Input
                     placeholder="Enter phone number"
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      if (touched.phone) validateField("phone", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, phone: true }));
+                      validateField("phone", formData.phone);
+                    }}
                     required
                     disabled={loading}
+                    className={
+                      touched.phone && errors.phone ? "border-red-500" : ""
+                    }
                   />
+                  {touched.phone && errors.phone && (
+                    <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
+                  )}
                 </div>
 
                 <div>
@@ -343,12 +579,23 @@ export default function CreateEventPage() {
                     type="email"
                     placeholder="Enter email"
                     value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      if (touched.email) validateField("email", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, email: true }));
+                      validateField("email", formData.email);
+                    }}
                     required
                     disabled={loading}
+                    className={
+                      touched.email && errors.email ? "border-red-500" : ""
+                    }
                   />
+                  {touched.email && errors.email && (
+                    <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -368,12 +615,23 @@ export default function CreateEventPage() {
                   <Input
                     placeholder="Enter event title"
                     value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, title: e.target.value });
+                      if (touched.title) validateField("title", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, title: true }));
+                      validateField("title", formData.title);
+                    }}
                     required
                     disabled={loading}
+                    className={
+                      touched.title && errors.title ? "border-red-500" : ""
+                    }
                   />
+                  {touched.title && errors.title && (
+                    <p className="text-sm text-red-500 mt-1">{errors.title}</p>
+                  )}
                 </div>
 
                 <div className="md:col-span-2">
@@ -384,11 +642,27 @@ export default function CreateEventPage() {
                     placeholder="Enter event description"
                     rows={4}
                     value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, description: e.target.value });
+                      if (touched.description)
+                        validateField("description", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, description: true }));
+                      validateField("description", formData.description);
+                    }}
                     disabled={loading}
+                    className={
+                      touched.description && errors.description
+                        ? "border-red-500"
+                        : ""
+                    }
                   />
+                  {touched.description && errors.description && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.description}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -399,13 +673,24 @@ export default function CreateEventPage() {
                     type="number"
                     placeholder="Enter cost"
                     value={formData.cost}
-                    onChange={(e) =>
-                      setFormData({ ...formData, cost: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, cost: e.target.value });
+                      if (touched.cost) validateField("cost", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, cost: true }));
+                      validateField("cost", formData.cost);
+                    }}
                     min="0"
                     step="0.01"
                     disabled={loading}
+                    className={
+                      touched.cost && errors.cost ? "border-red-500" : ""
+                    }
                   />
+                  {touched.cost && errors.cost && (
+                    <p className="text-sm text-red-500 mt-1">{errors.cost}</p>
+                  )}
                 </div>
 
                 <div>
@@ -415,14 +700,38 @@ export default function CreateEventPage() {
                   <Input
                     placeholder="e.g. 100 students"
                     value={formData.targetedParticipants}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setFormData({
                         ...formData,
                         targetedParticipants: e.target.value,
-                      })
-                    }
+                      });
+                      if (touched.targetedParticipants)
+                        validateField("targetedParticipants", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({
+                        ...prev,
+                        targetedParticipants: true,
+                      }));
+                      validateField(
+                        "targetedParticipants",
+                        formData.targetedParticipants
+                      );
+                    }}
                     disabled={loading}
+                    className={
+                      touched.targetedParticipants &&
+                      errors.targetedParticipants
+                        ? "border-red-500"
+                        : ""
+                    }
                   />
+                  {touched.targetedParticipants &&
+                    errors.targetedParticipants && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.targetedParticipants}
+                      </p>
+                    )}
                 </div>
 
                 <div>
@@ -432,11 +741,36 @@ export default function CreateEventPage() {
                   <Input
                     type="file"
                     accept=".pdf,.doc,.docx"
-                    onChange={(e) =>
-                      setPaperworkFile(e.target.files?.[0] || null)
-                    }
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setPaperworkFile(file);
+                      if (file) {
+                        const validation = validateFile(
+                          file,
+                          [".pdf", ".doc", ".docx"],
+                          10
+                        );
+                        if (!validation.isValid) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            paperworkFile: validation.error || "",
+                          }));
+                        } else {
+                          setErrors((prev) => {
+                            const newErrors = { ...prev };
+                            delete newErrors.paperworkFile;
+                            return newErrors;
+                          });
+                        }
+                      }
+                    }}
                     disabled={loading}
                   />
+                  {errors.paperworkFile && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.paperworkFile}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -446,9 +780,32 @@ export default function CreateEventPage() {
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setPosterFile(e.target.files?.[0] || null)}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setPosterFile(file);
+                      if (file) {
+                        const validation = validateFile(file, ["image/*"], 10);
+                        if (!validation.isValid) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            posterFile: validation.error || "",
+                          }));
+                        } else {
+                          setErrors((prev) => {
+                            const newErrors = { ...prev };
+                            delete newErrors.posterFile;
+                            return newErrors;
+                          });
+                        }
+                      }
+                    }}
                     disabled={loading}
                   />
+                  {errors.posterFile && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.posterFile}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -468,12 +825,31 @@ export default function CreateEventPage() {
                         }
                       }
                       setFormData({ ...formData, startDate: value });
+                      if (touched.startDate) validateField("startDate", value);
+                      // Re-validate end date if it's been touched
+                      if (touched.endDate && formData.endDate) {
+                        validateField("endDate", formData.endDate);
+                      }
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, startDate: true }));
+                      validateField("startDate", formData.startDate);
                     }}
                     required
                     disabled={loading}
                     min="1000-01-01"
                     max="9999-12-31"
+                    className={
+                      touched.startDate && errors.startDate
+                        ? "border-red-500"
+                        : ""
+                    }
                   />
+                  {touched.startDate && errors.startDate && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.startDate}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -493,12 +869,29 @@ export default function CreateEventPage() {
                         }
                       }
                       setFormData({ ...formData, endDate: value });
+                      if (touched.endDate) validateField("endDate", value);
+                      // Re-validate end time if it's been touched
+                      if (touched.endTime && formData.endTime) {
+                        validateField("endTime", formData.endTime);
+                      }
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, endDate: true }));
+                      validateField("endDate", formData.endDate);
                     }}
                     required
                     disabled={loading}
-                    min="1000-01-01"
+                    min={formData.startDate || "1000-01-01"}
                     max="9999-12-31"
+                    className={
+                      touched.endDate && errors.endDate ? "border-red-500" : ""
+                    }
                   />
+                  {touched.endDate && errors.endDate && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.endDate}
+                    </p>
+                  )}
                 </div>
 
                 {/* TIME FIELDS */}
@@ -509,11 +902,31 @@ export default function CreateEventPage() {
                   <Input
                     type="time"
                     value={formData.startTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startTime: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, startTime: e.target.value });
+                      if (touched.startTime)
+                        validateField("startTime", e.target.value);
+                      // Re-validate end time if it's been touched
+                      if (touched.endTime && formData.endTime) {
+                        validateField("endTime", formData.endTime);
+                      }
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, startTime: true }));
+                      validateField("startTime", formData.startTime);
+                    }}
                     disabled={loading}
+                    className={
+                      touched.startTime && errors.startTime
+                        ? "border-red-500"
+                        : ""
+                    }
                   />
+                  {touched.startTime && errors.startTime && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.startTime}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -523,11 +936,25 @@ export default function CreateEventPage() {
                   <Input
                     type="time"
                     value={formData.endTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endTime: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, endTime: e.target.value });
+                      if (touched.endTime)
+                        validateField("endTime", e.target.value);
+                    }}
+                    onBlur={() => {
+                      setTouched((prev) => ({ ...prev, endTime: true }));
+                      validateField("endTime", formData.endTime);
+                    }}
                     disabled={loading}
+                    className={
+                      touched.endTime && errors.endTime ? "border-red-500" : ""
+                    }
                   />
+                  {touched.endTime && errors.endTime && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.endTime}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -537,7 +964,7 @@ export default function CreateEventPage() {
               <Button
                 type="submit"
                 className="bg-blue-600 text-white px-6 py-2"
-                disabled={loading}
+                disabled={loading || !isFormValid()}
               >
                 {loading ? "Saving..." : "Save Event"}
               </Button>

@@ -61,6 +61,7 @@ interface AttendedEvent {
   poster_url: string | null;
   director_name: string;
   registration_status: "attended";
+  was_registered: boolean;
   attendance: {
     marked_at: string;
     method: "QR" | "Code" | "Manual";
@@ -109,14 +110,37 @@ export default function AttendancePage() {
     setLoadingAttendedEvents(true);
     try {
       const data = await getMyAttendedEvents();
-      setAttendedEvents(data.events || []);
+      // Ensure we set the events array even if empty, and handle all statuses
+      const events = data.events || [];
+      
+      // Debug logging
+      console.log("Fetched attended events:", events.length);
+      if (events.length > 0) {
+        const statusCounts = events.reduce((acc: any, e: AttendedEvent) => {
+          acc[e.status] = (acc[e.status] || 0) + 1;
+          return acc;
+        }, {});
+        console.log("Event status breakdown:", statusCounts);
+      }
+      
+      // Filter out any events that might be null or invalid
+      const validEvents = events.filter((e: AttendedEvent) => e && e.id && e.title);
+      setAttendedEvents(validEvents);
+      
+      // Log for debugging
+      if (validEvents.length === 0) {
+        console.log("No valid attended events found for user");
+      }
     } catch (err: any) {
       console.error("Failed to fetch attended events:", err);
+      console.error("Error details:", err.response?.data);
       toast({
         title: "Error",
-        description: "Failed to load attended events",
+        description: err.response?.data?.error || "Failed to load attended events. Please try again.",
         variant: "destructive",
       });
+      // Set empty array on error to show proper empty state
+      setAttendedEvents([]);
     } finally {
       setLoadingAttendedEvents(false);
     }
@@ -495,6 +519,18 @@ export default function AttendancePage() {
                             <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded">
                               {event.attendance.method}
                             </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-600">
+                            {event.was_registered ? (
+                              <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded flex items-center gap-1">
+                                <CheckCircle size={12} />
+                                You registered for this event
+                              </span>
+                            ) : (
+                              <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded">
+                                You didn't register for this event
+                              </span>
+                            )}
                           </div>
                         </div>
 

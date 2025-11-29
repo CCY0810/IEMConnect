@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import api from "@/lib/api";
 import { Eye, EyeOff } from "lucide-react";
+import { validateEmail, validatePassword } from "@/lib/validation";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -15,18 +16,67 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const router = useRouter();
   const { login } = useAuth();
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) newErrors.email = emailValidation.error || "";
+    
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) newErrors.password = passwordValidation.error || "";
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateField = (fieldName: string, value: string) => {
+    let validation;
+    
+    switch (fieldName) {
+      case "email":
+        validation = validateEmail(value);
+        break;
+      case "password":
+        validation = validatePassword(value);
+        break;
+      default:
+        return;
+    }
+    
+    if (!validation.isValid) {
+      setErrors(prev => ({ ...prev, [fieldName]: validation.error || "" }));
+    } else {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Mark all fields as touched
+    setTouched({ email: true, password: true });
+
+    // Validate form
+    if (!validateForm()) {
+      setError("Please fix all errors before submitting");
+      return;
+    }
 
     setIsLoading(true);
     setError("");
 
     try {
       const response = await api.post("/auth/login", {
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
@@ -45,6 +95,14 @@ export default function LoginForm() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const isFormValid = () => {
+    return (
+      email.trim() !== "" &&
+      password !== "" &&
+      Object.keys(errors).length === 0
+    );
   };
 
   return (
@@ -71,16 +129,27 @@ export default function LoginForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email Address
+              Email Address *
             </label>
             <Input
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (touched.email) validateField("email", e.target.value);
+              }}
+              onBlur={() => {
+                setTouched(prev => ({ ...prev, email: true }));
+                validateField("email", email);
+              }}
               required
               disabled={isLoading}
+              className={touched.email && errors.email ? "border-red-500" : ""}
             />
+            {touched.email && errors.email && (
+              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div>
@@ -88,16 +157,24 @@ export default function LoginForm() {
               htmlFor="password"
               className="block text-sm font-medium mb-1"
             >
-              Password
+              Password *
             </label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (touched.password) validateField("password", e.target.value);
+                }}
+                onBlur={() => {
+                  setTouched(prev => ({ ...prev, password: true }));
+                  validateField("password", password);
+                }}
                 required
                 disabled={isLoading}
+                className={touched.password && errors.password ? "border-red-500" : ""}
               />
               <Button
                 type="button"
@@ -115,6 +192,9 @@ export default function LoginForm() {
                 )}
               </Button>
             </div>
+            {touched.password && errors.password && (
+              <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+            )}
             <div className="text-right mt-1">
               <Link
                 href="/forgot-password"
@@ -125,7 +205,11 @@ export default function LoginForm() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading || !isFormValid()}
+          >
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>

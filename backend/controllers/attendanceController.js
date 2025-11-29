@@ -2,6 +2,7 @@ import Event from "../models/Event.js";
 import EventRegistration from "../models/EventRegistration.js";
 import Attendance from "../models/Attendance.js";
 import User from "../models/User.js";
+import { Op } from "sequelize";
 
 // Helper function to check if event is within scheduled time window
 const isEventWithinTimeWindow = (event) => {
@@ -363,17 +364,24 @@ export const getMyAttendedEvents = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Get all attendance records for this user by joining through EventRegistration
+    // Production-ready approach: Query directly from Attendance records
+    // This is the source of truth for who attended, regardless of event status
+    // This ensures we get ALL events the user has attended, including Completed events
     const attendanceRecords = await Attendance.findAll({
       include: [
         {
           model: EventRegistration,
           as: "registration",
-          where: { user_id: userId, status: "attended" },
+          required: true, // Must have a valid registration
+          where: {
+            user_id: userId, // Filter by current user
+          },
           include: [
             {
               model: Event,
               as: "event",
+              required: true, // Must have a valid event
+              // NO status filter - we want ALL events (Upcoming, Open, Completed)
               attributes: [
                 "id",
                 "title",
@@ -382,7 +390,7 @@ export const getMyAttendedEvents = async (req, res) => {
                 "end_date",
                 "start_time",
                 "end_time",
-                "status",
+                "status", // Include status - we want Completed events
                 "poster_file",
                 "director_name",
               ],
@@ -400,33 +408,48 @@ export const getMyAttendedEvents = async (req, res) => {
       ],
     });
 
-    // Format the response
-    const events = attendanceRecords.map((attendance) => {
-      const eventData = attendance.registration.event.toJSON();
+    // Debug logging
+    console.log(`Found ${attendanceRecords.length} attendance records for user ${userId}`);
 
-      // Add file URLs
-      if (eventData.poster_file) {
-        eventData.poster_url = `/api/v1/events/files/${eventData.poster_file}`;
-      }
+    // Format the response - explicitly include ALL events regardless of status
+    const events = attendanceRecords
+      .filter((att) => att.registration && att.registration.event) // Defensive: filter out any null data
+      .map((att) => {
+        const registration = att.registration.toJSON();
+        const eventData = registration.event.toJSON();
+        const attendanceData = att.toJSON();
 
-      return {
-        id: eventData.id,
-        title: eventData.title,
-        description: eventData.description,
-        start_date: eventData.start_date,
-        end_date: eventData.end_date,
-        start_time: eventData.start_time,
-        end_time: eventData.end_time,
-        status: eventData.status,
-        poster_url: eventData.poster_url || null,
-        director_name: eventData.director_name,
-        registration_status: "attended",
-        attendance: {
-          marked_at: attendance.marked_at,
-          method: attendance.method,
-        },
-      };
-    });
+        // Add file URLs
+        if (eventData.poster_file) {
+          eventData.poster_url = `/api/v1/events/files/${eventData.poster_file}`;
+        }
+
+        return {
+          id: eventData.id,
+          title: eventData.title,
+          description: eventData.description,
+          start_date: eventData.start_date,
+          end_date: eventData.end_date,
+          start_time: eventData.start_time,
+          end_time: eventData.end_time,
+          status: eventData.status, // Upcoming, Open, or Completed - ALL are included
+          poster_url: eventData.poster_url || null,
+          director_name: eventData.director_name,
+          registration_status: registration.status, // "attended" - user has both registered and attended
+          was_registered: true, // Since they attended, they must have registered
+          attendance: {
+            marked_at: attendanceData.marked_at,
+            method: attendanceData.method,
+          },
+        };
+      });
+
+    // Debug logging
+    const statusCounts = events.reduce((acc, e) => {
+      acc[e.status] = (acc[e.status] || 0) + 1;
+      return acc;
+    }, {});
+    console.log(`Returning ${events.length} events with status counts:`, statusCounts);
 
     res.json({
       events,
@@ -434,6 +457,9 @@ export const getMyAttendedEvents = async (req, res) => {
     });
   } catch (error) {
     console.error("Get my attended events error:", error);
-    res.status(500).json({ error: "Failed to fetch attended events" });
+    res.status(500).json({ 
+      error: "Failed to fetch attended events",
+      details: error.message 
+    });
   }
 };

@@ -166,6 +166,9 @@ export default function ViewEventPage() {
   // Check if user is admin
   const isAdmin = user?.role === "admin";
 
+  // Tab state for controlling which tab is active
+  const [activeTab, setActiveTab] = useState("details");
+
   // Fetch event data
   useEffect(() => {
     const fetchEvent = async () => {
@@ -362,9 +365,17 @@ export default function ViewEventPage() {
   };
 
   const handleViewParticipants = async () => {
-    if (!eventId) return;
+    if (!eventId) {
+      toast({
+        title: "Error",
+        description: "Event ID is missing",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoadingParticipants(true);
+    setError(""); // Clear any previous errors
     try {
       const data = await getEventParticipants(eventId);
       setParticipants(data.participants || []);
@@ -376,8 +387,28 @@ export default function ViewEventPage() {
       if (currentUserParticipant?.status === "attended") {
         setHasCheckedIn(true);
       }
+
+      // Switch to users tab to show participants
+      setActiveTab("users");
+
+      // Show success message if participants loaded
+      if (data.participants && data.participants.length > 0) {
+        toast({
+          title: "Participants Loaded",
+          description: `Found ${data.participants.length} participant(s)`,
+        });
+      }
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load participants");
+      const errorMessage =
+        err.response?.data?.error ||
+        "Failed to load participants. Please try again.";
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      console.error("Failed to load participants:", err);
     } finally {
       setLoadingParticipants(false);
     }
@@ -700,7 +731,7 @@ export default function ViewEventPage() {
           {isAdmin && (
             <SidebarButton
               icon={<FileText size={18} />}
-              label="Reports"
+              label="Analytics"
               open={sidebarOpen}
               onClick={() => router.push("/admin/reports")}
             />
@@ -809,8 +840,16 @@ export default function ViewEventPage() {
               Event not found
             </div>
           ) : (
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-6">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList
+                className={`grid w-full ${
+                  isAdmin ? "grid-cols-4" : "grid-cols-1"
+                } mb-6`}
+              >
                 <TabsTrigger value="details">Event Details</TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger value="users">Registered Users</TabsTrigger>
@@ -818,7 +857,9 @@ export default function ViewEventPage() {
                 {isAdmin && (
                   <TabsTrigger value="notifications">Notifications</TabsTrigger>
                 )}
-                <TabsTrigger value="attendance">Attendance</TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger value="attendance">Attendance</TabsTrigger>
+                )}
               </TabsList>
 
               {/* EVENT DETAILS TAB */}
@@ -1409,6 +1450,14 @@ export default function ViewEventPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
+                      {error && (
+                        <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                          <p className="font-medium">
+                            Error loading participants
+                          </p>
+                          <p className="text-sm">{error}</p>
+                        </div>
+                      )}
                       {loadingParticipants ? (
                         <p className="text-center text-slate-500 py-8">
                           Loading participants...
@@ -1421,9 +1470,12 @@ export default function ViewEventPage() {
                           <Button
                             onClick={handleViewParticipants}
                             className="gap-2"
+                            disabled={loadingParticipants}
                           >
                             <Users size={18} />
-                            Load Participants
+                            {loadingParticipants
+                              ? "Loading..."
+                              : "Load Participants"}
                           </Button>
                         </div>
                       ) : (
@@ -1619,268 +1671,270 @@ export default function ViewEventPage() {
                 </TabsContent>
               )}
 
-              {/* ATTENDANCE TAB */}
-              <TabsContent value="attendance" className="space-y-6">
-                {/* ATTENDANCE MANAGEMENT (ADMIN ONLY) */}
-                {isAdmin && (
-                  <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg border-indigo-200">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-indigo-900">
-                        <CheckSquare size={20} />
-                        Attendance Management
-                      </CardTitle>
-                      <CardDescription className="text-indigo-700">
-                        Control attendance check-in for this event
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {attendanceMessage && (
-                        <div
-                          className={`px-4 py-3 rounded-lg ${
-                            attendanceMessage.type === "success"
-                              ? "bg-green-50 border border-green-200 text-green-800"
-                              : "bg-red-50 border border-red-200 text-red-800"
-                          }`}
-                        >
-                          {attendanceMessage.text}
-                        </div>
-                      )}
-
-                      <div className="flex gap-3">
-                        {event.attendance_status === "Pending" && (
-                          <Button
-                            onClick={handleStartAttendance}
-                            disabled={attendanceLoading}
-                            className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
+              {/* ATTENDANCE TAB - ADMIN ONLY */}
+              {isAdmin && (
+                <TabsContent value="attendance" className="space-y-6">
+                  {/* ATTENDANCE MANAGEMENT (ADMIN ONLY) */}
+                  {isAdmin && (
+                    <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg border-indigo-200">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-indigo-900">
+                          <CheckSquare size={20} />
+                          Attendance Management
+                        </CardTitle>
+                        <CardDescription className="text-indigo-700">
+                          Control attendance check-in for this event
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {attendanceMessage && (
+                          <div
+                            className={`px-4 py-3 rounded-lg ${
+                              attendanceMessage.type === "success"
+                                ? "bg-green-50 border border-green-200 text-green-800"
+                                : "bg-red-50 border border-red-200 text-red-800"
+                            }`}
                           >
-                            <PlayCircle size={18} />
-                            {attendanceLoading
-                              ? "Starting..."
-                              : "Start Attendance"}
-                          </Button>
-                        )}
-
-                        {event.attendance_status === "Active" && (
-                          <Button
-                            onClick={handleStopAttendance}
-                            disabled={attendanceLoading}
-                            variant="destructive"
-                            className="flex-1 gap-2"
-                          >
-                            <StopCircle size={18} />
-                            {attendanceLoading
-                              ? "Stopping..."
-                              : "Stop Attendance"}
-                          </Button>
-                        )}
-
-                        {event.attendance_status === "Closed" && (
-                          <div className="flex-1 px-4 py-2 bg-slate-100 rounded-md text-center text-slate-600">
-                            Attendance has been closed
+                            {attendanceMessage.text}
                           </div>
                         )}
-                      </div>
 
-                      {/* QR CODE & ATTENDANCE CODE DISPLAY */}
-                      {event.attendance_status === "Active" &&
-                        event.attendance_code && (
-                          <div className="grid md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-indigo-200">
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-indigo-900 flex items-center gap-2">
-                                <QrCode size={18} />
-                                QR Code
-                              </h4>
-                              <div className="bg-white p-4 rounded-lg border-2 border-indigo-300 flex justify-center">
-                                <div className="text-center">
-                                  <QRCodeSVG
-                                    value={`${window.location.origin}/attendance?code=${event.attendance_code}`}
-                                    size={192}
-                                    level="H"
-                                    includeMargin={true}
-                                  />
-                                  <p className="text-xs text-slate-500 mt-2">
-                                    Scan to check in
+                        <div className="flex gap-3">
+                          {event.attendance_status === "Pending" && (
+                            <Button
+                              onClick={handleStartAttendance}
+                              disabled={attendanceLoading}
+                              className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
+                            >
+                              <PlayCircle size={18} />
+                              {attendanceLoading
+                                ? "Starting..."
+                                : "Start Attendance"}
+                            </Button>
+                          )}
+
+                          {event.attendance_status === "Active" && (
+                            <Button
+                              onClick={handleStopAttendance}
+                              disabled={attendanceLoading}
+                              variant="destructive"
+                              className="flex-1 gap-2"
+                            >
+                              <StopCircle size={18} />
+                              {attendanceLoading
+                                ? "Stopping..."
+                                : "Stop Attendance"}
+                            </Button>
+                          )}
+
+                          {event.attendance_status === "Closed" && (
+                            <div className="flex-1 px-4 py-2 bg-slate-100 rounded-md text-center text-slate-600">
+                              Attendance has been closed
+                            </div>
+                          )}
+                        </div>
+
+                        {/* QR CODE & ATTENDANCE CODE DISPLAY */}
+                        {event.attendance_status === "Active" &&
+                          event.attendance_code && (
+                            <div className="grid md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-indigo-200">
+                              <div className="space-y-3">
+                                <h4 className="font-semibold text-indigo-900 flex items-center gap-2">
+                                  <QrCode size={18} />
+                                  QR Code
+                                </h4>
+                                <div className="bg-white p-4 rounded-lg border-2 border-indigo-300 flex justify-center">
+                                  <div className="text-center">
+                                    <QRCodeSVG
+                                      value={`${window.location.origin}/attendance?code=${event.attendance_code}`}
+                                      size={192}
+                                      level="H"
+                                      includeMargin={true}
+                                    />
+                                    <p className="text-xs text-slate-500 mt-2">
+                                      Scan to check in
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="space-y-3">
+                                <h4 className="font-semibold text-indigo-900">
+                                  Attendance Code
+                                </h4>
+                                <div className="bg-white p-6 rounded-lg border-2 border-indigo-300">
+                                  <p className="text-4xl font-bold text-center tracking-wider text-indigo-600 font-mono">
+                                    {event.attendance_code.substring(0, 4)}-
+                                    {event.attendance_code.substring(4)}
+                                  </p>
+                                  <p className="text-center text-sm text-slate-600 mt-3">
+                                    Share this code with participants
+                                  </p>
+                                  <p className="text-center text-xs text-slate-500 mt-2">
+                                    Check-in URL:{" "}
+                                    <a
+                                      href={`/check-in/${event.id}?code=${event.attendance_code}`}
+                                      target="_blank"
+                                      className="text-blue-600 underline"
+                                    >
+                                      /check-in/{event.id}
+                                    </a>
                                   </p>
                                 </div>
                               </div>
                             </div>
+                          )}
 
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-indigo-900">
-                                Attendance Code
-                              </h4>
-                              <div className="bg-white p-6 rounded-lg border-2 border-indigo-300">
-                                <p className="text-4xl font-bold text-center tracking-wider text-indigo-600 font-mono">
-                                  {event.attendance_code.substring(0, 4)}-
-                                  {event.attendance_code.substring(4)}
-                                </p>
-                                <p className="text-center text-sm text-slate-600 mt-3">
-                                  Share this code with participants
-                                </p>
-                                <p className="text-center text-xs text-slate-500 mt-2">
-                                  Check-in URL:{" "}
-                                  <a
-                                    href={`/check-in/${event.id}?code=${event.attendance_code}`}
-                                    target="_blank"
-                                    className="text-blue-600 underline"
-                                  >
-                                    /check-in/{event.id}
-                                  </a>
-                                </p>
+                        {/* CHECK-IN SECTION (FOR REGISTERED USERS - NOT ADMINS) */}
+                        {!isAdmin &&
+                          event.is_registered &&
+                          event.attendance_status === "Active" &&
+                          event.attendance_code && (
+                            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
+                              <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-green-900">
+                                  <CheckSquare size={20} />
+                                  Check In to Event
+                                </CardTitle>
+                                <CardDescription className="text-green-700">
+                                  Enter the attendance code to mark your
+                                  attendance
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent className="space-y-4">
+                                {hasCheckedIn ? (
+                                  <div className="text-center py-6">
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
+                                      <CheckCircle size={20} />
+                                      You have already checked in for this event
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="space-y-3">
+                                      <label
+                                        htmlFor="checkInCode"
+                                        className="text-sm font-semibold text-green-900 block"
+                                      >
+                                        Attendance Code
+                                      </label>
+                                      <div className="flex gap-3">
+                                        <Input
+                                          id="checkInCode"
+                                          type="text"
+                                          placeholder="1234-5678"
+                                          value={checkInCode}
+                                          onChange={(e) =>
+                                            setCheckInCode(e.target.value)
+                                          }
+                                          maxLength={9}
+                                          className="text-xl font-mono tracking-wider text-center h-12 text-green-700"
+                                          onKeyPress={(e) => {
+                                            if (e.key === "Enter")
+                                              handleCheckIn();
+                                          }}
+                                        />
+                                      </div>
+                                      <p className="text-xs text-green-600">
+                                        Enter the 8-digit code provided by the
+                                        event organizer
+                                      </p>
+                                    </div>
+
+                                    {checkInMessage && (
+                                      <div
+                                        className={`px-4 py-3 rounded-lg border ${
+                                          checkInMessage.type === "success"
+                                            ? "bg-green-50 border-green-200 text-green-800"
+                                            : "bg-red-50 border-red-200 text-red-800"
+                                        }`}
+                                      >
+                                        {checkInMessage.text}
+                                      </div>
+                                    )}
+
+                                    <Button
+                                      onClick={handleCheckIn}
+                                      disabled={
+                                        checkInLoading || !checkInCode.trim()
+                                      }
+                                      className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                    >
+                                      {checkInLoading
+                                        ? "Checking In..."
+                                        : "Check In"}
+                                    </Button>
+                                  </>
+                                )}
+                              </CardContent>
+                            </Card>
+                          )}
+
+                        {/* LIVE ATTENDANCE LIST */}
+                        {event.attendance_status === "Active" &&
+                          showAttendanceList && (
+                            <div className="mt-6 pt-6 border-t border-indigo-200">
+                              <div className="flex items-center justify-between mb-4">
+                                <h4 className="font-semibold text-indigo-900 flex items-center gap-2">
+                                  <Users size={18} />
+                                  Live Attendance ({attendanceList.length})
+                                </h4>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={handleRefreshAttendance}
+                                  className="gap-2"
+                                >
+                                  <RefreshCw size={14} />
+                                  Refresh
+                                </Button>
                               </div>
-                            </div>
-                          </div>
-                        )}
 
-                      {/* CHECK-IN SECTION (FOR REGISTERED USERS - NOT ADMINS) */}
-                      {!isAdmin &&
-                        event.is_registered &&
-                        event.attendance_status === "Active" &&
-                        event.attendance_code && (
-                          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2 text-green-900">
-                                <CheckSquare size={20} />
-                                Check In to Event
-                              </CardTitle>
-                              <CardDescription className="text-green-700">
-                                Enter the attendance code to mark your
-                                attendance
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              {hasCheckedIn ? (
-                                <div className="text-center py-6">
-                                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
-                                    <CheckCircle size={20} />
-                                    You have already checked in for this event
-                                  </div>
-                                </div>
+                              {attendanceList.length === 0 ? (
+                                <p className="text-center text-slate-500 py-8 bg-white rounded-lg border border-indigo-200">
+                                  No one has checked in yet
+                                </p>
                               ) : (
-                                <>
-                                  <div className="space-y-3">
-                                    <label
-                                      htmlFor="checkInCode"
-                                      className="text-sm font-semibold text-green-900 block"
-                                    >
-                                      Attendance Code
-                                    </label>
-                                    <div className="flex gap-3">
-                                      <Input
-                                        id="checkInCode"
-                                        type="text"
-                                        placeholder="1234-5678"
-                                        value={checkInCode}
-                                        onChange={(e) =>
-                                          setCheckInCode(e.target.value)
-                                        }
-                                        maxLength={9}
-                                        className="text-xl font-mono tracking-wider text-center h-12 text-green-700"
-                                        onKeyPress={(e) => {
-                                          if (e.key === "Enter")
-                                            handleCheckIn();
-                                        }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-green-600">
-                                      Enter the 8-digit code provided by the
-                                      event organizer
-                                    </p>
-                                  </div>
-
-                                  {checkInMessage && (
-                                    <div
-                                      className={`px-4 py-3 rounded-lg border ${
-                                        checkInMessage.type === "success"
-                                          ? "bg-green-50 border-green-200 text-green-800"
-                                          : "bg-red-50 border-red-200 text-red-800"
-                                      }`}
-                                    >
-                                      {checkInMessage.text}
-                                    </div>
-                                  )}
-
-                                  <Button
-                                    onClick={handleCheckIn}
-                                    disabled={
-                                      checkInLoading || !checkInCode.trim()
-                                    }
-                                    className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                                  >
-                                    {checkInLoading
-                                      ? "Checking In..."
-                                      : "Check In"}
-                                  </Button>
-                                </>
-                              )}
-                            </CardContent>
-                          </Card>
-                        )}
-
-                      {/* LIVE ATTENDANCE LIST */}
-                      {event.attendance_status === "Active" &&
-                        showAttendanceList && (
-                          <div className="mt-6 pt-6 border-t border-indigo-200">
-                            <div className="flex items-center justify-between mb-4">
-                              <h4 className="font-semibold text-indigo-900 flex items-center gap-2">
-                                <Users size={18} />
-                                Live Attendance ({attendanceList.length})
-                              </h4>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleRefreshAttendance}
-                                className="gap-2"
-                              >
-                                <RefreshCw size={14} />
-                                Refresh
-                              </Button>
-                            </div>
-
-                            {attendanceList.length === 0 ? (
-                              <p className="text-center text-slate-500 py-8 bg-white rounded-lg border border-indigo-200">
-                                No one has checked in yet
-                              </p>
-                            ) : (
-                              <div className="space-y-2 max-h-96 overflow-y-auto">
-                                {attendanceList.map(
-                                  (record: any, index: number) => (
-                                    <div
-                                      key={record.id}
-                                      className="p-3 bg-white border border-indigo-200 rounded-lg flex items-center justify-between hover:bg-indigo-50 transition-colors"
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <span className="font-mono text-sm text-slate-500">
-                                          #{index + 1}
-                                        </span>
-                                        <div>
-                                          <p className="font-semibold text-slate-900">
-                                            {record.name}
-                                          </p>
-                                          <p className="text-xs text-slate-600">
-                                            {record.matric_number} •{" "}
-                                            {record.method}
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
+                                  {attendanceList.map(
+                                    (record: any, index: number) => (
+                                      <div
+                                        key={record.id}
+                                        className="p-3 bg-white border border-indigo-200 rounded-lg flex items-center justify-between hover:bg-indigo-50 transition-colors"
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <span className="font-mono text-sm text-slate-500">
+                                            #{index + 1}
+                                          </span>
+                                          <div>
+                                            <p className="font-semibold text-slate-900">
+                                              {record.name}
+                                            </p>
+                                            <p className="text-xs text-slate-600">
+                                              {record.matric_number} •{" "}
+                                              {record.method}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className="text-xs text-slate-500">
+                                            {new Date(
+                                              record.marked_at
+                                            ).toLocaleTimeString()}
                                           </p>
                                         </div>
                                       </div>
-                                      <div className="text-right">
-                                        <p className="text-xs text-slate-500">
-                                          {new Date(
-                                            record.marked_at
-                                          ).toLocaleTimeString()}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  )
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
+                                    )
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+              )}
             </Tabs>
           )}
         </main>
