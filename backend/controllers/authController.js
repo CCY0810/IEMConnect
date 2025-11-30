@@ -12,6 +12,15 @@ import {
 } from "../utils/twofa.js";
 import emailService from "../utils/emailService.js";
 import NotificationService from "../services/notificationService.js";
+import {
+  processAvatarImage,
+  deleteAvatarFile,
+} from "../middleware/profileUpload.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
@@ -584,6 +593,118 @@ export const changePassword = async (req, res) => {
   } catch (error) {
     console.error("Change password error:", error);
     res.status(500).json({ error: "Failed to change password" });
+  }
+};
+
+// Upload profile avatar
+export const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Delete old avatar if exists
+    if (user.avatar_url) {
+      deleteAvatarFile(user.avatar_url);
+    }
+
+    // Process and optimize the uploaded image
+    const tempFilePath = req.file.path;
+    const filename = await processAvatarImage(tempFilePath, user.id);
+
+    // Update user's avatar_url
+    await user.update({ avatar_url: filename });
+
+    res.status(200).json({
+      message: "Avatar uploaded successfully",
+      avatar_url: filename,
+      avatar_url_full: `/api/v1/auth/avatar/${filename}`,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar_url: filename,
+      },
+    });
+  } catch (error) {
+    console.error("Upload avatar error:", error);
+    
+    // Clean up temp file if it exists
+    if (req.file && req.file.path) {
+      try {
+        const fs = await import("fs");
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+      } catch (cleanupError) {
+        console.error("Error cleaning up temp file:", cleanupError);
+      }
+    }
+
+    res.status(500).json({
+      error: "Failed to upload avatar",
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+// Delete profile avatar
+export const deleteAvatar = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.avatar_url) {
+      return res.status(400).json({ error: "No avatar to delete" });
+    }
+
+    // Delete avatar file
+    deleteAvatarFile(user.avatar_url);
+
+    // Update user's avatar_url to null
+    await user.update({ avatar_url: null });
+
+    res.status(200).json({
+      message: "Avatar deleted successfully",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar_url: null,
+      },
+    });
+  } catch (error) {
+    console.error("Delete avatar error:", error);
+    res.status(500).json({ error: "Failed to delete avatar" });
+  }
+};
+
+// Serve avatar image
+export const getAvatar = async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const avatarsDir = path.join(__dirname, "../uploads/avatars");
+    const filePath = path.join(avatarsDir, filename);
+
+    const fs = await import("fs");
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "Avatar not found" });
+    }
+
+    // Set cache headers for 1 year
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("Content-Type", "image/webp");
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error("Get avatar error:", error);
+    res.status(500).json({ error: "Failed to retrieve avatar" });
   }
 };
 

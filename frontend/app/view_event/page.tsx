@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { sendEventAnnouncement } from "@/lib/notification-api";
 import NotificationBell from "@/components/NotificationBell";
 import { getFileUrl } from "@/lib/event-api";
+import UserAvatar from "@/components/UserAvatar";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -814,13 +815,10 @@ export default function ViewEventPage() {
 
             <button
               onClick={() => router.push("/profile")}
-              className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              className="rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
               title="View Profile"
             >
-              <img
-                src="/placeholder-user.jpg"
-                className="w-full h-full object-cover"
-              />
+              <UserAvatar size="md" />
             </button>
           </div>
         </header>

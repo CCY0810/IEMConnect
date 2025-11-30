@@ -16,7 +16,10 @@ import {
   updateProfile,
   changePassword,
   deleteAccount,
+  uploadAvatar,
+  deleteAvatar as deleteAvatarApi,
 } from "@/lib/profile-api";
+import UserAvatar from "@/components/UserAvatar";
 import {
   ArrowLeft,
   Edit2,
@@ -27,6 +30,9 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
+  Upload,
+  Trash2,
+  Camera,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import NotificationBell from "@/components/NotificationBell";
@@ -68,6 +74,15 @@ export default function ProfilePage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  // Avatar upload state
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [showAvatarDialog, setShowAvatarDialog] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -226,6 +241,101 @@ export default function ProfilePage() {
     setShowDeleteSection(false);
   };
 
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      setAvatarLoading(true);
+      setAvatarMessage(null);
+
+      // Validate file
+      if (file.size > 2 * 1024 * 1024) {
+        setAvatarMessage({
+          type: "error",
+          text: "Image size must be less than 2MB",
+        });
+        return;
+      }
+
+      const response = await uploadAvatar(file);
+
+      // Update user in auth context
+      if (user && token) {
+        verify2FA(
+          { ...user, avatar_url: response.avatar_url },
+          token
+        );
+      }
+
+      setAvatarMessage({
+        type: "success",
+        text: "Avatar uploaded successfully!",
+      });
+      setShowAvatarDialog(false);
+      setAvatarPreview(null);
+
+      // Clear message after 3 seconds
+      setTimeout(() => setAvatarMessage(null), 3000);
+    } catch (error: any) {
+      setAvatarMessage({
+        type: "error",
+        text: error.response?.data?.error || "Failed to upload avatar",
+      });
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    try {
+      setAvatarLoading(true);
+      setAvatarMessage(null);
+
+      await deleteAvatarApi();
+
+      // Update user in auth context
+      if (user && token) {
+        verify2FA({ ...user, avatar_url: null }, token);
+      }
+
+      setAvatarMessage({
+        type: "success",
+        text: "Avatar deleted successfully!",
+      });
+      setShowAvatarDialog(false);
+      setAvatarPreview(null);
+
+      // Clear message after 3 seconds
+      setTimeout(() => setAvatarMessage(null), 3000);
+    } catch (error: any) {
+      setAvatarMessage({
+        type: "error",
+        text: error.response?.data?.error || "Failed to delete avatar",
+      });
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setAvatarMessage({
+        type: "error",
+        text: "Please select an image file",
+      });
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   if (!user) return null;
 
   return (
@@ -281,8 +391,15 @@ export default function ProfilePage() {
           <CardHeader className="border-b border-slate-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                  <User size={32} className="text-white" />
+                <div className="relative group">
+                  <UserAvatar user={user} size="lg" />
+                  <button
+                    onClick={() => setShowAvatarDialog(true)}
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    title="Change profile picture"
+                  >
+                    <Camera size={20} className="text-white" />
+                  </button>
                 </div>
                 <div>
                   <CardTitle className="text-xl">{user.name}</CardTitle>
@@ -834,6 +951,99 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Avatar Upload Dialog */}
+      {showAvatarDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle>Change Profile Picture</CardTitle>
+              <CardDescription>
+                Upload a new profile picture (max 2MB, JPEG/PNG/WebP)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Preview */}
+              {avatarPreview && (
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <img
+                      src={avatarPreview}
+                      alt="Preview"
+                      className="w-32 h-32 rounded-full object-cover border-2 border-slate-200"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Area */}
+              <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleAvatarFileSelect}
+                  className="hidden"
+                  id="avatar-upload"
+                  disabled={avatarLoading}
+                />
+                <label
+                  htmlFor="avatar-upload"
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <Upload size={32} className="text-slate-400" />
+                  <span className="text-sm text-slate-600">
+                    Click to select or drag and drop
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    JPEG, PNG, WebP or GIF (max 2MB)
+                  </span>
+                </label>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                {user.avatar_url && (
+                  <Button
+                    onClick={handleAvatarDelete}
+                    variant="destructive"
+                    className="flex-1 gap-2"
+                    disabled={avatarLoading}
+                  >
+                    <Trash2 size={16} />
+                    Delete Current
+                  </Button>
+                )}
+                <Button
+                  onClick={() => {
+                    const input = document.getElementById(
+                      "avatar-upload"
+                    ) as HTMLInputElement;
+                    if (input && input.files && input.files[0]) {
+                      handleAvatarUpload(input.files[0]);
+                    }
+                  }}
+                  disabled={!avatarPreview || avatarLoading}
+                  className="flex-1 gap-2"
+                >
+                  <Upload size={16} />
+                  {avatarLoading ? "Uploading..." : "Upload"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowAvatarDialog(false);
+                    setAvatarPreview(null);
+                    setAvatarMessage(null);
+                  }}
+                  variant="outline"
+                  disabled={avatarLoading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

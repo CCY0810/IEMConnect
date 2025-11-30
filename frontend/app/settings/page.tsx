@@ -58,6 +58,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import UserAvatar from "@/components/UserAvatar";
 import {
   getUserPreferences,
   updateUserPreferences,
@@ -448,14 +449,10 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={() => router.push("/profile")}
-              className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              className="rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
               title="View Profile"
             >
-              <img
-                src="/placeholder-user.jpg"
-                className="w-full h-full object-cover"
-                alt="Profile"
-              />
+              <UserAvatar size="md" />
             </button>
           </div>
         </header>

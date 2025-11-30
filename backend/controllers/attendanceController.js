@@ -364,67 +364,142 @@ export const getMyAttendedEvents = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Production-ready approach: Query directly from Attendance records
-    // This is the source of truth for who attended, regardless of event status
-    // This ensures we get ALL events the user has attended, including Completed events
+    // Debug logging
+    console.log(
+      `[getMyAttendedEvents] Fetching attended events for user ${userId}`
+    );
+
+    // Step 1: Get all attendance records for user with registration info
     const attendanceRecords = await Attendance.findAll({
       include: [
         {
           model: EventRegistration,
           as: "registration",
-          required: true, // Must have a valid registration
-          where: {
-            user_id: userId, // Filter by current user
-          },
-          include: [
-            {
-              model: Event,
-              as: "event",
-              required: true, // Must have a valid event
-              // NO status filter - we want ALL events (Upcoming, Open, Completed)
-              attributes: [
-                "id",
-                "title",
-                "description",
-                "start_date",
-                "end_date",
-                "start_time",
-                "end_time",
-                "status", // Include status - we want Completed events
-                "poster_file",
-                "director_name",
-              ],
-            },
+          required: true,
+          where: { user_id: userId },
+          attributes: [
+            "id",
+            "user_id",
+            "event_id",
+            "status",
+            "registration_date",
           ],
         },
       ],
-      order: [
-        [
-          { model: EventRegistration, as: "registration" },
-          { model: Event, as: "event" },
-          "start_date",
-          "DESC",
-        ],
+      order: [["marked_at", "DESC"]],
+    });
+
+    console.log(
+      `[getMyAttendedEvents] Found ${attendanceRecords.length} attendance records`
+    );
+
+    if (attendanceRecords.length === 0) {
+      console.log(
+        `[getMyAttendedEvents] No attendance records found for user ${userId}`
+      );
+      return res.json({ events: [], total: 0 });
+    }
+
+    // Step 2: Extract event IDs safely
+    const eventIds = [];
+    for (const att of attendanceRecords) {
+      try {
+        const registration = att.get
+          ? att.get("registration")
+          : att.registration;
+        if (registration) {
+          const eventId = registration.get
+            ? registration.get("event_id")
+            : registration.event_id;
+          if (eventId && !eventIds.includes(eventId)) {
+            eventIds.push(eventId);
+          }
+        }
+      } catch (err) {
+        console.warn(
+          `[getMyAttendedEvents] Error extracting event_id from attendance record ${att.id}:`,
+          err.message
+        );
+      }
+    }
+
+    console.log(
+      `[getMyAttendedEvents] Found ${eventIds.length} unique event IDs:`,
+      eventIds
+    );
+
+    if (eventIds.length === 0) {
+      console.warn(
+        `[getMyAttendedEvents] No valid event IDs found in attendance records`
+      );
+      return res.json({ events: [], total: 0 });
+    }
+
+    // Step 3: Fetch events separately
+    const eventsData = await Event.findAll({
+      where: { id: { [Op.in]: eventIds } },
+      attributes: [
+        "id",
+        "title",
+        "description",
+        "start_date",
+        "end_date",
+        "start_time",
+        "end_time",
+        "status",
+        "poster_file",
+        "director_name",
       ],
     });
 
-    // Debug logging
-    console.log(`Found ${attendanceRecords.length} attendance records for user ${userId}`);
+    console.log(
+      `[getMyAttendedEvents] Fetched ${eventsData.length} events from database`
+    );
 
-    // Format the response - explicitly include ALL events regardless of status
-    const events = attendanceRecords
-      .filter((att) => att.registration && att.registration.event) // Defensive: filter out any null data
-      .map((att) => {
-        const registration = att.registration.toJSON();
-        const eventData = registration.event.toJSON();
-        const attendanceData = att.toJSON();
+    // Step 4: Create event map
+    const eventMap = new Map();
+    for (const event of eventsData) {
+      const eventJson = event.toJSON ? event.toJSON() : event;
+      eventMap.set(eventJson.id, eventJson);
+    }
 
-        // Add file URLs
-        if (eventData.poster_file) {
-          eventData.poster_url = `/api/v1/events/files/${eventData.poster_file}`;
+    // Step 5: Combine data with better error handling
+    const events = [];
+    for (const att of attendanceRecords) {
+      try {
+        const attendanceData = att.toJSON ? att.toJSON() : att;
+        const registration = att.get
+          ? att.get("registration")
+          : att.registration;
+
+        if (!registration) {
+          console.warn(
+            `[getMyAttendedEvents] Attendance record ${attendanceData.id} missing registration`
+          );
+          continue;
         }
 
-        return {
+        const registrationData = registration.toJSON
+          ? registration.toJSON()
+          : registration;
+        const eventId = registrationData.event_id;
+
+        if (!eventId) {
+          console.warn(
+            `[getMyAttendedEvents] Registration ${registrationData.id} missing event_id`
+          );
+          continue;
+        }
+
+        const eventData = eventMap.get(eventId);
+        if (!eventData) {
+          console.warn(
+            `[getMyAttendedEvents] Event ${eventId} not found in eventMap`
+          );
+          continue;
+        }
+
+        events.push({
           id: eventData.id,
           title: eventData.title,
           description: eventData.description,
@@ -432,34 +507,66 @@ export const getMyAttendedEvents = async (req, res) => {
           end_date: eventData.end_date,
           start_time: eventData.start_time,
           end_time: eventData.end_time,
-          status: eventData.status, // Upcoming, Open, or Completed - ALL are included
-          poster_url: eventData.poster_url || null,
+          status: eventData.status,
+          poster_url: eventData.poster_file
+            ? `/api/v1/events/files/${eventData.poster_file}`
+            : null,
           director_name: eventData.director_name,
-          registration_status: registration.status, // "attended" - user has both registered and attended
-          was_registered: true, // Since they attended, they must have registered
+          registration_status: registrationData.status,
+          was_registered: true,
           attendance: {
             marked_at: attendanceData.marked_at,
             method: attendanceData.method,
           },
-        };
-      });
+        });
+      } catch (err) {
+        console.error(
+          `[getMyAttendedEvents] Error processing attendance record ${att.id}:`,
+          err.message
+        );
+        continue;
+      }
+    }
+
+    // Step 6: Sort by event date (most recent first)
+    events.sort((a, b) => {
+      try {
+        const dateA = new Date(`${a.start_date} ${a.start_time || "00:00:00"}`);
+        const dateB = new Date(`${b.start_date} ${b.start_time || "00:00:00"}`);
+        return dateB.getTime() - dateA.getTime();
+      } catch (err) {
+        return 0;
+      }
+    });
 
     // Debug logging
     const statusCounts = events.reduce((acc, e) => {
       acc[e.status] = (acc[e.status] || 0) + 1;
       return acc;
     }, {});
-    console.log(`Returning ${events.length} events with status counts:`, statusCounts);
+    console.log(
+      `[getMyAttendedEvents] Returning ${events.length} events with status counts:`,
+      statusCounts
+    );
 
     res.json({
       events,
       total: events.length,
     });
   } catch (error) {
-    console.error("Get my attended events error:", error);
-    res.status(500).json({ 
+    console.error("[getMyAttendedEvents] Error:", error);
+    console.error("[getMyAttendedEvents] Error stack:", error.stack);
+    console.error("[getMyAttendedEvents] Error details:", {
+      message: error.message,
+      name: error.name,
+      userId: req.user?.id,
+    });
+    res.status(500).json({
       error: "Failed to fetch attended events",
-      details: error.message 
+      details:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Internal server error",
     });
   }
 };

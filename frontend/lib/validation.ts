@@ -344,9 +344,40 @@ export const validateFile = (
   }
   
   const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
-  const allowedExtensions = allowedTypes.map(type => type.replace(".", "").toLowerCase());
+  const fileType = file.type.toLowerCase();
   
-  if (!allowedExtensions.includes(fileExtension)) {
+  // Check if file matches any allowed type
+  let isValidType = false;
+  
+  for (const allowedType of allowedTypes) {
+    const normalizedType = allowedType.toLowerCase();
+    
+    // Handle MIME type patterns (e.g., "image/*")
+    if (normalizedType.includes("/*")) {
+      const baseType = normalizedType.split("/")[0];
+      if (fileType.startsWith(baseType + "/")) {
+        isValidType = true;
+        break;
+      }
+    }
+    // Handle explicit MIME types (e.g., "image/jpeg")
+    else if (normalizedType.includes("/")) {
+      if (fileType === normalizedType) {
+        isValidType = true;
+        break;
+      }
+    }
+    // Handle file extensions (e.g., ".jpg", ".webp", "jpg", "webp")
+    else {
+      const extension = normalizedType.replace(".", "");
+      if (fileExtension === extension) {
+        isValidType = true;
+        break;
+      }
+    }
+  }
+  
+  if (!isValidType) {
     return {
       isValid: false,
       error: `File type not allowed. Allowed types: ${allowedTypes.join(", ")}`,

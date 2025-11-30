@@ -13,6 +13,9 @@ import {
   updateProfile,
   changePassword,
   deleteAccount,
+  uploadAvatar,
+  deleteAvatar,
+  getAvatar,
 } from "../controllers/authController.js";
 import {
   getUserPreferences,
@@ -25,6 +28,7 @@ import {
   getAdminSystemStats,
 } from "../controllers/settingsController.js";
 import { verifyTempToken, verifyToken } from "../middleware/auth.js";
+import profileUpload from "../middleware/profileUpload.js";
 
 const router = express.Router();
 
@@ -45,6 +49,16 @@ router.post("/reset-password", resetPassword);
 
 // Profile update route
 router.put("/profile", verifyToken, updateProfile);
+
+// Avatar routes
+router.put(
+  "/profile/avatar",
+  verifyToken,
+  profileUpload.single("avatar"),
+  uploadAvatar
+);
+router.delete("/profile/avatar", verifyToken, deleteAvatar);
+router.get("/avatar/:filename", getAvatar);
 
 // Change password route
 router.put("/change-password", verifyToken, changePassword);

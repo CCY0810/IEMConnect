@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { createEvent } from "@/lib/event-api";
 import NotificationBell from "@/components/NotificationBell";
+import UserAvatar from "@/components/UserAvatar";
 import {
   validateName,
   validateEmail,
@@ -182,7 +183,11 @@ export default function CreateEventPage() {
       newErrors.endTime = endTimeValidation.error || "";
 
     if (posterFile) {
-      const posterValidation = validateFile(posterFile, ["image/*"], 10);
+      const posterValidation = validateFile(
+        posterFile,
+        ["image/*", ".webp", "webp"],
+        10
+      );
       if (!posterValidation.isValid)
         newErrors.posterFile = posterValidation.error || "";
     }
@@ -456,13 +461,10 @@ export default function CreateEventPage() {
 
             <button
               onClick={() => router.push("/profile")}
-              className="w-10 h-10 rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              className="rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
               title="View Profile"
             >
-              <img
-                src="/placeholder-user.jpg"
-                className="w-full h-full object-cover"
-              />
+              <UserAvatar size="md" />
             </button>
           </div>
         </header>
@@ -779,12 +781,16 @@ export default function CreateEventPage() {
                   </span>
                   <Input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.webp"
                     onChange={(e) => {
                       const file = e.target.files?.[0] || null;
                       setPosterFile(file);
                       if (file) {
-                        const validation = validateFile(file, ["image/*"], 10);
+                        const validation = validateFile(
+                          file,
+                          ["image/*", ".webp", "webp"],
+                          10
+                        );
                         if (!validation.isValid) {
                           setErrors((prev) => ({
                             ...prev,
