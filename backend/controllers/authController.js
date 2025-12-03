@@ -109,17 +109,23 @@ export const login = async (req, res) => {
 
     const user = await User.findOne({ where: { email: value.email } });
 
-    // Changed from !user.is_verified to user.is_verified !== 1
-    if (!user || user.is_verified !== 1) {
-      return res.status(401).json({ error: "Invalid credentials" });
+    // Check if user exists
+    if (!user) {
+      return res.status(401).json({ error: "No account found with this email address" });
     }
 
+    // Check if user is verified
+    if (user.is_verified !== 1) {
+      return res.status(401).json({ error: "Account pending verification. Please contact an administrator." });
+    }
+
+    // Check password
     const isPasswordValid = await bcrypt.compare(
       value.password,
       user.password_hash
     );
     if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Incorrect password" });
     }
 
     // Generate 2FA code

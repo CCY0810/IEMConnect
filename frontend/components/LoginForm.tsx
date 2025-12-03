@@ -72,7 +72,6 @@ export default function LoginForm() {
     }
 
     setIsLoading(true);
-    setError("");
 
     try {
       const response = await api.post("/auth/login", {
@@ -137,6 +136,7 @@ export default function LoginForm() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
+                setError(""); // Clear general error when user starts typing
                 if (touched.email) validateField("email", e.target.value);
               }}
               onBlur={() => {
@@ -166,6 +166,7 @@ export default function LoginForm() {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
+                  setError(""); // Clear general error when user starts typing
                   if (touched.password) validateField("password", e.target.value);
                 }}
                 onBlur={() => {

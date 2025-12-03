@@ -82,82 +82,78 @@ export const generateCertificate = async (req, res) => {
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // 6. Format dates
-    const eventDate = new Date(registration.event.start_date).toLocaleDateString(
-      "en-US",
-      {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+    // 6. Helper function to convert to Title Case
+    const toTitleCase = (str) => {
+      return str.replace(/\w\S*/g, (txt) => {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+      });
+    };
+
+    // Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+    const getOrdinalSuffix = (day) => {
+      if (day > 3 && day < 21) return 'th';
+      switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
       }
-    );
-    const issueDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    };
 
-    // 7. Add text fields
-    // NOTE: These coordinates are approximate. You'll need to adjust them
-    // based on your actual PDF template layout. Use a PDF editor to find exact positions.
+    // 7. Format dates
+    const eventDateObj = new Date(registration.event.start_date);
+    const day = eventDateObj.getDate();
+    const month = eventDateObj.toLocaleDateString("en-US", { month: "long" });
+    const year = eventDateObj.getFullYear();
+    const eventDate = `${day}${getOrdinalSuffix(day)} ${month} ${year}`;
 
-    // Participant Name (centered, larger, bold)
-    const participantName = registration.user.name;
-    const nameFontSize = 28;
+    // 8. Add text fields with precise A4 Landscape coordinates
+    // A4 Landscape: Width = 842, Height = 595 (Y=0 is bottom)
+
+    // Participant Name (Title Case, centered, larger, bold)
+    const participantName = toTitleCase(registration.user.name);
+    const nameFontSize = 30;
     const nameTextWidth = helveticaBoldFont.widthOfTextAtSize(
       participantName,
       nameFontSize
     );
     firstPage.drawText(participantName, {
       x: width / 2 - nameTextWidth / 2, // Center horizontally
-      y: height * 0.55, // Adjust based on template (typically middle-upper area)
+      y: 260, // Fixed Y coordinate for A4 landscape
       size: nameFontSize,
       font: helveticaBoldFont,
       color: rgb(0, 0, 0),
     });
 
-    // Event Title
+    // Event Title Line ("For participating in...")
     const eventTitle = registration.event.title;
-    const titleFontSize = 18;
-    const titleTextWidth = helveticaFont.widthOfTextAtSize(
-      eventTitle,
-      titleFontSize
+    const eventTitleText = `For participating in ${eventTitle}`;
+    const eventTitleFontSize = 16;
+    const eventTitleTextWidth = helveticaFont.widthOfTextAtSize(
+      eventTitleText,
+      eventTitleFontSize
     );
-    firstPage.drawText(eventTitle, {
-      x: width / 2 - titleTextWidth / 2,
-      y: height * 0.45, // Below name
-      size: titleFontSize,
+    firstPage.drawText(eventTitleText, {
+      x: width / 2 - eventTitleTextWidth / 2,
+      y: 230, // Fixed Y coordinate
+      size: eventTitleFontSize,
       font: helveticaFont,
       color: rgb(0, 0, 0),
     });
 
-    // Event Date
-    const dateFontSize = 14;
+    // Date Line
+    const dateText = `on ${eventDate}`;
+    const dateFontSize = 16;
     const dateTextWidth = helveticaFont.widthOfTextAtSize(
-      eventDate,
+      dateText,
       dateFontSize
     );
-    firstPage.drawText(eventDate, {
+    firstPage.drawText(dateText, {
       x: width / 2 - dateTextWidth / 2,
-      y: height * 0.38, // Below event title
+      y: 200, // Fixed Y coordinate
       size: dateFontSize,
       font: helveticaFont,
       color: rgb(0, 0, 0),
-    });
-
-    // Issue Date (optional, at bottom)
-    const issueDateText = `Issued on: ${issueDate}`;
-    const issueDateFontSize = 10;
-    const issueDateTextWidth = helveticaFont.widthOfTextAtSize(
-      issueDateText,
-      issueDateFontSize
-    );
-    firstPage.drawText(issueDateText, {
-      x: width / 2 - issueDateTextWidth / 2,
-      y: height * 0.15, // Near bottom
-      size: issueDateFontSize,
-      font: helveticaFont,
-      color: rgb(0.5, 0.5, 0.5),
     });
 
     // 8. Generate PDF bytes
