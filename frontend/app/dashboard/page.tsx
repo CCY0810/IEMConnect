@@ -275,7 +275,7 @@ export default function DashboardPage() {
         <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-white">Dashboard</h2>
-            <p className="text-sm text-slate-300">Welcome back, **{user.name}**.</p>
+            <p className="text-sm text-slate-300">Welcome back, {user.name}.</p>
           </div>
 
           <div className="flex items-center gap-5">

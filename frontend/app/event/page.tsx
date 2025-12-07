@@ -357,7 +357,7 @@ export default function EventsPage() {
                           size="sm"
                           variant="outline"
                           className="flex-1 text-slate-300 border-slate-600 hover:bg-slate-700 hover:text-white"
-                          onClick={() => router.push(`/admin/events/edit?id=${event.id}`)}
+                          onClick={() => router.push(`/view_event?id=${event.id}`)}
                         >
                           Edit
                         </Button>

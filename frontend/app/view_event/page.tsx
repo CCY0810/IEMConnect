@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { QRCodeSVG } from "qrcode.react";
@@ -45,7 +45,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 const Textarea = (props: any) => (
   <textarea
     {...props}
-    className={`w-full min-h-[120px] rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${props.className}`}
+    // APPLY DARK TEXTAREA STYLES
+    className={`w-full min-h-[120px] rounded-md border border-slate-600 bg-slate-800 text-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${props.className}`}
   />
 );
 
@@ -78,6 +79,7 @@ import {
   QrCode,
   Trash2,
   Award,
+  ChevronRight, // Ensure ChevronRight is imported for SidebarButton
 } from "lucide-react";
 
 export default function ViewEventPage() {
@@ -682,33 +684,33 @@ export default function ViewEventPage() {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-[#F3F6FB] text-slate-900">
-      {/* SIDEBAR */}
+    // APPLY DARK BACKGROUND: bg-slate-900
+    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+      {/* SIDEBAR (Dark Theme Retained) */}
       <aside
-        className={`transition-all duration-300 ${
-          sidebarOpen ? "w-72" : "w-20"
-        } bg-[#071129] text-white shadow-xl`}
+        className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
+          sidebarOpen ? "w-64" : "w-20"
+        } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div
-              className={`bg-white/90 rounded-xl shadow-md flex items-center justify-center ${
-                sidebarOpen ? "w-14 h-14" : "w-12 h-12"
+              className={`bg-white rounded-xl p-2 shadow-md flex items-center justify-center ${
+                sidebarOpen ? "w-12 h-12" : "w-10 h-10"
               }`}
             >
               <img
                 src="/iem-logo.jpg"
-                className={`object-contain ${
-                  sidebarOpen ? "w-10 h-10" : "w-8 h-8"
-                }`}
+                alt="IEM UTM Logo"
+                className="object-contain w-full h-full"
               />
             </div>
 
             {sidebarOpen && (
               <div>
-                <div className="text-sm font-semibold">IEM Connect</div>
-                <div className="text-xs text-slate-300">
-                  {isAdmin ? "Admin Panel" : "Member Portal"}
+                <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
+                <div className="text-xs text-slate-400 font-medium">
+                  {isAdmin ? "Admin Portal" : "Member Dashboard"}
                 </div>
               </div>
             )}
@@ -716,62 +718,56 @@ export default function ViewEventPage() {
 
           <button
             onClick={() => setSidebarOpen((s) => !s)}
-            className="p-2 text-slate-200 rounded hover:bg-white/10"
+            className="p-2 text-slate-200 rounded-lg hover:bg-white/10"
           >
             <Menu size={18} />
           </button>
         </div>
 
-        <nav className="px-3 py-6 space-y-2">
+        <nav className="px-3 py-6 space-y-2 flex-1 overflow-y-auto">
           <SidebarButton
-            icon={<PieChart size={18} />}
+            icon={<PieChart size={20} />}
             label="Dashboard"
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
           {isAdmin && (
             <SidebarButton
-              icon={<FileText size={18} />}
-              label="Analytics"
+              icon={<FileText size={20} />}
+              label="Analytics & Reports" // Corrected label for clarity
               open={sidebarOpen}
               onClick={() => router.push("/admin/reports")}
             />
           )}
           <SidebarButton
-            icon={<Calendar size={18} />}
+            icon={<Calendar size={20} />}
             label="Events"
             open={sidebarOpen}
             active
             onClick={() => router.push("/event")}
           />
           <SidebarButton
-            icon={<CheckSquare size={18} />}
+            icon={<CheckSquare size={20} />}
             label="Attendance"
             open={sidebarOpen}
             onClick={() => router.push("/attendance")}
           />
           <SidebarButton
-            icon={<Bell size={18} />}
-            label="Notifications"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/notifications")}
-          />
-          <SidebarButton
-            icon={<Settings size={18} />}
+            icon={<Settings size={20} />}
             label="Settings"
             open={sidebarOpen}
             onClick={() => router.push("/settings")}
           />
           <SidebarButton
-            icon={<HelpCircle size={18} />}
-            label="Help"
+            icon={<HelpCircle size={20} />}
+            label="Help Center"
             open={sidebarOpen}
             onClick={() => router.push("/admin/help")}
           />
 
           <div className="mt-6 border-t border-white/10 pt-4">
             <SidebarButton
-              icon={<LogOut size={18} />}
+              icon={<LogOut size={20} />}
               label="Logout"
               open={sidebarOpen}
               onClick={logout}
@@ -782,21 +778,21 @@ export default function ViewEventPage() {
 
       {/* MAIN AREA */}
       <div className="flex-1">
-        {/* HEADER */}
-        <header className="flex items-center justify-between px-8 py-4 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40">
+        {/* APPLY GLASSY HEADER: Semi-transparent dark background, white text */}
+        <header className="flex items-center justify-between px-8 py-4 sticky top-0 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20 z-40">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push("/event")}
-              className="p-2 rounded hover:bg-slate-100"
+              className="p-2 rounded hover:bg-white/10 text-white"
             >
               <ArrowLeft size={20} />
             </button>
 
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">
+              <h2 className="text-2xl font-semibold tracking-tight text-white">
                 View Event
               </h2>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-300">
                 Event details & director information
               </p>
             </div>
@@ -807,7 +803,7 @@ export default function ViewEventPage() {
             <NotificationBell />
 
             <div className="text-right">
-              <div className="text-sm font-semibold">{user.name}</div>
+              <div className="text-sm font-semibold text-white">{user.name}</div>
               <div className="text-xs text-slate-400 capitalize">
                 {user.role}
               </div>
@@ -815,10 +811,16 @@ export default function ViewEventPage() {
 
             <button
               onClick={() => router.push("/profile")}
-              className="rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              className="rounded-full overflow-hidden border-2 border-transparent shadow hover:ring-2 hover:ring-indigo-500 transition-colors cursor-pointer"
               title="View Profile"
             >
               <UserAvatar size="md" />
+            </button>
+            <button 
+              onClick={logout}
+              className="p-2 rounded-lg hover:bg-white/10 text-white"
+            >
+              <LogOut size={18} />
             </button>
           </div>
         </header>
@@ -826,15 +828,16 @@ export default function ViewEventPage() {
         {/* CONTENT */}
         <main className="px-8 py-10 max-w-7xl mx-auto">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-slate-500">
               Loading event...
             </div>
           ) : error ? (
-            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+            // APPLY DARK ERROR STYLES
+            <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg">
               {error}
             </div>
           ) : !event ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-slate-500">
               Event not found
             </div>
           ) : (
@@ -844,19 +847,39 @@ export default function ViewEventPage() {
               className="w-full"
             >
               <TabsList
-                className={`grid w-full ${
+                className={`grid w-full mb-6 bg-slate-800 border border-slate-700 ${
                   isAdmin ? "grid-cols-4" : "grid-cols-1"
-                } mb-6`}
+                }`}
               >
-                <TabsTrigger value="details">Event Details</TabsTrigger>
+                <TabsTrigger 
+                  value="details" 
+                  className="text-slate-300 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                >
+                  Event Details
+                </TabsTrigger>
                 {isAdmin && (
-                  <TabsTrigger value="users">Registered Users</TabsTrigger>
+                  <TabsTrigger 
+                    value="users" 
+                    className="text-slate-300 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                  >
+                    Registered Users
+                  </TabsTrigger>
                 )}
                 {isAdmin && (
-                  <TabsTrigger value="notifications">Notifications</TabsTrigger>
+                  <TabsTrigger 
+                    value="notifications" 
+                    className="text-slate-300 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                  >
+                    Notifications
+                  </TabsTrigger>
                 )}
                 {isAdmin && (
-                  <TabsTrigger value="attendance">Attendance</TabsTrigger>
+                  <TabsTrigger 
+                    value="attendance" 
+                    className="text-slate-300 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                  >
+                    Attendance
+                  </TabsTrigger>
                 )}
               </TabsList>
 
@@ -864,21 +887,21 @@ export default function ViewEventPage() {
               <TabsContent value="details" className="space-y-6">
                 {/* COMPLETED EVENT BANNER */}
                 {event.status === "Completed" && (
-                  <Card className="bg-slate-50 border-slate-200 shadow">
+                  <Card className="bg-slate-700 border border-slate-600 shadow">
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0">
-                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                            <CheckCircle size={20} className="text-slate-600" />
+                          <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center">
+                            <CheckCircle size={20} className="text-slate-300" />
                           </div>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-sm font-medium">
+                            <span className="px-3 py-1 bg-slate-600 text-slate-300 rounded-full text-sm font-medium">
                               Event Completed
                             </span>
                           </div>
-                          <p className="text-sm text-slate-700">
+                          <p className="text-sm text-slate-300">
                             This event has been completed. Registration and
                             check-in are no longer available.
                           </p>
@@ -889,11 +912,12 @@ export default function ViewEventPage() {
                 )}
 
                 {registrationMessage && (
+                  // APPLY DARK MESSAGE STYLES
                   <div
                     className={`px-4 py-3 rounded-lg ${
                       registrationMessage.type === "success"
-                        ? "bg-green-50 border border-green-200 text-green-800"
-                        : "bg-red-50 border border-red-200 text-red-800"
+                        ? "bg-green-900/50 border border-green-700 text-green-300"
+                        : "bg-red-900/50 border border-red-700 text-red-300"
                     }`}
                   >
                     {registrationMessage.text}
@@ -902,13 +926,13 @@ export default function ViewEventPage() {
 
                 {/* START EVENT (ADMIN ONLY - UPCOMING EVENTS) */}
                 {isAdmin && event.status === "Upcoming" && (
-                  <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
+                  <Card className="bg-slate-700 shadow-lg border border-slate-600">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-green-900">
+                      <CardTitle className="flex items-center gap-2 text-green-400">
                         <PlayCircle size={20} />
                         Start Event
                       </CardTitle>
-                      <CardDescription className="text-green-700">
+                      <CardDescription className="text-green-500">
                         Change event status from 'Upcoming' to 'Open' when the
                         event time arrives
                       </CardDescription>
@@ -918,8 +942,8 @@ export default function ViewEventPage() {
                         <div
                           className={`px-4 py-3 rounded-lg ${
                             startEventMessage.type === "success"
-                              ? "bg-green-50 border border-green-200 text-green-800"
-                              : "bg-red-50 border border-red-200 text-red-800"
+                              ? "bg-green-900/50 border border-green-700 text-green-300"
+                              : "bg-red-900/50 border border-red-700 text-red-300"
                           }`}
                         >
                           {startEventMessage.text}
@@ -927,11 +951,11 @@ export default function ViewEventPage() {
                       )}
 
                       <div className="space-y-3">
-                        <div className="bg-white/70 p-4 rounded-lg border border-green-200">
-                          <p className="text-sm text-slate-700 mb-2">
+                        <div className="bg-slate-800 p-4 rounded-lg border border-green-700">
+                          <p className="text-sm text-slate-300 mb-2">
                             <strong>Event Schedule:</strong>
                           </p>
-                          <div className="space-y-1 text-sm text-slate-600">
+                          <div className="space-y-1 text-sm text-slate-300">
                             <p>
                               <strong>Date:</strong>{" "}
                               {new Date(event.start_date).toLocaleDateString()}
@@ -963,7 +987,7 @@ export default function ViewEventPage() {
                             ? "Starting Event..."
                             : "Start Event"}
                         </Button>
-                        <p className="text-xs text-slate-500 text-center">
+                        <p className="text-xs text-slate-400 text-center">
                           The event can only be started when the current time is
                           within the scheduled time window.
                         </p>
@@ -974,13 +998,13 @@ export default function ViewEventPage() {
 
                 {/* END EVENT (ADMIN ONLY - OPEN EVENTS) */}
                 {isAdmin && event.status === "Open" && (
-                  <Card className="bg-gradient-to-br from-red-50 to-orange-50 shadow-lg border-red-200">
+                  <Card className="bg-slate-700 shadow-lg border border-slate-600">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-red-900">
+                      <CardTitle className="flex items-center gap-2 text-red-400">
                         <StopCircle size={20} />
                         End Event
                       </CardTitle>
-                      <CardDescription className="text-red-700">
+                      <CardDescription className="text-red-500">
                         Change event status from 'Open' to 'Completed'. This
                         will make certificates available for download.
                       </CardDescription>
@@ -990,8 +1014,8 @@ export default function ViewEventPage() {
                         <div
                           className={`px-4 py-3 rounded-lg ${
                             endEventMessage.type === "success"
-                              ? "bg-green-50 border border-green-200 text-green-800"
-                              : "bg-red-50 border border-red-200 text-red-800"
+                              ? "bg-green-900/50 border border-green-700 text-green-300"
+                              : "bg-red-900/50 border border-red-700 text-red-300"
                           }`}
                         >
                           {endEventMessage.text}
@@ -1014,16 +1038,16 @@ export default function ViewEventPage() {
                             End Event
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="bg-slate-700 text-white border-slate-600">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>End Event</AlertDialogTitle>
+                            <AlertDialogTitle className="text-white">End Event</AlertDialogTitle>
                             <AlertDialogDescription asChild>
                               <div>
-                                <p>
+                                <p className="text-slate-300">
                                   Are you sure you want to end this event? This
                                   action will:
                                 </p>
-                                <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                                <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-slate-400">
                                   <li>
                                     Change the event status to 'Completed'
                                   </li>
@@ -1036,7 +1060,7 @@ export default function ViewEventPage() {
                                     this event
                                   </li>
                                 </ul>
-                                <p className="mt-3 font-semibold text-red-600">
+                                <p className="mt-3 font-semibold text-red-400">
                                   This action cannot be undone.
                                 </p>
                               </div>
@@ -1044,7 +1068,7 @@ export default function ViewEventPage() {
                           </AlertDialogHeader>
                           <div className="space-y-4 py-4">
                             <div>
-                              <label className="block text-sm font-medium mb-2">
+                              <label className="block text-sm font-medium mb-2 text-slate-300">
                                 Type <span className="font-mono">CLOSE</span> to
                                 confirm:
                               </label>
@@ -1056,21 +1080,21 @@ export default function ViewEventPage() {
                                 }}
                                 placeholder="Type CLOSE"
                                 disabled={endEventLoading}
-                                className="font-mono"
+                                className="font-mono bg-slate-800 border-slate-600 text-white placeholder-slate-500"
                               />
                               {endEventConfirmText &&
                                 endEventConfirmText !== "CLOSE" && (
-                                  <p className="text-sm text-red-600 mt-1">
+                                  <p className="text-sm text-red-400 mt-1">
                                     Please type "CLOSE" exactly to confirm
                                   </p>
                                 )}
                             </div>
                             {endEventMessage && (
                               <div
-                                className={`px-3 py-2 rounded ${
+                                className={`px-3 py-2 rounded border ${
                                   endEventMessage.type === "error"
-                                    ? "bg-red-50 text-red-800"
-                                    : "bg-green-50 text-green-800"
+                                    ? "bg-red-900/50 text-red-300 border-red-700"
+                                    : "bg-green-900/50 text-green-300 border-green-700"
                                 }`}
                               >
                                 {endEventMessage.text}
@@ -1084,6 +1108,7 @@ export default function ViewEventPage() {
                                 setEndEventConfirmText("");
                                 setEndEventMessage(null);
                               }}
+                              className="bg-slate-600 text-white hover:bg-slate-500"
                             >
                               Cancel
                             </AlertDialogCancel>
@@ -1100,7 +1125,7 @@ export default function ViewEventPage() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                      <p className="text-xs text-slate-500 text-center">
+                      <p className="text-xs text-slate-400 text-center">
                         Ending the event will mark it as completed and enable
                         certificate downloads for all participants who attended.
                       </p>
@@ -1109,33 +1134,33 @@ export default function ViewEventPage() {
                 )}
 
                 {/* EVENT STATISTICS */}
-                <Card className="bg-white/70 shadow">
+                <Card className="bg-slate-700 shadow border border-slate-600">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users size={20} />
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Users size={20} className="text-indigo-400" />
                       Event Statistics
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-400">
                           Registered Participants
                         </p>
-                        <p className="text-2xl font-bold text-blue-600">
+                        <p className="text-2xl font-bold text-indigo-400">
                           {event.participant_count || 0}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-slate-500">Your Status</p>
+                        <p className="text-sm text-slate-400">Your Status</p>
                         {event.is_registered ? (
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                            <span className="px-3 py-1 bg-green-900/50 text-green-300 rounded-full text-sm font-medium border border-green-700">
                               ✓ Registered
                             </span>
                           </div>
                         ) : (
-                          <span className="text-sm text-slate-600">
+                          <span className="text-sm text-slate-400">
                             Not registered
                           </span>
                         )}
@@ -1144,13 +1169,13 @@ export default function ViewEventPage() {
 
                     {/* REGISTRATION ACTION BUTTON */}
                     {event.status !== "Completed" && (
-                      <div className="mt-6 pt-4 border-t border-slate-200">
+                      <div className="mt-6 pt-4 border-t border-slate-600">
                         {event.is_registered ? (
                           <Button
                             onClick={handleUnregister}
                             disabled={registering}
                             variant="destructive"
-                            className="w-full gap-2"
+                            className="w-full gap-2 bg-red-600 hover:bg-red-700"
                           >
                             <UserX size={18} />
                             {registering
@@ -1174,7 +1199,7 @@ export default function ViewEventPage() {
 
                     {/* ADMIN VIEW PARTICIPANTS BUTTON */}
                     {isAdmin && (
-                      <div className="mt-6 pt-4 border-t border-slate-200">
+                      <div className="mt-6 pt-4 border-t border-slate-600">
                         <Button
                           onClick={handleViewParticipants}
                           disabled={loadingParticipants}
@@ -1191,10 +1216,10 @@ export default function ViewEventPage() {
                 </Card>
 
                 {/* DIRECTOR INFO */}
-                <Card className="bg-white/70 shadow">
+                <Card className="bg-slate-700 shadow border border-slate-600">
                   <CardHeader>
-                    <CardTitle>Director Information</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-white">Director Information</CardTitle>
+                    <CardDescription className="text-slate-400">
                       Details of the event director
                     </CardDescription>
                   </CardHeader>
@@ -1239,10 +1264,10 @@ export default function ViewEventPage() {
                 </Card>
 
                 {/* EVENT INFO */}
-                <Card className="bg-white/70 shadow">
+                <Card className="bg-slate-700 shadow border border-slate-600">
                   <CardHeader>
-                    <CardTitle>Event Information</CardTitle>
-                    <CardDescription>Complete event details</CardDescription>
+                    <CardTitle className="text-white">Event Information</CardTitle>
+                    <CardDescription className="text-slate-400">Complete event details</CardDescription>
                   </CardHeader>
 
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1257,7 +1282,7 @@ export default function ViewEventPage() {
                     />
 
                     <div className="md:col-span-2">
-                      <span className="text-sm font-medium text-slate-600">
+                      <span className="text-sm font-medium text-slate-300">
                         Description
                       </span>
                       {editing ? (
@@ -1271,7 +1296,7 @@ export default function ViewEventPage() {
                           }
                         />
                       ) : (
-                        <p className="text-slate-700">{event.description}</p>
+                        <p className="text-slate-300">{event.description}</p>
                       )}
                     </div>
 
@@ -1359,7 +1384,7 @@ export default function ViewEventPage() {
                   <div className="flex justify-between items-center mt-6 gap-4">
                     {event.status !== "Completed" && (
                       <Button
-                        className="px-6 py-2 bg-blue-600 text-white"
+                        className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700"
                         onClick={() =>
                           editing ? handleUpdate() : setEditing(true)
                         }
@@ -1373,13 +1398,13 @@ export default function ViewEventPage() {
                       </Button>
                     )}
                     {event.status === "Completed" && (
-                      <div className="text-sm text-slate-500 italic">
+                      <div className="text-sm text-slate-400 italic">
                         Completed events cannot be edited
                       </div>
                     )}
 
                     <div className="flex gap-3">
-                      <Button className="px-6 py-2 bg-slate-700 text-white">
+                      <Button className="px-6 py-2 bg-slate-600 text-white hover:bg-slate-500">
                         Generate Report
                       </Button>
 
@@ -1390,20 +1415,20 @@ export default function ViewEventPage() {
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="destructive"
-                            className="px-6 py-2 gap-2"
+                            className="px-6 py-2 gap-2 bg-red-600 hover:bg-red-700"
                             disabled={deleting}
                           >
                             <Trash2 size={18} />
                             Delete Event
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="bg-slate-700 text-white border-slate-600">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Event</AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogTitle className="text-white">Delete Event</AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-400">
                               Are you sure you want to delete "{event?.title}"?
                               {event?.status === "Completed" && (
-                                <span className="block mt-2 text-red-600 font-semibold">
+                                <span className="block mt-2 text-red-400 font-semibold">
                                   Warning: This is a completed event. Deleting
                                   it will permanently remove all historical
                                   data, including attendance records and
@@ -1416,7 +1441,7 @@ export default function ViewEventPage() {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel disabled={deleting}>
+                            <AlertDialogCancel disabled={deleting} className="bg-slate-600 text-white hover:bg-slate-500">
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -1437,19 +1462,19 @@ export default function ViewEventPage() {
               {/* REGISTERED USERS TAB */}
               {isAdmin && (
                 <TabsContent value="users" className="space-y-6">
-                  <Card className="bg-white/70 shadow">
+                  <Card className="bg-slate-700 shadow border border-slate-600">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Users size={20} />
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Users size={20} className="text-indigo-400" />
                         Registered Participants
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-slate-400">
                         Total: {participants.length} participant(s)
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       {error && (
-                        <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                        <div className="mb-4 bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg">
                           <p className="font-medium">
                             Error loading participants
                           </p>
@@ -1457,17 +1482,17 @@ export default function ViewEventPage() {
                         </div>
                       )}
                       {loadingParticipants ? (
-                        <p className="text-center text-slate-500 py-8">
+                        <p className="text-center text-slate-400 py-8">
                           Loading participants...
                         </p>
                       ) : participants.length === 0 ? (
                         <div className="text-center py-8">
-                          <p className="text-slate-500 mb-4">
+                          <p className="text-slate-400 mb-4">
                             No participants registered yet.
                           </p>
                           <Button
                             onClick={handleViewParticipants}
-                            className="gap-2"
+                            className="gap-2 bg-purple-600 hover:bg-purple-700"
                             disabled={loadingParticipants}
                           >
                             <Users size={18} />
@@ -1479,13 +1504,14 @@ export default function ViewEventPage() {
                       ) : (
                         <div className="space-y-4">
                           <div className="flex justify-between items-center mb-4">
-                            <p className="text-sm text-slate-600">
+                            <p className="text-sm text-slate-400">
                               Showing {participants.length} participant(s)
                             </p>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={handleViewParticipants}
+                              className="gap-2 bg-slate-800 border-slate-600 text-white hover:bg-slate-600"
                             >
                               <RefreshCw size={14} className="mr-2" />
                               Refresh
@@ -1496,31 +1522,31 @@ export default function ViewEventPage() {
                               (participant: any, index: number) => (
                                 <div
                                   key={participant.id}
-                                  className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                                  className="p-4 border border-slate-600 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
                                 >
                                   <div className="flex items-start justify-between">
                                     <div className="space-y-1 flex-1">
                                       <div className="flex items-center gap-3">
-                                        <span className="font-semibold text-slate-700">
+                                        <span className="font-semibold text-slate-300">
                                           #{index + 1}
                                         </span>
-                                        <h4 className="font-semibold text-slate-900">
+                                        <h4 className="font-semibold text-white">
                                           {participant.user.name}
                                         </h4>
                                         <span
                                           className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                             participant.status === "registered"
-                                              ? "bg-green-100 text-green-700"
+                                              ? "bg-green-900/50 text-green-300"
                                               : participant.status ===
                                                 "attended"
-                                              ? "bg-blue-100 text-blue-700"
-                                              : "bg-slate-100 text-slate-600"
+                                              ? "bg-blue-900/50 text-blue-300"
+                                              : "bg-slate-600 text-slate-400"
                                           }`}
                                         >
                                           {participant.status}
                                         </span>
                                       </div>
-                                      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-slate-600 mt-2">
+                                      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-slate-400 mt-2">
                                         <p>
                                           <span className="font-medium">
                                             Email:
@@ -1569,13 +1595,13 @@ export default function ViewEventPage() {
               {isAdmin && (
                 <TabsContent value="notifications" className="space-y-6">
                   {event.status !== "Completed" && (
-                    <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg border-blue-200">
+                    <Card className="bg-slate-700 shadow-lg border border-slate-600">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-blue-900">
+                        <CardTitle className="flex items-center gap-2 text-indigo-400">
                           <Bell size={20} />
                           Send Announcement
                         </CardTitle>
-                        <CardDescription className="text-blue-700">
+                        <CardDescription className="text-slate-400">
                           Send a notification to all registered participants
                         </CardDescription>
                       </CardHeader>
@@ -1584,8 +1610,8 @@ export default function ViewEventPage() {
                           <div
                             className={`px-4 py-3 rounded-lg ${
                               announcementResult.type === "success"
-                                ? "bg-green-50 border border-green-200 text-green-800"
-                                : "bg-red-50 border border-red-200 text-red-800"
+                                ? "bg-green-900/50 border border-green-700 text-green-300"
+                                : "bg-red-900/50 border border-red-700 text-red-300"
                             }`}
                           >
                             {announcementResult.text}
@@ -1594,9 +1620,10 @@ export default function ViewEventPage() {
 
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <label className="block text-sm font-medium text-slate-300 mb-1">
                               Subject
                             </label>
+                            {/* APPLY DARK INPUT STYLE */}
                             <Input
                               type="text"
                               placeholder="Announcement subject..."
@@ -1604,12 +1631,12 @@ export default function ViewEventPage() {
                               onChange={(e) =>
                                 setAnnouncementSubject(e.target.value)
                               }
-                              className="w-full"
+                              className="w-full bg-slate-800 border-slate-600 text-white placeholder-slate-500"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <label className="block text-sm font-medium text-slate-300 mb-1">
                               Message
                             </label>
                             <Textarea
@@ -1628,11 +1655,11 @@ export default function ViewEventPage() {
                               id="sendEmail"
                               checked={sendEmail}
                               onChange={(e) => setSendEmail(e.target.checked)}
-                              className="rounded"
+                              className="rounded bg-slate-800 border-slate-600"
                             />
                             <label
                               htmlFor="sendEmail"
-                              className="text-sm text-slate-700 cursor-pointer"
+                              className="text-sm text-slate-300 cursor-pointer"
                             >
                               Also send via email
                             </label>
@@ -1658,9 +1685,9 @@ export default function ViewEventPage() {
                     </Card>
                   )}
                   {event.status === "Completed" && (
-                    <Card className="bg-slate-50">
+                    <Card className="bg-slate-700 border border-slate-600">
                       <CardContent className="pt-6">
-                        <p className="text-center text-slate-500">
+                        <p className="text-center text-slate-400">
                           Announcements cannot be sent for completed events.
                         </p>
                       </CardContent>
@@ -1674,13 +1701,13 @@ export default function ViewEventPage() {
                 <TabsContent value="attendance" className="space-y-6">
                   {/* ATTENDANCE MANAGEMENT (ADMIN ONLY) */}
                   {isAdmin && (
-                    <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg border-indigo-200">
+                    <Card className="bg-slate-700 shadow-lg border border-slate-600">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-indigo-900">
+                        <CardTitle className="flex items-center gap-2 text-indigo-400">
                           <CheckSquare size={20} />
                           Attendance Management
                         </CardTitle>
-                        <CardDescription className="text-indigo-700">
+                        <CardDescription className="text-slate-400">
                           Control attendance check-in for this event
                         </CardDescription>
                       </CardHeader>
@@ -1689,8 +1716,8 @@ export default function ViewEventPage() {
                           <div
                             className={`px-4 py-3 rounded-lg ${
                               attendanceMessage.type === "success"
-                                ? "bg-green-50 border border-green-200 text-green-800"
-                                : "bg-red-50 border border-red-200 text-red-800"
+                                ? "bg-green-900/50 border border-green-700 text-green-300"
+                                : "bg-red-900/50 border border-red-700 text-red-300"
                             }`}
                           >
                             {attendanceMessage.text}
@@ -1716,7 +1743,7 @@ export default function ViewEventPage() {
                               onClick={handleStopAttendance}
                               disabled={attendanceLoading}
                               variant="destructive"
-                              className="flex-1 gap-2"
+                              className="flex-1 gap-2 bg-red-600 hover:bg-red-700"
                             >
                               <StopCircle size={18} />
                               {attendanceLoading
@@ -1726,7 +1753,7 @@ export default function ViewEventPage() {
                           )}
 
                           {event.attendance_status === "Closed" && (
-                            <div className="flex-1 px-4 py-2 bg-slate-100 rounded-md text-center text-slate-600">
+                            <div className="flex-1 px-4 py-2 bg-slate-600 rounded-md text-center text-slate-300">
                               Attendance has been closed
                             </div>
                           )}
@@ -1735,21 +1762,23 @@ export default function ViewEventPage() {
                         {/* QR CODE & ATTENDANCE CODE DISPLAY */}
                         {event.attendance_status === "Active" &&
                           event.attendance_code && (
-                            <div className="grid md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-indigo-200">
+                            <div className="grid md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-slate-600">
                               <div className="space-y-3">
-                                <h4 className="font-semibold text-indigo-900 flex items-center gap-2">
+                                <h4 className="font-semibold text-indigo-400 flex items-center gap-2">
                                   <QrCode size={18} />
                                   QR Code
                                 </h4>
-                                <div className="bg-white p-4 rounded-lg border-2 border-indigo-300 flex justify-center">
+                                <div className="bg-slate-800 p-4 rounded-lg border-2 border-indigo-500/50 flex justify-center">
                                   <div className="text-center">
                                     <QRCodeSVG
                                       value={`${window.location.origin}/attendance?code=${event.attendance_code}`}
                                       size={192}
                                       level="H"
                                       includeMargin={true}
+                                      fgColor="#ffffff" // White QR code foreground
+                                      bgColor="#0f172a" // Dark slate background (slate-900)
                                     />
-                                    <p className="text-xs text-slate-500 mt-2">
+                                    <p className="text-xs text-slate-400 mt-2">
                                       Scan to check in
                                     </p>
                                   </div>
@@ -1757,15 +1786,15 @@ export default function ViewEventPage() {
                               </div>
 
                               <div className="space-y-3">
-                                <h4 className="font-semibold text-indigo-900">
+                                <h4 className="font-semibold text-indigo-400">
                                   Attendance Code
                                 </h4>
-                                <div className="bg-white p-6 rounded-lg border-2 border-indigo-300">
-                                  <p className="text-4xl font-bold text-center tracking-wider text-indigo-600 font-mono">
+                                <div className="bg-slate-800 p-6 rounded-lg border-2 border-indigo-500/50">
+                                  <p className="text-4xl font-bold text-center tracking-wider text-indigo-400 font-mono">
                                     {event.attendance_code.substring(0, 4)}-
                                     {event.attendance_code.substring(4)}
                                   </p>
-                                  <p className="text-center text-sm text-slate-600 mt-3">
+                                  <p className="text-center text-sm text-slate-400 mt-3">
                                     Share this code with participants
                                   </p>
                                   <p className="text-center text-xs text-slate-500 mt-2">
@@ -1773,7 +1802,7 @@ export default function ViewEventPage() {
                                     <a
                                       href={`/check-in/${event.id}?code=${event.attendance_code}`}
                                       target="_blank"
-                                      className="text-blue-600 underline"
+                                      className="text-blue-400 underline"
                                     >
                                       /check-in/{event.id}
                                     </a>
@@ -1788,13 +1817,13 @@ export default function ViewEventPage() {
                           event.is_registered &&
                           event.attendance_status === "Active" &&
                           event.attendance_code && (
-                            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg border-green-200">
+                            <Card className="bg-slate-700 shadow-lg border border-slate-600 mt-6 pt-6 border-t">
                               <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-green-900">
+                                <CardTitle className="flex items-center gap-2 text-green-400">
                                   <CheckSquare size={20} />
                                   Check In to Event
                                 </CardTitle>
-                                <CardDescription className="text-green-700">
+                                <CardDescription className="text-green-500">
                                   Enter the attendance code to mark your
                                   attendance
                                 </CardDescription>
@@ -1802,7 +1831,7 @@ export default function ViewEventPage() {
                               <CardContent className="space-y-4">
                                 {hasCheckedIn ? (
                                   <div className="text-center py-6">
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-900/50 text-green-300 rounded-full font-semibold border border-green-700">
                                       <CheckCircle size={20} />
                                       You have already checked in for this event
                                     </div>
@@ -1812,7 +1841,7 @@ export default function ViewEventPage() {
                                     <div className="space-y-3">
                                       <label
                                         htmlFor="checkInCode"
-                                        className="text-sm font-semibold text-green-900 block"
+                                        className="text-sm font-semibold text-green-400 block"
                                       >
                                         Attendance Code
                                       </label>
@@ -1826,14 +1855,15 @@ export default function ViewEventPage() {
                                             setCheckInCode(e.target.value)
                                           }
                                           maxLength={9}
-                                          className="text-xl font-mono tracking-wider text-center h-12 text-green-700"
+                                          // APPLY DARK INPUT STYLE
+                                          className="text-xl font-mono tracking-wider text-center h-12 text-green-400 bg-slate-800 border-slate-600 placeholder-green-600"
                                           onKeyPress={(e) => {
                                             if (e.key === "Enter")
                                               handleCheckIn();
                                           }}
                                         />
                                       </div>
-                                      <p className="text-xs text-green-600">
+                                      <p className="text-xs text-green-500">
                                         Enter the 8-digit code provided by the
                                         event organizer
                                       </p>
@@ -1843,8 +1873,8 @@ export default function ViewEventPage() {
                                       <div
                                         className={`px-4 py-3 rounded-lg border ${
                                           checkInMessage.type === "success"
-                                            ? "bg-green-50 border-green-200 text-green-800"
-                                            : "bg-red-50 border-red-200 text-red-800"
+                                            ? "bg-green-900/50 border-green-700 text-green-300"
+                                            : "bg-red-900/50 border-red-700 text-red-300"
                                         }`}
                                       >
                                         {checkInMessage.text}
@@ -1871,9 +1901,9 @@ export default function ViewEventPage() {
                         {/* LIVE ATTENDANCE LIST */}
                         {event.attendance_status === "Active" &&
                           showAttendanceList && (
-                            <div className="mt-6 pt-6 border-t border-indigo-200">
+                            <div className="mt-6 pt-6 border-t border-slate-600">
                               <div className="flex items-center justify-between mb-4">
-                                <h4 className="font-semibold text-indigo-900 flex items-center gap-2">
+                                <h4 className="font-semibold text-indigo-400 flex items-center gap-2">
                                   <Users size={18} />
                                   Live Attendance ({attendanceList.length})
                                 </h4>
@@ -1881,7 +1911,7 @@ export default function ViewEventPage() {
                                   size="sm"
                                   variant="outline"
                                   onClick={handleRefreshAttendance}
-                                  className="gap-2"
+                                  className="gap-2 bg-slate-800 border-slate-600 text-white hover:bg-slate-600"
                                 >
                                   <RefreshCw size={14} />
                                   Refresh
@@ -1889,7 +1919,7 @@ export default function ViewEventPage() {
                               </div>
 
                               {attendanceList.length === 0 ? (
-                                <p className="text-center text-slate-500 py-8 bg-white rounded-lg border border-indigo-200">
+                                <p className="text-center text-slate-500 py-8 bg-slate-800 rounded-lg border border-slate-600">
                                   No one has checked in yet
                                 </p>
                               ) : (
@@ -1898,24 +1928,24 @@ export default function ViewEventPage() {
                                     (record: any, index: number) => (
                                       <div
                                         key={record.id}
-                                        className="p-3 bg-white border border-indigo-200 rounded-lg flex items-center justify-between hover:bg-indigo-50 transition-colors"
+                                        className="p-3 bg-slate-800 border border-slate-600 rounded-lg flex items-center justify-between hover:bg-slate-700 transition-colors"
                                       >
                                         <div className="flex items-center gap-3">
                                           <span className="font-mono text-sm text-slate-500">
                                             #{index + 1}
                                           </span>
                                           <div>
-                                            <p className="font-semibold text-slate-900">
+                                            <p className="font-semibold text-white">
                                               {record.name}
                                             </p>
-                                            <p className="text-xs text-slate-600">
+                                            <p className="text-xs text-slate-400">
                                               {record.matric_number} •{" "}
                                               {record.method}
                                             </p>
                                           </div>
                                         </div>
                                         <div className="text-right">
-                                          <p className="text-xs text-slate-500">
+                                          <p className="text-xs text-slate-400">
                                             {new Date(
                                               record.marked_at
                                             ).toLocaleTimeString()}
@@ -1941,6 +1971,8 @@ export default function ViewEventPage() {
   );
 }
 
+/* --- HELPER COMPONENTS --- */
+
 function InputField({
   label,
   editable,
@@ -1963,17 +1995,19 @@ function InputField({
 
   return (
     <div className={className}>
-      <span className="text-sm font-medium text-slate-600">{label}</span>
+      <span className="text-sm font-medium text-slate-300">{label}</span>
       {editable ? (
+        // APPLY DARK INPUT STYLE
         <Input
           type={type}
           value={value}
           onChange={type === "date" ? handleDateChange : onChange}
           min={type === "date" ? "1000-01-01" : undefined}
           max={type === "date" ? "9999-12-31" : undefined}
+          className="bg-slate-800 border-slate-600 text-white placeholder-slate-500"
         />
       ) : (
-        <p className="text-slate-700">{value}</p>
+        <p className="text-white">{value}</p>
       )}
     </div>
   );
@@ -2036,15 +2070,16 @@ function FileField({ label, file, editable, onChange }: any) {
 
   return (
     <div>
-      <span className="text-sm font-medium text-slate-600">{label}</span>
+      <span className="text-sm font-medium text-slate-300">{label}</span>
 
       {editable ? (
-        <Input type="file" className="mt-2" onChange={onChange} />
+        // APPLY DARK INPUT STYLE
+        <Input type="file" className="mt-2 bg-slate-800 border-slate-600 text-white" onChange={onChange} />
       ) : file ? (
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="text-blue-600 underline text-sm block mt-1 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-blue-400 underline text-sm block mt-1 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {downloading ? "Downloading..." : "Download File"}
         </button>
@@ -2122,20 +2157,21 @@ function PosterField({ poster, editable, onChange }: any) {
 
   return (
     <div>
-      <span className="text-sm font-medium text-slate-600">Poster</span>
+      <span className="text-sm font-medium text-slate-300">Poster</span>
 
       {editable ? (
+        // APPLY DARK INPUT STYLE
         <Input
           type="file"
           accept="image/*"
-          className="mt-2"
+          className="mt-2 bg-slate-800 border-slate-600 text-white"
           onChange={onChange}
         />
       ) : imageUrl && !imageError ? (
         <img
           src={imageUrl}
           alt="Event Poster"
-          className="w-full max-w-sm h-auto object-cover rounded-md border mt-2"
+          className="w-full max-w-sm h-auto object-cover rounded-md border mt-2 border-slate-600"
           onError={(e) => {
             console.error("Failed to display poster image");
             setImageError(true);
@@ -2152,17 +2188,103 @@ function PosterField({ poster, editable, onChange }: any) {
 }
 
 function SidebarButton({ icon, label, open, active, onClick }: any) {
+  const baseClasses = "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150 font-medium";
+  // RESTORED: Default active classes
+  const activeClasses = active ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow" : "text-slate-300 hover:bg-white/10 hover:text-white";
+
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
-        active
-          ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white"
-          : "text-slate-300 hover:bg-white/10 hover:text-white"
-      }`}
+      className={`${baseClasses} ${activeClasses}`}
     >
       <div className="w-6 h-6 flex items-center justify-center">{icon}</div>
       {open && <span>{label}</span>}
+      {open && active && <ChevronRight size={16} className="ml-auto text-white/70" />}
     </button>
+  );
+}
+
+/* Modal - same auth-aware fetch logic as before */
+function ImageModal({ imageUrl, onClose }: { imageUrl: string; onClose: () => void }) {
+  const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(false);
+
+  useEffect(() => {
+    let url = "";
+    if (imageUrl.startsWith("http")) {
+      url = imageUrl;
+    } else if (imageUrl.startsWith("/api/v1")) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = apiUrl.replace("/api/v1", "");
+      url = `${baseUrl}${imageUrl}`;
+    } else {
+      url = getFileUrl(imageUrl);
+    }
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      setLoading(true);
+      fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch modal image");
+          return res.blob();
+        })
+        .then((blob) => {
+          const obj = URL.createObjectURL(blob);
+          setModalImageUrl(obj);
+          setErr(false);
+        })
+        .catch((e) => {
+          console.error(e);
+          setErr(true);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setModalImageUrl(url);
+      setLoading(false);
+    }
+
+    return () => {
+      if (modalImageUrl && modalImageUrl.startsWith("blob:")) URL.revokeObjectURL(modalImageUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageUrl]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 z-50 p-2 bg-white/90 rounded-full shadow"
+        aria-label="close"
+      >
+
+      </button>
+
+      <div className="relative w-[90vw] h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        {loading ? (
+          <div className="w-full h-full flex items-center justify-center text-white">Loading image...</div>
+        ) : err || !modalImageUrl ? (
+          <div className="w-full h-full flex items-center justify-center text-white">Failed to load image</div>
+        ) : (
+          <img src={modalImageUrl} alt="Event poster" className="w-full h-full object-contain rounded" />
+        )}
+      </div>
+    </div>
   );
 }
