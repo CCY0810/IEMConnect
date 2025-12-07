@@ -105,22 +105,23 @@ export default function NotificationsPage() {
   const unreadNotifications = notifications.filter((n) => !n.is_read);
 
   return (
-    <div className="min-h-screen bg-[#F3F6FB]">
-      {/* HEADER */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+    // APPLY DARK BACKGROUND
+    <div className="min-h-screen bg-slate-900 text-white">
+      {/* HEADER: Dark and Sticky */}
+      <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/dashboard")}
-              className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-lg hover:bg-slate-700 transition-colors text-white"
             >
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-semibold text-slate-900">
+              <h1 className="text-2xl font-semibold text-white">
                 Notifications
               </h1>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-400">
                 {unreadCount > 0
                   ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`
                   : "All caught up!"}
@@ -135,7 +136,8 @@ export default function NotificationsPage() {
                 onClick={handleMarkAllAsRead}
                 disabled={markingAll}
                 variant="outline"
-                className="gap-2"
+                // APPLY DARK BUTTON STYLES
+                className="gap-2 bg-slate-700 border-slate-600 text-white hover:bg-slate-600 hover:text-white"
               >
                 <CheckCheck size={16} />
                 {markingAll ? "Marking..." : "Mark all as read"}
@@ -152,13 +154,14 @@ export default function NotificationsPage() {
             Loading notifications...
           </div>
         ) : notifications.length === 0 ? (
-          <Card className="bg-white/70 shadow">
+          // APPLY DARK CARD STYLES for 'No notifications'
+          <Card className="bg-slate-800 border-slate-700 shadow-xl">
             <CardContent className="py-20 text-center">
-              <Bell size={48} className="mx-auto mb-4 text-slate-400" />
-              <h3 className="text-lg font-semibold text-slate-700 mb-2">
+              <Bell size={48} className="mx-auto mb-4 text-slate-500" />
+              <h3 className="text-lg font-semibold text-white mb-2">
                 No notifications
               </h3>
-              <p className="text-slate-500">
+              <p className="text-slate-400">
                 You're all caught up! New notifications will appear here.
               </p>
             </CardContent>
@@ -167,7 +170,7 @@ export default function NotificationsPage() {
           <div className="space-y-4">
             {unreadNotifications.length > 0 && (
               <div className="mb-6">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                <h2 className="text-lg font-semibold text-white mb-4">
                   Unread ({unreadNotifications.length})
                 </h2>
                 <div className="space-y-3">
@@ -185,7 +188,7 @@ export default function NotificationsPage() {
 
             {notifications.filter((n) => n.is_read).length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                <h2 className="text-lg font-semibold text-white mb-4">
                   Read ({notifications.filter((n) => n.is_read).length})
                 </h2>
                 <div className="space-y-3">
@@ -220,8 +223,9 @@ function NotificationCard({
 }) {
   return (
     <Card
-      className={`bg-white/70 shadow transition-all hover:shadow-md ${
-        !notification.is_read ? "border-l-4 border-l-blue-500" : ""
+      // APPLY DARK CARD STYLES
+      className={`bg-slate-800 border-slate-700 shadow-md transition-all hover:shadow-lg ${
+        !notification.is_read ? "border-l-4 border-l-indigo-400" : "border border-slate-700"
       }`}
     >
       <CardContent className="p-4">
@@ -236,22 +240,24 @@ function NotificationCard({
           >
             <div className="flex items-start gap-3">
               {!notification.is_read && (
-                <div className="h-2 w-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                // UNREAD BLUE DOT
+                <div className="h-2 w-2 bg-indigo-400 rounded-full mt-2 flex-shrink-0"></div>
               )}
               <div className="flex-1">
                 <h3
                   className={`font-semibold mb-1 ${
+                    // ENSURE TEXT IS WHITE/LIGHT AGAINST DARK CARD
                     !notification.is_read
-                      ? "text-slate-900"
-                      : "text-slate-700"
+                      ? "text-white"
+                      : "text-slate-300"
                   }`}
                 >
                   {notification.title}
                 </h3>
-                <p className="text-sm text-slate-600 mb-2">
+                <p className="text-sm text-slate-400 mb-2">
                   {notification.message}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   {formatTimeAgo(notification.created_at)}
                 </p>
               </div>
@@ -260,15 +266,15 @@ function NotificationCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+            // APPLY DARK ICON/HOVER STYLES
+            className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-slate-700"
             onClick={() => onDelete(notification.id)}
             title="Delete notification"
           >
-            <X size={16} />
+            <Trash2 size={16} />
           </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
-
