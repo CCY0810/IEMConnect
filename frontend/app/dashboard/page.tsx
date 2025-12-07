@@ -311,6 +311,10 @@ export default function DashboardPage() {
               >
                 <UserAvatar size="md" />
               </button>
+
+              <button className="p-2 rounded-lg hover:bg-white/10 text-white" onClick={handleLogout}>
+                <LogOut size={18} />
+              </button>
             </div>
           </div>
         </header>
@@ -574,7 +578,7 @@ function StatsCard({
     violet: "text-violet-400",
   }[color];
   const borderColor = {
-    blue: "border-violet-900",
+    blue: "border-indigo-500",
     amber: "border-yellow-500",
     emerald: "border-emerald-500",
     red: "border-red-500",

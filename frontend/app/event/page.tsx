@@ -239,7 +239,7 @@ export default function EventsPage() {
                 )}
                 <Button
                   variant="outline"
-                  className="text-white border-white/40 hover:bg-white/10"
+                  className="text-[#0a66ff] border-white/40 hover:bg-white/10"
                   onClick={() => window.scrollTo({ top: 600, behavior: "smooth" })}
                 >
                   Browse Events
