@@ -6,6 +6,7 @@ import { useAuth } from "@/context/auth-context";
 import { getEvents, Event } from "@/lib/event-api";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
+import { getFileUrl } from "@/lib/event-api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,36 +14,32 @@ import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
+// FIX: Added imports for Alert components
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+// FIX: Added Badge import which may be needed if using conditional badges
+import { Badge } from "@/components/ui/badge";
+
 
 import {
   Menu,
   LogOut,
-  FileText,
   Calendar,
   CheckSquare,
-  Bell,
   Settings,
   HelpCircle,
-  PieChart,
+  PieChart as PieChartIcon, 
   Plus,
   Search,
   Eye,
   X,
+  ChevronRight,
+  FileText, // FIX: Added FileText import
 } from "lucide-react";
-import { getFileUrl } from "@/lib/event-api";
 
 export default function EventsPage() {
   const router = useRouter();
@@ -55,7 +52,12 @@ export default function EventsPage() {
   const [error, setError] = useState("");
   const [modalImage, setModalImage] = useState<string | null>(null);
 
-  // Fetch events from backend
+  // protect page: redirect to /login if no token
+  useEffect(() => {
+    if (!token) router.push("/login");
+  }, [token, router]);
+
+  // fetch events (backend logic intact)
   useEffect(() => {
     const fetchEvents = async () => {
       setLoading(true);
@@ -71,44 +73,43 @@ export default function EventsPage() {
       }
     };
 
-    if (user) {
-      fetchEvents();
-    }
+    if (user) fetchEvents();
   }, [search, user]);
 
-  // Check if user is admin
+  // admin check
   const isAdmin = user?.role === "admin";
 
+  // don't render until logged in (same as before)
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-[#F3F6FB] text-slate-900">
+    // APPLY DARK BACKGROUND: bg-slate-900
+    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+      {/* SIDEBAR (Dark Theme Retained) */}
       <aside
-        className={`transition-all duration-300 ${
-          sidebarOpen ? "w-72" : "w-20"
-        } bg-[#071129] text-white shadow-xl`}
+        className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
+          sidebarOpen ? "w-64" : "w-20"
+        } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div
-              className={`bg-white/90 backdrop-blur-sm rounded-xl border border-white/40 shadow-md flex items-center justify-center ${
-                sidebarOpen ? "w-14 h-14" : "w-12 h-12"
+              className={`bg-white rounded-xl p-2 shadow-md flex items-center justify-center ${
+                sidebarOpen ? "w-12 h-12" : "w-10 h-10"
               }`}
             >
               <img
                 src="/iem-logo.jpg"
                 alt="IEM UTM Logo"
-                className={`object-contain ${
-                  sidebarOpen ? "w-10 h-10" : "w-8 h-8"
-                }`}
+                className="object-contain w-full h-full"
               />
             </div>
 
             {sidebarOpen && (
               <div>
-                <div className="text-sm font-semibold">IEM Connect</div>
-                <div className="text-xs text-slate-300">
-                  {isAdmin ? "Admin Panel" : "Member Portal"}
+                <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
+                <div className="text-xs text-slate-400 font-medium">
+                  {isAdmin ? "Admin Portal" : "Member Dashboard"}
                 </div>
               </div>
             )}
@@ -116,61 +117,56 @@ export default function EventsPage() {
 
           <button
             onClick={() => setSidebarOpen((s) => !s)}
-            className="p-2 text-slate-200 rounded hover:bg-white/10"
+            className="p-2 text-slate-200 rounded-lg hover:bg-white/10"
           >
             <Menu size={18} />
           </button>
         </div>
 
-        <nav className="px-3 py-6 space-y-2">
+        <nav className="px-3 py-6 space-y-2 flex-1 overflow-y-auto">
           <SidebarButton
-            icon={<PieChart size={18} />}
+            icon={<PieChartIcon size={20} />}
             label="Dashboard"
             open={sidebarOpen}
             onClick={() => router.push("/dashboard")}
           />
           {isAdmin && (
             <SidebarButton
-              icon={<FileText size={18} />}
-              label="Analytics"
+              icon={<FileText size={20} />}
+              label="Analytics & Reports" // Corrected label for clarity
               open={sidebarOpen}
               onClick={() => router.push("/admin/reports")}
             />
           )}
           <SidebarButton
-            icon={<Calendar size={18} />}
+            icon={<Calendar size={20} />}
             label="Events"
             open={sidebarOpen}
             active
+            onClick={() => router.push("/event")}
           />
           <SidebarButton
-            icon={<CheckSquare size={18} />}
+            icon={<CheckSquare size={20} />}
             label="Attendance"
             open={sidebarOpen}
             onClick={() => router.push("/attendance")}
           />
           <SidebarButton
-            icon={<Bell size={18} />}
-            label="Notifications"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/notifications")}
-          />
-          <SidebarButton
-            icon={<Settings size={18} />}
+            icon={<Settings size={20} />}
             label="Settings"
             open={sidebarOpen}
             onClick={() => router.push("/settings")}
           />
           <SidebarButton
-            icon={<HelpCircle size={18} />}
-            label="Help"
+            icon={<HelpCircle size={20} />}
+            label="Help Center"
             open={sidebarOpen}
             onClick={() => router.push("/admin/help")}
           />
 
           <div className="mt-6 border-t border-white/10 pt-4">
             <SidebarButton
-              icon={<LogOut size={18} />}
+              icon={<LogOut size={20} />}
               label="Logout"
               open={sidebarOpen}
               onClick={logout}
@@ -179,205 +175,229 @@ export default function EventsPage() {
         </nav>
       </aside>
 
+      {/* MAIN */}
       <div className="flex-1 min-h-screen">
-        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        {/* APPLY GLASSY HEADER: Semi-transparent dark background, white text */}
+        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Events</h2>
-            <p className="text-sm text-slate-500">Manage IEM Connect events</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-white">Events</h2>
+            <p className="text-sm text-slate-300">Manage IEM Connect events</p>
           </div>
 
-          <div className="flex items-center gap-5">
-            {/* Notification Bell */}
+          <div className="flex items-center gap-4">
             <NotificationBell />
 
-            <div className="text-right">
-              <div className="text-sm font-semibold">{user.name}</div>
-              <div className="text-xs text-slate-400 capitalize">
-                {user.role}
-              </div>
+            <div className="text-right hidden sm:block">
+              <div className="text-sm font-semibold text-white">{user.name}</div>
+              <div className="text-xs text-slate-400 capitalize">{user.role}</div>
             </div>
 
             <button
               onClick={() => router.push("/profile")}
-              className="rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              className="rounded-full overflow-hidden border-2 border-transparent shadow hover:ring-2 hover:ring-indigo-500 transition-colors cursor-pointer"
               title="View Profile"
             >
               <UserAvatar size="md" />
             </button>
 
-            <button className="p-2 rounded hover:bg-slate-200" onClick={logout}>
+            <button className="p-2 rounded-lg hover:bg-white/10 text-white" onClick={logout}>
               <LogOut size={18} />
             </button>
           </div>
         </header>
 
-        <main className="px-8 py-10 space-y-8 max-w-7xl mx-auto">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
+        <section
+          className="relative text-white px-10 py-16"
+          aria-hidden={false}
+          style={{
+            backgroundImage: "url('/eventbg.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
 
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-semibold">Event Management</h3>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/70" />
+          <div className="absolute inset-0 bg-white/0" />
+
+          <div className="relative max-w-7xl mx-auto flex flex-col md:flex-row items-start gap-8">
+            <div className="flex-1 max-w-3xl">
+              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
+                Professional IEM Events
+              </h1>
+              <p className="text-lg text-white/90 mb-6 max-w-3xl">
+                Browse upcoming events, register, or manage events 
+              </p>
+
+              <div className="flex gap-3">
+                {isAdmin && (
+                  <Button
+                    className="bg-white text-[#0a66ff] font-semibold shadow-md hover:bg-gray-100"
+                    onClick={() => router.push("/create_event")}
+                  >
+                    <Plus size={16} /> Create Event
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  className="text-[#0a66ff] border-white/40 hover:bg-white/10"
+                  onClick={() => window.scrollTo({ top: 600, behavior: "smooth" })}
+                >
+                  Browse Events
+                </Button>
+              </div>
             </div>
 
-            {isAdmin && (
-              <Button
-                className="flex items-center gap-2 bg-blue-600"
-                onClick={() => router.push("/create_event")}
-              >
-                <Plus size={18} /> Create Event
-              </Button>
-            )}
           </div>
+        </section>
 
-          <Card className="bg-white/70 shadow">
-            <CardHeader>
-              <CardTitle className="text-lg">Search Events</CardTitle>
-              <CardDescription>Find events by name</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative w-full">
-                <Search
-                  className="absolute left-3 top-2.5 text-slate-400"
-                  size={18}
-                />
+        {/* CONTENT */}
+        <main className="px-8 py-10 max-w-7xl mx-auto space-y-10">
+          {/* search + filters */}
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="flex-1 max-w-xl">
+              <div className="relative">
+                {/* Search icon color adjusted */}
+                <Search className="absolute left-4 top-3 text-slate-400" size={18} />
+                {/* APPLY DARK INPUT STYLE */}
                 <Input
-                  placeholder="Search event..."
-                  className="pl-10"
+                  placeholder="Search event by title and director name ..."
+                  className="pl-12 py-3 rounded-full shadow-lg bg-slate-800 text-white border-slate-700 placeholder-slate-400 focus:border-indigo-500"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/*table*/}
-          <Card className="bg-white/70 shadow">
-            <CardHeader>
-              <CardTitle className="text-lg">Event List</CardTitle>
-            </CardHeader>
+            <div className="flex gap-3 items-center">
+              <Button
+                variant="ghost"
+                className="hidden sm:inline-flex items-center gap-2 text-slate-300 hover:bg-slate-700"
+                onClick={() => {
+                  setSearch("");
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
 
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-gray-500">
-                  Loading events...
-                </div>
-              ) : events.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No events found. {isAdmin && "Create your first event!"}
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Poster</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Director</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Participants</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
+          {error && (
+            <Alert variant="destructive" className="rounded-lg">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-                  <TableBody>
-                    {events.map((event) => (
-                      <TableRow key={event.id}>
-                        <TableCell>
-                          <PosterImage
-                            poster={event.poster_url}
-                            onClick={() => event.poster_url && setModalImage(event.poster_url)}
-                          />
-                        </TableCell>
-                        <TableCell>{event.title}</TableCell>
-                        <TableCell>{event.director_name}</TableCell>
-                        <TableCell>
-                          {new Date(event.start_date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-slate-600">
-                            {event.participant_count || 0} registered
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              event.status === "Upcoming"
-                                ? "bg-blue-100 text-blue-600"
-                                : event.status === "Open"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-slate-200 text-slate-600"
-                            }`}
-                          >
-                            {event.status}
-                          </span>
-                        </TableCell>
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {loading ? (
+              // APPLY DARK SKELETON STYLES
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse bg-slate-800 rounded-xl p-4 shadow-md h-60 border border-slate-700" />
+              ))
+            ) : events.length === 0 ? (
+              // APPLY DARK NO RESULTS STYLE
+              <div className="col-span-3 text-center py-12 text-slate-400 bg-slate-800 rounded-xl shadow-lg border border-slate-700">
+                No events found. {isAdmin && "Create your first event to get started."}
+              </div>
+            ) : (
+              events.map((event) => (
+                <article
+                  key={event.id}
+                  // APPLY DARK CARD BACKGROUND
+                  className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 overflow-hidden transform hover:scale-[1.01] transition duration-300"
+                  aria-labelledby={`event-${event.id}`}
+                >
+                  <div className="w-full h-48 bg-slate-700 overflow-hidden">
+                    <PosterImage
+                      poster={event.poster_url}
+                      onClick={() => event.poster_url && setModalImage(event.poster_url)}
+                    />
+                  </div>
 
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex items-center gap-1"
-                            onClick={() =>
-                              router.push(`/view_event?id=${event.id}`)
-                            }
-                          >
-                            <Eye size={16} /> View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                  <CardContent className="p-5">
+                    <h3 id={`event-${event.id}`} className="text-lg font-semibold mb-2 text-white">
+                      {event.title}
+                    </h3>
+
+                    <p className="text-sm text-slate-400 mb-3">
+                      <strong>Director:</strong> {event.director_name || "—"}
+                    </p>
+
+                    <div className="flex items-center justify-between gap-4 mb-4">
+                      <div className="text-sm text-slate-400">
+                        {event.start_date ? new Date(event.start_date).toLocaleDateString() : "TBA"}
+                      </div>
+
+                      <div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            event.status === "Upcoming"
+                              ? "bg-blue-800 text-blue-300"
+                              : event.status === "Open"
+                              ? "bg-green-800 text-green-300"
+                              : "bg-slate-700 text-slate-400"
+                          }`}
+                        >
+                          {event.status || "Unknown"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                        onClick={() => router.push(`/view_event?id=${event.id}`)}
+                      >
+                        <Eye size={14} /> View
+                      </Button>
+
+                      {isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-slate-300 border-slate-600 hover:bg-slate-700 hover:text-white"
+                          onClick={() => router.push(`/view_event?id=${event.id}`)}
+                        >
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </article>
+              ))
+            )}
+          </section>
         </main>
       </div>
 
-      {/* Image Modal */}
+      {/* image modal */}
       {modalImage && (
-        <ImageModal
-          imageUrl={modalImage}
-          onClose={() => setModalImage(null)}
-        />
+        <ImageModal imageUrl={modalImage} onClose={() => setModalImage(null)} />
       )}
     </div>
   );
 }
 
-function SidebarButton({
-  icon,
-  label,
-  open,
-  active,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  open: boolean;
-  active?: boolean;
-  onClick?: () => void;
-}) {
+
+
+function SidebarButton({ icon, label, open, active, onClick }: any) {
+  const baseClasses = "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150 font-medium";
+
+  const activeClasses = active ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow" : "text-slate-300 hover:bg-white/10 hover:text-white";
+
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150 ${
-        active
-          ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow"
-          : "text-slate-300 hover:bg-white/10 hover:text-white"
-      }`}
+      className={`${baseClasses} ${activeClasses}`}
     >
       <div className="w-6 h-6 flex items-center justify-center">{icon}</div>
       {open && <span className="truncate">{label}</span>}
+      {open && active && <ChevronRight size={16} className="ml-auto text-white/70" />}
     </button>
   );
 }
 
-// Poster Image Component - Displays uniform-sized poster thumbnails
 function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: () => void }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
@@ -391,7 +411,6 @@ function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: ()
       return;
     }
 
-    // Construct the full URL
     let url = "";
     if (poster.startsWith("http")) {
       url = poster;
@@ -403,7 +422,6 @@ function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: ()
       url = getFileUrl(poster);
     }
 
-    // Fetch image as blob with auth token
     const token = localStorage.getItem("token");
     if (token) {
       setLoading(true);
@@ -413,9 +431,7 @@ function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: ()
         },
       })
         .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Failed to load image: ${response.status}`);
-          }
+          if (!response.ok) throw new Error(`Failed to load image: ${response.status}`);
           return response.blob();
         })
         .then((blob) => {
@@ -423,62 +439,49 @@ function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: ()
           setImageUrl(objectUrl);
           setImageError(false);
         })
-        .catch((error) => {
-          console.error("Failed to load poster:", error);
+        .catch((err) => {
+          console.error("Failed poster load", err);
           setImageError(true);
         })
-        .finally(() => {
-          setLoading(false);
-        });
+        .finally(() => setLoading(false));
     } else {
       setImageUrl(url);
       setLoading(false);
     }
 
-    // Cleanup
     return () => {
-      if (imageUrl && imageUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(imageUrl);
-      }
+      if (imageUrl && imageUrl.startsWith("blob:")) URL.revokeObjectURL(imageUrl);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poster]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (imageUrl && imageUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(imageUrl);
-      }
-    };
-  }, [imageUrl]);
 
   if (!poster) {
     return (
-      <div className="w-[150px] h-[100px] bg-slate-100 rounded border flex items-center justify-center">
-        <span className="text-xs text-slate-400">No poster</span>
+      <div className="w-full h-48 bg-slate-700 flex items-center justify-center text-xs text-slate-500">
+        No poster
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="w-[150px] h-[100px] bg-slate-100 rounded border flex items-center justify-center">
-        <span className="text-xs text-slate-400">Loading...</span>
+      <div className="w-full h-48 bg-slate-700 flex items-center justify-center text-xs text-slate-500">
+        Loading...
       </div>
     );
   }
 
   if (imageError || !imageUrl) {
     return (
-      <div className="w-[150px] h-[100px] bg-slate-100 rounded border flex items-center justify-center">
-        <span className="text-xs text-slate-400">Error loading</span>
+      <div className="w-full h-48 bg-slate-700 flex items-center justify-center text-xs text-slate-500">
+        Error loading
       </div>
     );
   }
 
   return (
     <div
-      className="w-[150px] h-[100px] rounded border overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+      className="w-full h-48 overflow-hidden cursor-pointer"
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -489,23 +492,18 @@ function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: ()
         }
       }}
     >
-      <img
-        src={imageUrl}
-        alt="Event Poster"
-        className="w-full h-full object-cover"
-      />
+      <img src={imageUrl} alt="Event poster" className="w-full h-full object-cover" />
     </div>
   );
 }
 
-// Image Modal Component - Full-screen image viewer
+/* Modal - same auth-aware fetch logic as before */
 function ImageModal({ imageUrl, onClose }: { imageUrl: string; onClose: () => void }) {
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [err, setErr] = useState(false);
 
   useEffect(() => {
-    // Construct the full URL
     let url = "";
     if (imageUrl.startsWith("http")) {
       url = imageUrl;
@@ -517,7 +515,6 @@ function ImageModal({ imageUrl, onClose }: { imageUrl: string; onClose: () => vo
       url = getFileUrl(imageUrl);
     }
 
-    // Fetch image as blob with auth token
     const token = localStorage.getItem("token");
     if (token) {
       setLoading(true);
@@ -526,88 +523,63 @@ function ImageModal({ imageUrl, onClose }: { imageUrl: string; onClose: () => vo
           Authorization: `Bearer ${token}`,
         },
       })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Failed to load image: ${response.status}`);
-          }
-          return response.blob();
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch modal image");
+          return res.blob();
         })
         .then((blob) => {
-          const objectUrl = URL.createObjectURL(blob);
-          setModalImageUrl(objectUrl);
-          setError(false);
+          const obj = URL.createObjectURL(blob);
+          setModalImageUrl(obj);
+          setErr(false);
         })
-        .catch((error) => {
-          console.error("Failed to load modal image:", error);
-          setError(true);
+        .catch((e) => {
+          console.error(e);
+          setErr(true);
         })
-        .finally(() => {
-          setLoading(false);
-        });
+        .finally(() => setLoading(false));
     } else {
       setModalImageUrl(url);
       setLoading(false);
     }
 
-    // Cleanup
     return () => {
-      if (modalImageUrl && modalImageUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(modalImageUrl);
-      }
+      if (modalImageUrl && modalImageUrl.startsWith("blob:")) URL.revokeObjectURL(modalImageUrl);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageUrl]);
 
-  // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      if (modalImageUrl && modalImageUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(modalImageUrl);
-      }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
     };
-  }, [modalImageUrl]);
-
-  // Close on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in-0 duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70"
       onClick={onClose}
     >
-      {/* Close Button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-[101] p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors"
-        aria-label="Close modal"
+        className="absolute top-5 right-5 z-50 p-2 bg-white/90 rounded-full shadow"
+        aria-label="close"
       >
-        <X size={24} className="text-slate-900" />
+        <X size={20} />
       </button>
 
-      {/* Modal Content - 90% of screen */}
-      <div
-        className="relative w-[90vw] h-[90vh] flex items-center justify-center"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative w-[90vw] h-[90vh]" onClick={(e) => e.stopPropagation()}>
         {loading ? (
-          <div className="text-white text-lg">Loading image...</div>
-        ) : error || !modalImageUrl ? (
-          <div className="text-white text-lg">Failed to load image</div>
+          <div className="w-full h-full flex items-center justify-center text-white">Loading image...</div>
+        ) : err || !modalImageUrl ? (
+          <div className="w-full h-full flex items-center justify-center text-white">Failed to load image</div>
         ) : (
-          <img
-            src={modalImageUrl}
-            alt="Event Poster"
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-          />
+          <img src={modalImageUrl} alt="Event poster" className="w-full h-full object-contain rounded" />
         )}
       </div>
     </div>
   );
 }
+
+
