@@ -18,7 +18,7 @@ import {
   deleteNotification,
   Notification,
 } from "@/lib/notification-api";
-import { Bell, CheckCheck, X, ArrowLeft, Trash2 } from "lucide-react";
+import { Bell, CheckCheck, X, ArrowLeft, Trash2, CheckCircle } from "lucide-react"; // Added CheckCircle for visual confirmation
 import NotificationBell from "@/components/NotificationBell";
 
 const formatTimeAgo = (date: string) => {
@@ -118,7 +118,8 @@ export default function NotificationsPage() {
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-semibold text-white">
+              <h1 className="text-2xl font-semibold text-white flex items-center gap-2">
+                <Bell size={24} className="text-indigo-400" />
                 Notifications
               </h1>
               <p className="text-sm text-slate-400">
@@ -157,7 +158,7 @@ export default function NotificationsPage() {
           // APPLY DARK CARD STYLES for 'No notifications'
           <Card className="bg-slate-800 border-slate-700 shadow-xl">
             <CardContent className="py-20 text-center">
-              <Bell size={48} className="mx-auto mb-4 text-slate-500" />
+              <Bell size={48} className="mx-auto mb-4 text-indigo-400" />
               <h3 className="text-lg font-semibold text-white mb-2">
                 No notifications
               </h3>
@@ -221,11 +222,15 @@ function NotificationCard({
   onMarkAsRead: (id: number) => void;
   onDelete: (id: number) => void;
 }) {
+  const isUnread = !notification.is_read;
+  
   return (
     <Card
-      // APPLY DARK CARD STYLES
-      className={`bg-slate-800 border-slate-700 shadow-md transition-all hover:shadow-lg ${
-        !notification.is_read ? "border-l-4 border-l-indigo-400" : "border border-slate-700"
+      // APPLY DARK CARD STYLES: Use different backgrounds for visual hierarchy
+      className={`shadow-md transition-all duration-200 hover:shadow-lg hover:bg-slate-700 ${
+        isUnread 
+          ? "bg-slate-700 border-l-4 border-l-indigo-400 border-slate-600" // Brighter, left border cue
+          : "bg-slate-800 border border-slate-700" // Darker, less prominent
       }`}
     >
       <CardContent className="p-4">
@@ -233,21 +238,22 @@ function NotificationCard({
           <div
             className="flex-1 cursor-pointer"
             onClick={() => {
-              if (!notification.is_read) {
+              if (isUnread) {
                 onMarkAsRead(notification.id);
               }
             }}
           >
             <div className="flex items-start gap-3">
-              {!notification.is_read && (
-                // UNREAD BLUE DOT
-                <div className="h-2 w-2 bg-indigo-400 rounded-full mt-2 flex-shrink-0"></div>
+              {isUnread && (
+                // CHECKMARK ICON for UNREAD status visual indicator
+                <div className="h-4 w-4 text-indigo-400 mt-1 flex-shrink-0">
+                  <CheckCircle size={16} />
+                </div>
               )}
               <div className="flex-1">
                 <h3
                   className={`font-semibold mb-1 ${
-                    // ENSURE TEXT IS WHITE/LIGHT AGAINST DARK CARD
-                    !notification.is_read
+                    isUnread
                       ? "text-white"
                       : "text-slate-300"
                   }`}
@@ -268,7 +274,10 @@ function NotificationCard({
             size="icon"
             // APPLY DARK ICON/HOVER STYLES
             className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-slate-700"
-            onClick={() => onDelete(notification.id)}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click event when deleting
+              onDelete(notification.id);
+            }}
             title="Delete notification"
           >
             <Trash2 size={16} />
