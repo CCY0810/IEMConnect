@@ -37,7 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Menu,
   LogOut,
-  Settings,
+  Settings as SettingsIcon,
   User,
   Lock,
   Bell,
@@ -70,6 +70,7 @@ import {
 } from "@/lib/settings-api";
 import { changePassword, deleteAccount } from "@/lib/profile-api";
 import { useToast } from "@/hooks/use-toast";
+import React from "react";
 
 interface UserPreferences {
   notifications: {
@@ -132,6 +133,7 @@ export default function SettingsPage() {
       return;
     }
     fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, router]);
 
   const fetchSettings = async () => {
@@ -186,7 +188,6 @@ export default function SettingsPage() {
       setSaving(false);
     }
   };
-
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -294,7 +295,7 @@ export default function SettingsPage() {
       setTimeout(() => {
         logout();
         router.push("/");
-      }, 2000);
+      }, 1200);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -331,34 +332,33 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-[#F3F6FB] text-slate-900">
-      {/* SIDEBAR */}
+    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+      {/* SIDEBAR (match Dashboard style & size) */}
       <aside
-        className={`transition-all duration-300 ${
-          sidebarOpen ? "w-72" : "w-20"
-        } bg-[#071129] text-white shadow-xl`}
+        className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
+          sidebarOpen ? "w-64" : "w-20"
+        } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+        {/* sidebar header */}
+        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div
-              className={`bg-white/90 backdrop-blur-sm rounded-xl border border-white/40 shadow-md flex items-center justify-center ${
-                sidebarOpen ? "w-14 h-14" : "w-12 h-12"
+              className={`bg-white rounded-xl p-2 shadow-md flex items-center justify-center ${
+                sidebarOpen ? "w-12 h-12" : "w-10 h-10"
               }`}
             >
               <img
                 src="/iem-logo.jpg"
                 alt="IEM UTM Logo"
-                className={`object-contain ${
-                  sidebarOpen ? "w-10 h-10" : "w-8 h-8"
-                }`}
+                className="object-contain w-full h-full"
               />
             </div>
 
             {sidebarOpen && (
               <div>
-                <div className="text-sm font-semibold">IEM Connect</div>
-                <div className="text-xs text-slate-300">
-                  {isAdmin ? "Admin Panel" : "Member Portal"}
+                <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
+                <div className="text-xs text-slate-400 font-medium">
+                  {isAdmin ? "Admin Portal" : "Member Dashboard"}
                 </div>
               </div>
             )}
@@ -366,104 +366,103 @@ export default function SettingsPage() {
 
           <button
             onClick={() => setSidebarOpen((s) => !s)}
-            className="p-2 text-slate-200 rounded hover:bg-white/10"
+            className="p-2 text-slate-200 rounded-lg hover:bg-white/10"
+            aria-label="Toggle sidebar"
           >
             <Menu size={18} />
           </button>
         </div>
 
-        <nav className="px-3 py-6 space-y-2">
+        {/* menu */}
+        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
           <SidebarButton
             open={sidebarOpen}
-            icon={<PieChartIcon size={18} />}
+            icon={<PieChartIcon size={20} />}
             label="Dashboard"
             onClick={() => router.push("/dashboard")}
           />
           {isAdmin && (
             <SidebarButton
               open={sidebarOpen}
-              icon={<FileText size={18} />}
-              label="Analytics"
+              icon={<FileText size={20} />}
+              label="Analytics & Reports"
               onClick={() => router.push("/admin/reports")}
             />
           )}
           <SidebarButton
             open={sidebarOpen}
-            icon={<Calendar size={18} />}
+            icon={<Calendar size={20} />}
             label="Events"
             onClick={() => router.push("/event")}
           />
           <SidebarButton
             open={sidebarOpen}
-            icon={<CheckSquare size={18} />}
+            icon={<CheckSquare size={20} />}
             label="Attendance"
             onClick={() => router.push("/attendance")}
           />
           <SidebarButton
             open={sidebarOpen}
-            icon={<Settings size={18} />}
+            icon={<SettingsIcon size={20} />}
             label="Settings"
             onClick={() => router.push("/settings")}
             active
           />
           <SidebarButton
             open={sidebarOpen}
-            icon={<HelpCircle size={18} />}
-            label="Help"
-            onClick={() => router.push("/help")}
+            icon={<HelpCircle size={20} />}
+            label="Help Center"
+            onClick={() => router.push("/admin/help")}
           />
 
           <div className="mt-6 border-t border-white/10 pt-4">
             <SidebarButton
               open={sidebarOpen}
-              icon={<LogOut size={18} />}
+              icon={<LogOut size={20} />}
               label="Logout"
               onClick={logout}
+              variant="destructive"
             />
           </div>
         </nav>
       </aside>
 
-      <div className="flex-1">
-        <header className="flex items-center justify-between px-8 py-4 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="p-2 rounded hover:bg-slate-100"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Settings</h2>
-              <p className="text-sm text-slate-500">
-                Manage your account settings and preferences
-              </p>
-            </div>
+      {/* MAIN AREA */}
+      <div className="flex-1 min-h-screen">
+        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/5 backdrop-blur-md border-b border-white/10">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Settings</h2>
+            <p className="text-sm text-slate-400">Manage your account settings & preferences</p>
           </div>
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4">
             <NotificationBell />
-            <div className="text-right">
-              <div className="text-sm font-semibold">{user.name}</div>
+            <div className="text-right hidden sm:block">
+              <div className="text-sm font-semibold text-white">{user.name}</div>
               <div className="text-xs text-slate-400 capitalize">{user.role}</div>
             </div>
+
             <button
               onClick={() => router.push("/profile")}
-              className="rounded-full overflow-hidden border border-slate-300 shadow-sm hover:border-blue-500 transition-colors cursor-pointer"
+              className="rounded-full overflow-hidden border-2 border-transparent shadow hover:ring-2 hover:ring-indigo-500 transition-all cursor-pointer"
               title="View Profile"
             >
               <UserAvatar size="md" />
             </button>
+
+            <button className="p-2 rounded-lg hover:bg-white/10 text-white" onClick={logout}>
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
 
-        <main className="px-8 py-10 max-w-6xl mx-auto space-y-6">
+        <main className="px-8 py-10 max-w-7xl mx-auto space-y-6">
           {message && (
             <Alert
               className={
                 message.type === "error"
-                  ? "bg-red-50 border-red-200 text-red-800"
-                  : "bg-green-50 border-green-200 text-green-800"
+                  ? "bg-rose-900/70 border-rose-700 text-rose-200"
+                  : "bg-emerald-900/70 border-emerald-700 text-emerald-200"
               }
             >
               <AlertDescription>{message.text}</AlertDescription>
@@ -471,80 +470,75 @@ export default function SettingsPage() {
           )}
 
           {loading ? (
-            <div className="text-center py-10">Loading settings...</div>
+            <div className="text-center py-10 text-slate-400">Loading settings...</div>
           ) : (
             <>
-              {/* 1. ACCOUNT SETTINGS */}
-              <Card className="bg-white/70 shadow">
+              {/* Account Settings */}
+              <Card className="bg-slate-800 border border-slate-700 shadow-lg">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User size={20} className="text-blue-600" />
+                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                      <User size={20} className="text-indigo-400" />
                     </div>
                     <div>
-                      <CardTitle>Account Settings</CardTitle>
-                      <CardDescription>Your account information</CardDescription>
+                      <CardTitle className="text-white">Account Settings</CardTitle>
+                      <CardDescription className="text-slate-400">Your account information</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm text-slate-600">Full Name</Label>
-                      <p className="text-lg font-medium mt-1">{user.name}</p>
+                      <Label className="text-sm text-slate-400">Full Name</Label>
+                      <p className="text-lg font-medium mt-1 text-white">{user.name}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-slate-600">Email</Label>
-                      <p className="text-lg mt-1">{user.email}</p>
+                      <Label className="text-sm text-slate-400">Email</Label>
+                      <p className="text-lg mt-1 text-slate-300">{user.email}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-slate-600">
-                        Membership Number
-                      </Label>
-                      <p className="text-lg font-mono mt-1">
-                        {user.membership_number}
-                      </p>
+                      <Label className="text-sm text-slate-400">Membership Number</Label>
+                      <p className="text-lg font-mono mt-1 text-white">{user.membership_number}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-slate-600">Matric Number</Label>
-                      <p className="text-lg font-mono mt-1">
-                        {user.matric_number}
-                      </p>
+                      <Label className="text-sm text-slate-400">Matric Number</Label>
+                      <p className="text-lg font-mono mt-1 text-white">{user.matric_number}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-slate-600">Faculty</Label>
-                      <p className="text-lg mt-1">{user.faculty}</p>
+                      <Label className="text-sm text-slate-400">Faculty</Label>
+                      <p className="text-lg mt-1 text-slate-300">{user.faculty}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-slate-600">Role</Label>
-                      <p className="text-lg capitalize mt-1">{user.role}</p>
+                      <Label className="text-sm text-slate-400">Role</Label>
+                      <p className="text-lg capitalize mt-1 text-white">{user.role}</p>
                     </div>
                   </div>
                   <div className="pt-4 border-t">
-                    <Button
-                      variant="outline"
-                      onClick={() => router.push("/profile")}
-                      className="gap-2"
-                    >
-                      <User size={16} />
-                      Edit Profile
-                    </Button>
-                  </div>
+                  <Button
+                  onClick={() => router.push("/profile")}
+                  className="bg-indigo-600 text-white font-semibold shadow-md gap-2
+                            hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/40
+                            transition-all duration-200"
+                >
+                  <User size={16} />
+                  Edit Profile
+                </Button>
+                </div>
+
+
                 </CardContent>
               </Card>
 
-              {/* 2. SECURITY SETTINGS */}
-              <Card className="bg-white/70 shadow">
+              {/* Security */}
+              <Card className="bg-slate-800 border border-slate-700 shadow-lg">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                      <Shield size={20} className="text-red-600" />
+                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                      <Shield size={20} className="text-rose-400" />
                     </div>
                     <div>
-                      <CardTitle>Security Settings</CardTitle>
-                      <CardDescription>
-                        Manage your account security and authentication
-                      </CardDescription>
+                      <CardTitle className="text-white">Security Settings</CardTitle>
+                      <CardDescription className="text-slate-400">Manage your account security</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -553,28 +547,28 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label className="text-base font-semibold">
-                          Change Password
-                        </Label>
-                        <p className="text-sm text-slate-500">
-                          Update your account password
-                        </p>
+                        <Label className="text-base font-semibold text-white">Change Password</Label>
+                        <p className="text-sm text-slate-400">Update your account password</p>
                       </div>
                       {!showPasswordSection && (
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowPasswordSection(true)}
-                        >
-                          Change Password
-                        </Button>
+                        size="sm"
+                        onClick={() => setShowPasswordSection(true)}
+                        className="bg-indigo-600 text-white font-semibold shadow-md 
+                                  hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/40 
+                                  transition-all duration-200"
+                      >
+                        Change Password
+                      </Button>
+
+
                       )}
                     </div>
 
                     {showPasswordSection && (
-                      <div className="space-y-4 p-4 bg-slate-50 rounded-lg border">
+                      <div className="space-y-4 p-4 bg-slate-900 rounded-lg border border-slate-700">
                         <div>
-                          <Label>Current Password</Label>
+                          <Label className="text-slate-300">Current Password</Label>
                           <div className="relative mt-1">
                             <Input
                               type={showCurrentPassword ? "text" : "password"}
@@ -582,24 +576,20 @@ export default function SettingsPage() {
                               onChange={(e) => setCurrentPassword(e.target.value)}
                               placeholder="Enter current password"
                               disabled={passwordLoading}
+                              className="bg-slate-800 text-slate-100 border-slate-700"
                             />
                             <button
                               type="button"
-                              onClick={() =>
-                                setShowCurrentPassword(!showCurrentPassword)
-                              }
-                              className="absolute right-3 top-1/2 -translate-y-1/2"
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300"
+                              aria-label="toggle current password"
                             >
-                              {showCurrentPassword ? (
-                                <EyeOff size={18} />
-                              ) : (
-                                <Eye size={18} />
-                              )}
+                              {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                           </div>
                         </div>
                         <div>
-                          <Label>New Password</Label>
+                          <Label className="text-slate-300">New Password</Label>
                           <div className="relative mt-1">
                             <Input
                               type={showNewPassword ? "text" : "password"}
@@ -607,22 +597,20 @@ export default function SettingsPage() {
                               onChange={(e) => setNewPassword(e.target.value)}
                               placeholder="Enter new password (min. 6 characters)"
                               disabled={passwordLoading}
+                              className="bg-slate-800 text-slate-100 border-slate-700"
                             />
                             <button
                               type="button"
                               onClick={() => setShowNewPassword(!showNewPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300"
+                              aria-label="toggle new password"
                             >
-                              {showNewPassword ? (
-                                <EyeOff size={18} />
-                              ) : (
-                                <Eye size={18} />
-                              )}
+                              {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                           </div>
                         </div>
                         <div>
-                          <Label>Confirm New Password</Label>
+                          <Label className="text-slate-300">Confirm New Password</Label>
                           <div className="relative mt-1">
                             <Input
                               type={showConfirmPassword ? "text" : "password"}
@@ -630,90 +618,84 @@ export default function SettingsPage() {
                               onChange={(e) => setConfirmPassword(e.target.value)}
                               placeholder="Re-enter new password"
                               disabled={passwordLoading}
+                              className="bg-slate-800 text-slate-100 border-slate-700"
                             />
                             <button
                               type="button"
-                              onClick={() =>
-                                setShowConfirmPassword(!showConfirmPassword)
-                              }
-                              className="absolute right-3 top-1/2 -translate-y-1/2"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300"
+                              aria-label="toggle confirm password"
                             >
-                              {showConfirmPassword ? (
-                                <EyeOff size={18} />
-                              ) : (
-                                <Eye size={18} />
-                              )}
+                              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <Button
-                            onClick={handleChangePassword}
-                            disabled={passwordLoading}
-                            size="sm"
-                          >
-                            {passwordLoading ? "Saving..." : "Save Password"}
-                          </Button>
+                          onClick={handleChangePassword}
+                          disabled={passwordLoading}
+                          size="sm"
+                          className="bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md transition-colors"
+                        >
+                          {passwordLoading ? "Saving..." : "Save Password"}
+                        </Button>
+
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setShowPasswordSection(false);
-                              setCurrentPassword("");
-                              setNewPassword("");
-                              setConfirmPassword("");
-                            }}
-                          >
-                            Cancel
-                          </Button>
+                          size="sm"
+                          onClick={() => {
+                            setShowPasswordSection(false);
+                            setCurrentPassword("");
+                            setNewPassword("");
+                            setConfirmPassword("");
+                          }}
+                          className="border-slate-400 text-slate-200 hover:bg-slate-700 transition-colors"
+                        >
+                          Cancel
+                        </Button>
+
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {/* 2FA Status (Read-only) */}
-                  <div className="pt-4 border-t">
+                  {/* 2FA */}
+                  <div className="pt-2 border-t border-slate-700">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <Label className="text-base font-semibold">
-                          Two-Factor Authentication
-                        </Label>
-                        <p className="text-sm text-slate-500">
-                          Required for account security
-                        </p>
+                        <Label className="text-base font-semibold text-white">Two-Factor Authentication</Label>
+                        <p className="text-sm text-slate-400">Required for account security</p>
                       </div>
-                      <Badge className="bg-green-100 text-green-800">
+                      <Badge className="bg-emerald-700 text-emerald-100">
                         <CheckCircle size={12} className="mr-1" />
                         {twoFAEnabled ? "Enabled" : "Required"}
                       </Badge>
                     </div>
                   </div>
 
-                  {/* Active Sessions */}
-                  <div className="pt-4 border-t">
-                    <Label className="text-base font-semibold mb-3 block">
-                      Active Sessions
-                    </Label>
+                  {/* Sessions */}
+                  <div className="pt-4 border-t border-slate-700">
+                    <Label className="text-base font-semibold mb-3 block text-white">Active Sessions</Label>
                     <div className="space-y-2">
+                      {sessions.length === 0 && <p className="text-slate-400">No active sessions found.</p>}
                       {sessions.map((session) => (
                         <div
                           key={session.id}
-                          className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border"
+                          className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-slate-700"
                         >
                           <div className="flex-1">
-                            <p className="font-medium">{session.device}</p>
-                            <p className="text-sm text-slate-500">
-                              {session.ip} • Last active:{" "}
-                              {new Date(session.last_activity).toLocaleString()}
+                            <p className="font-medium text-white">{session.device}</p>
+                            <p className="text-sm text-slate-400">
+                              {session.ip} • Last active: {new Date(session.last_activity).toLocaleString()}
                             </p>
                           </div>
                           {session.current ? (
-                            <Badge>Current</Badge>
+                            <Badge className="bg-indigo-700 text-indigo-100">Current</Badge>
                           ) : (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleLogoutSession(session.id)}
+                              className="border-slate-600 text-slate-100"
                             >
                               Logout
                             </Button>
@@ -725,34 +707,28 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* 3. NOTIFICATION PREFERENCES */}
+              {/* Notification Preferences */}
               {preferences && (
-                <Card className="bg-white/70 shadow">
+                <Card className="bg-slate-800 border border-slate-700 shadow-lg">
                   <CardHeader>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                        <Bell size={20} className="text-purple-600" />
+                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                        <Bell size={20} className="text-purple-400" />
                       </div>
                       <div>
-                        <CardTitle>Notification Preferences</CardTitle>
-                        <CardDescription>
-                          Control how you receive notifications
-                        </CardDescription>
+                        <CardTitle className="text-white">Notification Preferences</CardTitle>
+                        <CardDescription className="text-slate-400">Control how you receive notifications</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div>
-                      <Label className="text-base font-semibold mb-4 block">
-                        Email Notifications
-                      </Label>
+                      <Label className="text-base font-semibold mb-4 block text-white">Email Notifications</Label>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <Label>Event Reminders</Label>
+                          <Label className="text-slate-300">Event Reminders</Label>
                           <Switch
-                            checked={
-                              preferences.notifications.email.reminders ?? true
-                            }
+                            checked={preferences.notifications.email.reminders ?? true}
                             onCheckedChange={(checked) =>
                               setPreferences({
                                 ...preferences,
@@ -768,11 +744,9 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label>Event Announcements</Label>
+                          <Label className="text-slate-300">Event Announcements</Label>
                           <Switch
-                            checked={
-                              preferences.notifications.email.announcements ?? true
-                            }
+                            checked={preferences.notifications.email.announcements ?? true}
                             onCheckedChange={(checked) =>
                               setPreferences({
                                 ...preferences,
@@ -788,11 +762,9 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label>Registration Confirmations</Label>
+                          <Label className="text-slate-300">Registration Confirmations</Label>
                           <Switch
-                            checked={
-                              preferences.notifications.email.registrations ?? true
-                            }
+                            checked={preferences.notifications.email.registrations ?? true}
                             onCheckedChange={(checked) =>
                               setPreferences({
                                 ...preferences,
@@ -808,11 +780,9 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label>Attendance Confirmations</Label>
+                          <Label className="text-slate-300">Attendance Confirmations</Label>
                           <Switch
-                            checked={
-                              preferences.notifications.email.attendance ?? true
-                            }
+                            checked={preferences.notifications.email.attendance ?? true}
                             onCheckedChange={(checked) =>
                               setPreferences({
                                 ...preferences,
@@ -828,11 +798,9 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label>System Notifications</Label>
+                          <Label className="text-slate-300">System Notifications</Label>
                           <Switch
-                            checked={
-                              preferences.notifications.email.system ?? true
-                            }
+                            checked={preferences.notifications.email.system ?? true}
                             onCheckedChange={(checked) =>
                               setPreferences({
                                 ...preferences,
@@ -849,11 +817,9 @@ export default function SettingsPage() {
                         </div>
                         {isAdmin && (
                           <div className="flex items-center justify-between">
-                            <Label>Admin Announcements</Label>
+                            <Label className="text-slate-300">Admin Announcements</Label>
                             <Switch
-                              checked={
-                                preferences.notifications.email.admin ?? true
-                              }
+                              checked={preferences.notifications.email.admin ?? true}
                               onCheckedChange={(checked) =>
                                 setPreferences({
                                   ...preferences,
@@ -872,11 +838,9 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t">
+                    <div className="pt-4 border-t border-slate-700">
                       <div className="flex items-center justify-between">
-                        <Label className="text-base font-semibold">
-                          In-App Notifications
-                        </Label>
+                        <Label className="text-base font-semibold text-white">In-App Notifications</Label>
                         <Switch
                           checked={preferences.notifications.in_app ?? true}
                           onCheckedChange={(checked) =>
@@ -892,10 +856,8 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t">
-                      <Label className="text-base font-semibold mb-3 block">
-                        Notification Frequency
-                      </Label>
+                    <div className="pt-4 border-t border-slate-700">
+                      <Label className="text-base font-semibold mb-3 block text-white">Notification Frequency</Label>
                       <Select
                         value={preferences.notifications.frequency || "immediate"}
                         onValueChange={(value: "immediate" | "daily" | "weekly") =>
@@ -908,10 +870,10 @@ export default function SettingsPage() {
                           })
                         }
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full bg-slate-800 border-slate-700 text-slate-100">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-slate-800 border-slate-700 text-slate-100">
                           <SelectItem value="immediate">Immediate</SelectItem>
                           <SelectItem value="daily">Daily Digest</SelectItem>
                           <SelectItem value="weekly">Weekly Digest</SelectItem>
@@ -919,12 +881,8 @@ export default function SettingsPage() {
                       </Select>
                     </div>
 
-                    <div className="pt-4 border-t">
-                      <Button
-                        onClick={handleSavePreferences}
-                        disabled={saving}
-                        className="gap-2"
-                      >
+                    <div className="pt-4 border-t border-slate-700">
+                      <Button onClick={handleSavePreferences} disabled={saving} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
                         <Save size={16} />
                         {saving ? "Saving..." : "Save Preferences"}
                       </Button>
@@ -933,72 +891,53 @@ export default function SettingsPage() {
                 </Card>
               )}
 
-              {/* 4. DANGER ZONE */}
-              <Card className="bg-white/70 shadow border-red-200">
+              {/* Danger Zone */}
+              <Card className="bg-slate-800 border border-rose-700 shadow-lg">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                      <AlertTriangle size={20} className="text-red-600" />
+                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                      <AlertTriangle size={20} className="text-rose-400" />
                     </div>
                     <div>
-                      <CardTitle className="text-red-600">Danger Zone</CardTitle>
-                      <CardDescription>
-                        Irreversible and destructive actions
-                      </CardDescription>
+                      <CardTitle className="text-rose-300">Danger Zone</CardTitle>
+                      <CardDescription className="text-slate-400">Irreversible and destructive actions</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-center justify-between p-4 bg-slate-900 rounded-lg border border-rose-800">
                     <div className="flex-1">
-                      <Label className="text-base font-semibold text-red-900">
-                        Export Your Data
-                      </Label>
-                      <p className="text-sm text-red-700 mt-1">
-                        Download all your account data in JSON format
-                      </p>
+                      <Label className="text-base font-semibold text-rose-200">Export Your Data</Label>
+                      <p className="text-sm text-rose-300 mt-1">Download all your account data in JSON format</p>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={handleExportData}
-                      className="gap-2 border-red-300 text-red-700 hover:bg-red-100"
-                    >
+                    <Button variant="outline" onClick={handleExportData} className="gap-2 border-rose-600 text-rose-600">
                       <Download size={16} />
                       Export Data
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-center justify-between p-4 bg-slate-900 rounded-lg border border-rose-800">
                     <div className="flex-1">
-                      <Label className="text-base font-semibold text-red-900">
-                        Delete Account
-                      </Label>
-                      <p className="text-sm text-red-700 mt-1">
-                        Permanently delete your account and all associated data
-                      </p>
+                      <Label className="text-base font-semibold text-rose-200">Delete Account</Label>
+                      <p className="text-sm text-rose-300 mt-1">Permanently delete your account and all associated data</p>
                     </div>
                     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                       <AlertDialogTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          className="gap-2"
-                        >
+                        <Button variant="destructive" className="gap-2 bg-rose-600 hover:bg-rose-700">
                           <Trash2 size={16} />
                           Delete Account
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="bg-slate-900 border border-rose-800 text-slate-100">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Account</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete your account and remove all your data from our
-                            servers.
+                            This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="space-y-4 py-4">
                           <div>
-                            <Label>Enter your password</Label>
+                            <Label className="text-slate-200">Enter your password</Label>
                             <div className="relative mt-1">
                               <Input
                                 type={showDeletePassword ? "text" : "password"}
@@ -1006,44 +945,31 @@ export default function SettingsPage() {
                                 onChange={(e) => setDeletePassword(e.target.value)}
                                 placeholder="Enter your password"
                                 disabled={deleteLoading}
+                                className="bg-slate-800 text-slate-100 border-rose-700"
                               />
                               <button
                                 type="button"
-                                onClick={() =>
-                                  setShowDeletePassword(!showDeletePassword)
-                                }
-                                className="absolute right-3 top-1/2 -translate-y-1/2"
+                                onClick={() => setShowDeletePassword(!showDeletePassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300"
                               >
-                                {showDeletePassword ? (
-                                  <EyeOff size={18} />
-                                ) : (
-                                  <Eye size={18} />
-                                )}
+                                {showDeletePassword ? <EyeOff size={18} /> : <Eye size={18} />}
                               </button>
                             </div>
                           </div>
                           <div>
-                            <Label>
-                              Type <span className="font-mono">DELETE</span> to confirm
-                            </Label>
+                            <Label className="text-slate-200">Type <span className="font-mono">DELETE</span> to confirm</Label>
                             <Input
                               value={deleteConfirmText}
                               onChange={(e) => setDeleteConfirmText(e.target.value)}
                               placeholder="Type DELETE"
                               disabled={deleteLoading}
-                              className="mt-1"
+                              className="mt-1 bg-slate-800 text-slate-100 border-rose-700"
                             />
                           </div>
                         </div>
                         <AlertDialogFooter>
-                          <AlertDialogCancel disabled={deleteLoading}>
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDeleteAccount}
-                            disabled={deleteLoading}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
+                          <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeleteAccount} disabled={deleteLoading} className="bg-rose-600 hover:bg-rose-700">
                             {deleteLoading ? "Deleting..." : "Delete Account"}
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -1053,46 +979,35 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* 5. ADMIN-ONLY SETTINGS */}
+              {/* Admin Stats */}
               {isAdmin && adminStats && (
-                <Card className="bg-white/70 shadow">
+                <Card className="bg-slate-800 border border-slate-700 shadow-lg">
                   <CardHeader>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <Server size={20} className="text-indigo-600" />
+                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                        <Server size={20} className="text-indigo-400" />
                       </div>
                       <div>
-                        <CardTitle>Admin Settings</CardTitle>
-                        <CardDescription>
-                          System configuration and statistics
-                        </CardDescription>
+                        <CardTitle className="text-white">Admin Settings</CardTitle>
+                        <CardDescription className="text-slate-400">System configuration & statistics</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-4 bg-slate-50 rounded-lg border">
-                        <p className="text-sm text-slate-500">Total Users</p>
-                        <p className="text-2xl font-bold mt-1">
-                          {adminStats.total_users}
-                        </p>
+                      <div className="p-4 bg-slate-900 rounded-lg border border-slate-700">
+                        <p className="text-sm text-slate-400">Total Users</p>
+                        <p className="text-2xl font-bold mt-1 text-white">{adminStats.total_users}</p>
                       </div>
-                      <div className="p-4 bg-slate-50 rounded-lg border">
-                        <p className="text-sm text-slate-500">Total Events</p>
-                        <p className="text-2xl font-bold mt-1">
-                          {adminStats.total_events}
-                        </p>
+                      <div className="p-4 bg-slate-900 rounded-lg border border-slate-700">
+                        <p className="text-sm text-slate-400">Total Events</p>
+                        <p className="text-2xl font-bold mt-1 text-white">{adminStats.total_events}</p>
                       </div>
-                      <div className="p-4 bg-slate-50 rounded-lg border">
-                        <p className="text-sm text-slate-500">System Status</p>
+                      <div className="p-4 bg-slate-900 rounded-lg border border-slate-700">
+                        <p className="text-sm text-slate-400">System Status</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <CheckCircle
-                            size={20}
-                            className="text-green-600"
-                          />
-                          <span className="text-lg font-semibold capitalize">
-                            {adminStats.system_status}
-                          </span>
+                          <CheckCircle size={20} className="text-green-400" />
+                          <span className="text-lg font-semibold capitalize text-white">{adminStats.system_status}</span>
                         </div>
                       </div>
                     </div>
@@ -1107,33 +1022,39 @@ export default function SettingsPage() {
   );
 }
 
-// Sidebar Button Component
-function SidebarButton({
-  icon,
-  label,
-  open,
-  active,
-  onClick,
-}: {
+/* Sidebar Button Component (typed, optional props with defaults) */
+type SidebarButtonVariant = "default" | "destructive";
+
+interface SidebarButtonProps {
   icon: React.ReactNode;
   label: string;
   open: boolean;
   active?: boolean;
   onClick?: () => void;
-}) {
+  variant?: SidebarButtonVariant;
+}
+
+function SidebarButton({
+  icon,
+  label,
+  open,
+  active = false,
+  onClick,
+  variant = "default",
+}: SidebarButtonProps) {
+  const baseClasses =
+    "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors duration-200 font-medium";
+
+  const activeClasses = active
+    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg"
+    : variant === "destructive"
+    ? "text-rose-300 hover:bg-rose-900/30"
+    : "text-slate-300 hover:bg-gray-800 hover:text-white";
+
   return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150 ${
-        active
-          ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow"
-          : "text-slate-300 hover:bg-white/10 hover:text-white"
-      }`}
-    >
-      <div className="w-6 h-6 flex items-center justify-center">{icon}</div>
+    <button onClick={onClick} className={`${baseClasses} ${activeClasses}`}>
+      <div className={`w-6 h-6 flex items-center justify-center transition-transform ${active ? "scale-100" : "scale-90"}`}>{icon}</div>
       {open && <span className="truncate">{label}</span>}
     </button>
   );
 }
-
-

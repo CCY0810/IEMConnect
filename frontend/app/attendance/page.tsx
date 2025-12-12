@@ -113,24 +113,10 @@ export default function AttendancePage() {
       // Ensure we set the events array even if empty, and handle all statuses
       const events = data.events || [];
       
-      // Debug logging
-      console.log("Fetched attended events:", events.length);
-      if (events.length > 0) {
-        const statusCounts = events.reduce((acc: any, e: AttendedEvent) => {
-          acc[e.status] = (acc[e.status] || 0) + 1;
-          return acc;
-        }, {});
-        console.log("Event status breakdown:", statusCounts);
-      }
-      
       // Filter out any events that might be null or invalid
       const validEvents = events.filter((e: AttendedEvent) => e && e.id && e.title);
       setAttendedEvents(validEvents);
       
-      // Log for debugging
-      if (validEvents.length === 0) {
-        console.log("No valid attended events found for user");
-      }
     } catch (err: any) {
       console.error("Failed to fetch attended events:", err);
       console.error("Error details:", err.response?.data);
@@ -213,16 +199,17 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
+    // APPLY DARK BACKGROUND
+    <div className="min-h-screen bg-slate-900 py-12 px-4 text-white">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex-1"></div>
           <div className="text-center flex-1">
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">
+            <h1 className="text-4xl font-bold text-white mb-2">
               Event Attendance
             </h1>
-            <p className="text-slate-600">
+            <p className="text-slate-400">
               Check in to events or view your attendance history
             </p>
           </div>
@@ -233,9 +220,17 @@ export default function AttendancePage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-2 mb-6">
-            <TabsTrigger value="give-attendance">Give Attendance</TabsTrigger>
-            <TabsTrigger value="attended">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-2 mb-6 bg-slate-800 border border-slate-700">
+            <TabsTrigger 
+              value="give-attendance"
+              className="text-slate-300 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+            >
+              Give Attendance
+            </TabsTrigger>
+            <TabsTrigger 
+              value="attended"
+              className="text-slate-300 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+            >
               Attended ({attendedEvents.length})
             </TabsTrigger>
           </TabsList>
@@ -243,13 +238,13 @@ export default function AttendancePage() {
           {/* Give Attendance Tab */}
           <TabsContent value="give-attendance">
             <div className="max-w-2xl mx-auto">
-              <Card className="shadow-2xl border-2 border-indigo-100">
-          <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
+              <Card className="shadow-2xl border-2 border-slate-700 bg-slate-800">
+          <CardHeader className="bg-indigo-700 text-white rounded-t-lg border-b border-indigo-600">
             <CardTitle className="flex items-center gap-2 text-2xl">
               <QrCode size={28} />
               Check In
             </CardTitle>
-            <CardDescription className="text-indigo-100">
+            <CardDescription className="text-white/70">
               Welcome, {user?.name}
             </CardDescription>
           </CardHeader>
@@ -260,7 +255,7 @@ export default function AttendancePage() {
               <div className="space-y-6">
                 {/* Input Section */}
                 <div className="space-y-3">
-                  <label htmlFor="code" className="text-lg font-semibold block">
+                  <label htmlFor="code" className="text-lg font-semibold block text-white">
                     Attendance Code
                   </label>
                   <div className="flex gap-3">
@@ -271,13 +266,14 @@ export default function AttendancePage() {
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       maxLength={9}
-                      className="text-2xl font-mono tracking-wider text-center h-14 text-indigo-600"
+                      // APPLY DARK INPUT STYLE
+                      className="text-2xl font-mono tracking-wider text-center h-14 text-indigo-400 bg-slate-700 border-slate-600 placeholder-slate-500"
                       onKeyPress={(e) => {
                         if (e.key === "Enter") handleCheckIn();
                       }}
                     />
                   </div>
-                  <p className="text-sm text-slate-500 flex items-center gap-2">
+                  <p className="text-sm text-slate-400 flex items-center gap-2">
                     <Keyboard size={16} />
                     Enter the 8-digit code provided by your event organizer
                   </p>
@@ -285,11 +281,12 @@ export default function AttendancePage() {
 
                 {/* Message Display */}
                 {message && (
+                  // APPLY DARK MESSAGE STYLES
                   <div
                     className={`px-4 py-3 rounded-lg border ${
                       message.type === "success"
-                        ? "bg-green-50 border-green-200 text-green-800"
-                        : "bg-red-50 border-red-200 text-red-800"
+                        ? "bg-green-900/50 border-green-700 text-green-300"
+                        : "bg-red-900/50 border-red-700 text-red-300"
                     }`}
                   >
                     {message.text}
@@ -306,11 +303,11 @@ export default function AttendancePage() {
                 </Button>
 
                 {/* QR Code Scanner Placeholder */}
-                <div className="pt-6 border-t border-slate-200">
-                  <p className="text-center text-sm text-slate-500 mb-3">
+                <div className="pt-6 border-t border-slate-700">
+                  <p className="text-center text-sm text-slate-400 mb-3">
                     Or scan QR code
                   </p>
-                  <div className="bg-slate-100 rounded-lg p-8 text-center text-slate-400">
+                  <div className="bg-slate-700 rounded-lg p-8 text-center text-slate-400 border border-slate-600">
                     <QrCode size={48} className="mx-auto mb-2 opacity-50" />
                     <p className="text-sm">QR Scanner Coming Soon</p>
                   </div>
@@ -321,50 +318,50 @@ export default function AttendancePage() {
               <div className="space-y-6 text-center">
                 {/* Success Icon */}
                 <div className="flex justify-center">
-                  <div className="bg-green-100 rounded-full p-6">
-                    <CheckCircle size={64} className="text-green-600" />
+                  <div className="bg-green-900/50 rounded-full p-6 border border-green-700">
+                    <CheckCircle size={64} className="text-green-400" />
                   </div>
                 </div>
 
                 {/* Success Message */}
                 <div>
-                  <h2 className="text-3xl font-bold text-green-600 mb-2">
+                  <h2 className="text-3xl font-bold text-green-400 mb-2">
                     Attendance Confirmed!
                   </h2>
-                  <p className="text-slate-600">
+                  <p className="text-slate-400">
                     You have successfully checked in
                   </p>
                 </div>
 
                 {/* Event Details */}
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-6 space-y-4">
+                <div className="bg-slate-700 rounded-lg p-6 space-y-4 border border-slate-600">
                   <div className="space-y-2">
-                    <p className="text-sm text-slate-500 font-semibold uppercase tracking-wide">
+                    <p className="text-sm text-slate-400 font-semibold uppercase tracking-wide">
                       Event Name
                     </p>
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-2xl font-bold text-white">
                       {attendanceResult.event.title}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-indigo-200">
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-600">
                     <div className="text-left">
-                      <p className="text-xs text-slate-500 mb-1 flex items-center gap-1">
+                      <p className="text-xs text-slate-400 mb-1 flex items-center gap-1">
                         <Calendar size={14} />
                         Date
                       </p>
-                      <p className="font-semibold text-slate-800">
+                      <p className="font-semibold text-white">
                         {new Date(
                           attendanceResult.event.date
                         ).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="text-left">
-                      <p className="text-xs text-slate-500 mb-1 flex items-center gap-1">
+                      <p className="text-xs text-slate-400 mb-1 flex items-center gap-1">
                         <Clock size={14} />
                         Check-in Time
                       </p>
-                      <p className="font-semibold text-slate-800">
+                      <p className="font-semibold text-white">
                         {new Date(
                           attendanceResult.attendance.marked_at
                         ).toLocaleTimeString()}
@@ -372,7 +369,7 @@ export default function AttendancePage() {
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-indigo-200">
+                  <div className="pt-4 border-t border-slate-600">
                     <div className="inline-block bg-green-600 text-white px-6 py-2 rounded-full font-bold text-lg">
                       ✓ {attendanceResult.attendance.status}
                     </div>
@@ -384,7 +381,7 @@ export default function AttendancePage() {
                   <Button
                     onClick={handleReset}
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
                   >
                     Check In to Another Event
                   </Button>
@@ -400,18 +397,18 @@ export default function AttendancePage() {
           </CardContent>
         </Card>
 
-              {/* Back to Dashboard */}
-              <div className="text-center mt-6">
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push("/dashboard")}
-                  className="text-slate-600"
-                >
-                  ← Back to Dashboard
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
+          {/* Back to Dashboard */}
+          <div className="text-center mt-6">
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/dashboard")}
+              className="text-slate-400 hover:bg-slate-800 hover:text-white"
+            >
+              ← Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      </TabsContent>
 
           {/* Attended Tab */}
           <TabsContent value="attended">
@@ -422,7 +419,7 @@ export default function AttendancePage() {
                   size="sm"
                   onClick={fetchAttendedEvents}
                   disabled={loadingAttendedEvents}
-                  className="gap-2"
+                  className="gap-2 bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
                 >
                   <RefreshCw
                     size={16}
@@ -432,20 +429,20 @@ export default function AttendancePage() {
                 </Button>
               </div>
               {loadingAttendedEvents ? (
-                <Card className="shadow-lg">
+                <Card className="shadow-lg bg-slate-800 border border-slate-700">
                   <CardContent className="py-12 text-center">
                     <RefreshCw className="mx-auto h-8 w-8 animate-spin text-slate-400 mb-4" />
-                    <p className="text-slate-500">Loading attended events...</p>
+                    <p className="text-slate-400">Loading attended events...</p>
                   </CardContent>
                 </Card>
               ) : attendedEvents.length === 0 ? (
-                <Card className="shadow-lg">
+                <Card className="shadow-lg bg-slate-800 border border-slate-700">
                   <CardContent className="py-12 text-center">
-                    <Calendar className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                    <Calendar className="mx-auto h-12 w-12 text-slate-500 mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">
                       No Events Attended Yet
                     </h3>
-                    <p className="text-slate-500">
+                    <p className="text-slate-400">
                       You haven't attended any events yet. Check in to events to
                       see them here.
                     </p>
@@ -456,38 +453,38 @@ export default function AttendancePage() {
                   {attendedEvents.map((event) => (
                     <Card
                       key={event.id}
-                      className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-slate-800 border border-slate-700"
                       onClick={() => router.push(`/view_event?id=${event.id}`)}
                     >
                       {event.poster_url && (
-                        <div className="relative h-48 overflow-hidden rounded-t-lg">
+                        <div className="relative h-48 overflow-hidden rounded-t-lg bg-slate-700">
                           <AttendedEventPoster posterUrl={event.poster_url} />
                         </div>
                       )}
                       <CardHeader>
                         <div className="flex items-start justify-between gap-2">
-                          <CardTitle className="text-lg line-clamp-2">
+                          <CardTitle className="text-lg line-clamp-2 text-white">
                             {event.title}
                           </CardTitle>
                           <Badge
                             className={`shrink-0 ${
                               event.status === "Completed"
-                                ? "bg-slate-200 text-slate-700"
+                                ? "bg-slate-600 text-slate-300 border-slate-500"
                                 : event.status === "Open"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-yellow-100 text-yellow-700"
+                                ? "bg-green-900/50 text-green-300 border-green-700"
+                                : "bg-yellow-900/50 text-yellow-300 border-yellow-700"
                             }`}
                           >
                             {event.status}
                           </Badge>
                         </div>
-                        <CardDescription className="line-clamp-2">
+                        <CardDescription className="line-clamp-2 text-slate-400">
                           {event.description || "No description available"}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2 text-slate-600">
+                          <div className="flex items-center gap-2 text-slate-400">
                             <Calendar size={16} />
                             <span>
                               {new Date(event.start_date).toLocaleDateString()}
@@ -498,7 +495,7 @@ export default function AttendancePage() {
                             </span>
                           </div>
                           {event.start_time && (
-                            <div className="flex items-center gap-2 text-slate-600">
+                            <div className="flex items-center gap-2 text-slate-400">
                               <Clock size={16} />
                               <span>
                                 {event.start_time}
@@ -506,8 +503,8 @@ export default function AttendancePage() {
                               </span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2 text-slate-600">
-                            <CheckCircle size={16} className="text-green-600" />
+                          <div className="flex items-center gap-2 text-slate-300">
+                            <CheckCircle size={16} className="text-green-400" />
                             <span>
                               Attended:{" "}
                               {new Date(
@@ -515,30 +512,30 @@ export default function AttendancePage() {
                               ).toLocaleString()}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-slate-600">
-                            <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                          <div className="flex items-center gap-2 text-slate-400">
+                            <span className="text-xs font-medium px-2 py-1 bg-blue-800 text-blue-300 rounded border border-blue-700">
                               {event.attendance.method}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-slate-600">
+                          <div className="flex items-center gap-2 text-slate-400">
                             {event.was_registered ? (
-                              <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded flex items-center gap-1">
+                              <span className="text-xs font-medium px-2 py-1 bg-green-900/50 text-green-300 rounded flex items-center gap-1 border border-green-700">
                                 <CheckCircle size={12} />
                                 You registered for this event
                               </span>
                             ) : (
-                              <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded">
+                              <span className="text-xs font-medium px-2 py-1 bg-slate-700 text-slate-400 rounded">
                                 You didn't register for this event
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex gap-2 pt-2 border-t border-slate-200">
+                        <div className="flex gap-2 pt-2 border-t border-slate-700">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1"
+                            className="flex-1 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(`/view_event?id=${event.id}`);
@@ -664,7 +661,7 @@ function AttendedEventPoster({ posterUrl }: { posterUrl: string }) {
 
   if (loading) {
     return (
-      <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+      <div className="w-full h-full bg-slate-700 flex items-center justify-center">
         <span className="text-xs text-slate-400">Loading...</span>
       </div>
     );
@@ -672,7 +669,7 @@ function AttendedEventPoster({ posterUrl }: { posterUrl: string }) {
 
   if (imageError || !imageUrl) {
     return (
-      <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+      <div className="w-full h-full bg-slate-700 flex items-center justify-center">
         <span className="text-xs text-slate-400">Failed to load poster</span>
       </div>
     );

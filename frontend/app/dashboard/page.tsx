@@ -12,7 +12,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { getUnverifiedUsers, verifyUser } from "@/lib/admin-api";
-// NOTE: Assuming these imports and types exist as defined in your file system
 import { getEvents, Event } from "@/lib/event-api"; 
 import {
   Table,
@@ -271,7 +270,6 @@ export default function DashboardPage() {
 
       {/* MAIN AREA */}
       <div className="flex-1 min-h-screen">
-        {/* AESTHETIC FIX: Glassy Header */}
         <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-white">Dashboard</h2>
@@ -285,13 +283,13 @@ export default function DashboardPage() {
             {/* Admin Approval Quick Access */}
             {isAdmin && pendingApprovals > 0 && (
                 <Button 
-                    onClick={toggleApprovalPanel} 
-                    variant="default" 
-                    size="sm" 
-                    className="relative bg-red-600 hover:bg-red-700 shadow-md transition-all text-white"
+                  onClick={toggleApprovalPanel} 
+                  variant="default" 
+                  size="sm" 
+                  className="relative bg-red-600 hover:bg-red-700 shadow-md transition-all text-white"
                 >
-                    <UserCheck size={16} className="mr-2" />
-                    {pendingApprovals} Approvals
+                  <UserCheck size={16} className="mr-2" />
+                  {pendingApprovals} Approvals
                 </Button>
             )}
 
@@ -321,7 +319,7 @@ export default function DashboardPage() {
 
         {/* content */}
         <main className="px-8 py-10 space-y-10 max-w-7xl mx-auto">
-          {/* STATS CARDS (White background maintained for contrast against dark main background) */}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatsCard
               title="Total Events"
@@ -373,16 +371,16 @@ export default function DashboardPage() {
             {/* LEFT COLUMN - Calendar & Profile */}
             <div className="lg:col-span-2 space-y-8">
               {/* CALENDAR VIEW (Dark card body) */}
-              <Card className="bg-slate-700 shadow-xl border border-slate-600 rounded-xl">
+              <Card className="bg-slate-700 shadow-xl border border-slate-600 rounded-xl h-full flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold text-indigo-400">Event Calendar</CardTitle>
                   <CardDescription className="text-slate-400">
                     Visual summary of scheduled events. Click on a date to view details.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="h-auto pb-6">
+                <CardContent className="flex-1 pb-8">
                   {eventsLoading ? (
-                    <div className="flex items-center justify-center h-80 text-slate-500 bg-slate-800 border border-dashed rounded-xl">
+                    <div className="flex items-center justify-center h-96 text-slate-500 bg-slate-800 border border-dashed rounded-xl">
                       Loading calendar data...
                     </div>
                   ) : (
@@ -457,7 +455,8 @@ export default function DashboardPage() {
           {/* ADMIN PANEL (Dark card body) */}
           {user.role === "admin" && (
             <Card className="bg-slate-700 shadow-xl border border-slate-600 rounded-xl">
-              <CardHeader className="border-b border-slate-600">
+              {/* FIX: Conditional Border Logic Added Here */}
+              <CardHeader className={showApprovalPanel ? "border-b border-slate-600" : ""}>
                 <div className="flex justify-between items-center">
                   <div>
                     <CardTitle className="flex items-center gap-2 text-blue-400"><UserCheck size={20} /> Admin Panel</CardTitle>
@@ -495,9 +494,10 @@ export default function DashboardPage() {
                   ) : unverifiedUsers.length === 0 ? (
                     <div className="text-slate-500 text-center py-4 border border-dashed rounded-lg bg-slate-800">All users verified. No pending registrations.</div>
                   ) : (
-                    <div className="border rounded-lg overflow-hidden">
+                    /* FIX: Added Fixed Height Scroll Container for Admin Table */
+                    <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
                       <Table>
-                        <TableHeader className="bg-slate-800">
+                        <TableHeader className="bg-slate-800 sticky top-0 z-10">
                           <TableRow>
                             <TableHead className="font-bold text-slate-300">Name</TableHead>
                             <TableHead className="font-bold text-slate-300">Email</TableHead>
@@ -861,7 +861,7 @@ const SimpleMonthView: React.FC<{ events: Event[]; onDateClick: (date: Date, dat
             <div className="grid grid-cols-7 gap-2 text-center text-sm">
                 {/* Day Names */}
                 {daysOfWeek.map(day => (
-                    <div key={day} className="font-semibold text-indigo-400 pt-1 pb-2">
+                    <div key={day} className="font-semibold text-indigo-400 pt-1 pb-2 uppercase text-xs tracking-wider">
                         {day}
                     </div>
                 ))}
@@ -884,8 +884,9 @@ const SimpleMonthView: React.FC<{ events: Event[]; onDateClick: (date: Date, dat
                             onMouseLeave={handleMouseLeave}
                             disabled={!dayObj.day}
                             className={`
-                                h-12 w-full flex flex-col items-center justify-center rounded-lg relative transition-all duration-150 border
-                                ${!dayObj.day ? 'border-transparent cursor-default' : 'border-slate-600 hover:shadow-md'}
+                                /* FIX: Increased min-height to make calendar bigger/more spacious */
+                                min-h-[5rem] w-full flex flex-col items-start justify-start p-2 rounded-lg relative transition-all duration-150 border
+                                ${!dayObj.day ? 'border-transparent cursor-default' : 'border-slate-600 hover:shadow-md hover:border-slate-500'}
                                 ${dayObj.isToday 
                                     ? 'bg-indigo-600 text-white font-bold border-indigo-700 shadow-lg' 
                                     : ''}
@@ -900,19 +901,19 @@ const SimpleMonthView: React.FC<{ events: Event[]; onDateClick: (date: Date, dat
                                 ${!dayObj.day ? 'text-gray-400' : ''}
                             `}
                         >
-                            {dayObj.day}
-                            {/* Dot indicator (Can use a small dot or simply rely on background color) */}
+                            <span className="text-sm">{dayObj.day}</span>
+                            
                             {dayObj.eventType !== 'none' && (
-                                <span className={`absolute bottom-1.5 h-1 w-1 rounded-full 
-                                    ${dayObj.isToday ? 'bg-white' : isRegisteredDay ? 'bg-emerald-500' : 'bg-amber-500'}`}>
-                                </span>
+                                <div className="mt-auto flex gap-1 pt-2">
+                                     {dayObj.eventType === 'registered' && <div className="w-2 h-2 rounded-full bg-emerald-400"></div>}
+                                     {dayObj.eventType === 'open' && <div className="w-2 h-2 rounded-full bg-amber-400"></div>}
+                                </div>
                             )}
                         </button>
                     );
                 })}
             </div>
 
-            {/* Calendar Legend (MOVED TO BOTTOM CENTER) */}
             <CalendarLegend />
         </div>
     );
