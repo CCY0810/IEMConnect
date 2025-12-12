@@ -38,7 +38,8 @@ import {
   Eye,
   X,
   ChevronRight,
-  FileText, // FIX: Added FileText import
+  FileText,
+  ChevronLeft,
 } from "lucide-react";
 
 export default function EventsPage() {
@@ -85,99 +86,107 @@ export default function EventsPage() {
   return (
     // APPLY DARK BACKGROUND: bg-slate-900
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
-      {/* SIDEBAR (Dark Theme Retained) */}
-      <aside
-        className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "w-64" : "w-20"
-        } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
+<aside
+  className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
+    sidebarOpen ? "w-64" : "w-20"
+  } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
+>
+  {/* sidebar header */}
+  <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
+    <div className="flex items-center gap-3">
+      <div
+        className={`bg-white rounded-xl p-2 shadow-md flex items-center justify-center ${
+          sidebarOpen ? "w-12 h-12" : "w-10 h-10"
+        }`}
       >
-        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div
-              className={`bg-white rounded-xl p-2 shadow-md flex items-center justify-center ${
-                sidebarOpen ? "w-12 h-12" : "w-10 h-10"
-              }`}
-            >
-              <img
-                src="/iem-logo.jpg"
-                alt="IEM UTM Logo"
-                className="object-contain w-full h-full"
-              />
-            </div>
+        <img
+          src="/iem-logo.jpg"
+          alt="IEM UTM Logo"
+          className="object-contain w-full h-full"
+        />
+      </div>
 
-            {sidebarOpen && (
-              <div>
-                <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
-                <div className="text-xs text-slate-400 font-medium">
-                  {isAdmin ? "Admin Portal" : "Member Dashboard"}
-                </div>
-              </div>
-            )}
+      {sidebarOpen && (
+        <div>
+          <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
+          <div className="text-xs text-slate-400 font-medium">
+            {isAdmin ? "Admin Portal" : "Member Dashboard"}
           </div>
-
-          <button
-            onClick={() => setSidebarOpen((s) => !s)}
-            className="p-2 text-slate-200 rounded-lg hover:bg-white/10"
-          >
-            <Menu size={18} />
-          </button>
         </div>
+      )}
+    </div>
 
-        <nav className="px-3 py-6 space-y-2 flex-1 overflow-y-auto">
-          <SidebarButton
-            icon={<PieChartIcon size={20} />}
-            label="Dashboard"
-            open={sidebarOpen}
-            onClick={() => router.push("/dashboard")}
-          />
-          {isAdmin && (
-            <SidebarButton
-              icon={<FileText size={20} />}
-              label="Analytics & Reports" // Corrected label for clarity
-              open={sidebarOpen}
-              onClick={() => router.push("/admin/reports")}
-            />
-          )}
-          <SidebarButton
-            icon={<Calendar size={20} />}
-            label="Events"
-            open={sidebarOpen}
-            active
-            onClick={() => router.push("/event")}
-          />
-          <SidebarButton
-            icon={<CheckSquare size={20} />}
-            label="Attendance"
-            open={sidebarOpen}
-            onClick={() => router.push("/attendance")}
-          />
-          <SidebarButton
-            icon={<Settings size={20} />}
-            label="Settings"
-            open={sidebarOpen}
-            onClick={() => router.push("/settings")}
-          />
-          <SidebarButton
-            icon={<HelpCircle size={20} />}
-            label="Help Center"
-            open={sidebarOpen}
-            onClick={() => router.push("/admin/help")}
-          />
+    <button
+      onClick={() => setSidebarOpen((s) => !s)}
+      className="p-2 text-slate-200 rounded-lg hover:bg-white/10"
+    >
+      <Menu size={18} />
+    </button>
+  </div>
 
-          <div className="mt-6 border-t border-white/10 pt-4">
-            <SidebarButton
-              icon={<LogOut size={20} />}
-              label="Logout"
-              open={sidebarOpen}
-              onClick={logout}
-            />
-          </div>
-        </nav>
-      </aside>
+  {/* menu (MATCHED EXACT SPACING FROM DASHBOARD) */}
+  <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+    <SidebarButton
+      open={sidebarOpen}
+      icon={<PieChartIcon size={20} />}
+      label="Dashboard"
+      onClick={() => router.push("/dashboard")}
+    />
+
+    {isAdmin && (
+      <SidebarButton
+        open={sidebarOpen}
+        icon={<FileText size={20} />}
+        label="Analytics & Reports"
+        onClick={() => router.push("/admin/reports")}
+      />
+    )}
+
+    <SidebarButton
+      open={sidebarOpen}
+      icon={<Calendar size={20} />}
+      label="Events"
+      onClick={() => router.push("/event")}
+      active
+    />
+
+    <SidebarButton
+      open={sidebarOpen}
+      icon={<CheckSquare size={20} />}
+      label="Attendance"
+      onClick={() => router.push("/attendance")}
+    />
+
+    <SidebarButton
+      open={sidebarOpen}
+      icon={<Settings size={20} />}
+      label="Settings"
+      onClick={() => router.push("/settings")}
+    />
+
+    <SidebarButton
+      open={sidebarOpen}
+      icon={<HelpCircle size={20} />}
+      label="Help Center"
+      onClick={() => router.push("/admin/help")}
+    />
+
+    <div className="mt-6 border-t border-white/10 pt-4">
+      <SidebarButton
+        open={sidebarOpen}
+        icon={<LogOut size={20} />}
+        label="Logout"
+        onClick={logout}
+        variant="destructive"
+      />
+    </div>
+  </nav>
+</aside>
+
 
       {/* MAIN */}
       <div className="flex-1 min-h-screen">
-        {/* APPLY GLASSY HEADER: Semi-transparent dark background, white text */}
+        {/* Header matched to Dashboard */}
         <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-white">Events</h2>
@@ -228,23 +237,37 @@ export default function EventsPage() {
                 Browse upcoming events, register, or manage events 
               </p>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-center">
                 {isAdmin && (
                   <Button
-                    className="bg-white text-[#0a66ff] font-semibold shadow-md hover:bg-gray-100"
                     onClick={() => router.push("/create_event")}
+                    className="inline-flex items-center gap-3 px-4 py-2 rounded-lg font-semibold text-white
+                              bg-gradient-to-r from-indigo-600 to-blue-500 shadow-lg
+                              transform transition duration-200 hover:-translate-y-0.5 hover:shadow-2xl
+                              focus:outline-none focus:ring-4 focus:ring-indigo-400/30"
+                    aria-label="Create Event"
+                    title="Create a new event"
                   >
-                    <Plus size={16} /> Create Event
+                    <Plus size={16} />
+                    <span className="whitespace-nowrap">Create Event</span>
                   </Button>
                 )}
+
                 <Button
                   variant="outline"
-                  className="text-[#0a66ff] border-white/40 hover:bg-white/10"
                   onClick={() => window.scrollTo({ top: 600, behavior: "smooth" })}
+                  className="inline-flex items-center gap-3 px-4 py-2 rounded-lg font-semibold
+                            backdrop-blur-sm bg-white/6 text-white border border-white/30
+                            hover:bg-white/10 hover:border-[#0a66ff] hover:text-[#0a66ff]
+                            transition duration-200 focus:outline-none focus:ring-4 focus:ring-[#0a66ff]/15"
+                  aria-label="Browse Events"
+                  title="Browse events"
                 >
-                  Browse Events
+                  <Search size={16} />
+                  <span className="whitespace-nowrap">Browse Events</span>
                 </Button>
               </div>
+
             </div>
 
           </div>
@@ -293,7 +316,7 @@ export default function EventsPage() {
               // APPLY DARK SKELETON STYLES
               Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="animate-pulse bg-slate-800 rounded-xl p-4 shadow-md h-60 border border-slate-700" />
-              ))
+             ))
             ) : events.length === 0 ? (
               // APPLY DARK NO RESULTS STYLE
               <div className="col-span-3 text-center py-12 text-slate-400 bg-slate-800 rounded-xl shadow-lg border border-slate-700">
@@ -303,7 +326,6 @@ export default function EventsPage() {
               events.map((event) => (
                 <article
                   key={event.id}
-                  // APPLY DARK CARD BACKGROUND
                   className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 overflow-hidden transform hover:scale-[1.01] transition duration-300"
                   aria-labelledby={`event-${event.id}`}
                 >
@@ -365,8 +387,8 @@ export default function EventsPage() {
                     </div>
                   </CardContent>
                 </article>
-              ))
-            )}
+             ))
+           )}
           </section>
         </main>
       </div>
@@ -381,22 +403,44 @@ export default function EventsPage() {
 
 
 
-function SidebarButton({ icon, label, open, active, onClick }: any) {
-  const baseClasses = "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150 font-medium";
+type SidebarButtonVariant = "default" | "destructive";
 
-  const activeClasses = active ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow" : "text-slate-300 hover:bg-white/10 hover:text-white";
+interface SidebarButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  open: boolean;
+  active?: boolean;               
+  onClick?: () => void;
+  variant?: SidebarButtonVariant; 
+}
+
+function SidebarButton({
+  icon,
+  label,
+  open,
+  active = false,
+  onClick,
+  variant = "default",
+}: SidebarButtonProps) {
+  const baseClasses =
+    "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors duration-200 font-medium";
+
+  const activeClasses = active
+    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg"
+    : variant === "destructive"
+    ? "text-rose-300 hover:bg-rose-900/30"
+    : "text-slate-300 hover:bg-gray-800 hover:text-white";
 
   return (
-    <button
-      onClick={onClick}
-      className={`${baseClasses} ${activeClasses}`}
-    >
-      <div className="w-6 h-6 flex items-center justify-center">{icon}</div>
+    <button onClick={onClick} className={`${baseClasses} ${activeClasses}`}>
+      <div className={`w-6 h-6 flex items-center justify-center transition-transform ${active ? 'scale-100' : 'scale-90'}`}>{icon}</div>
       {open && <span className="truncate">{label}</span>}
       {open && active && <ChevronRight size={16} className="ml-auto text-white/70" />}
     </button>
   );
 }
+
+
 
 function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: () => void }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -581,5 +625,3 @@ function ImageModal({ imageUrl, onClose }: { imageUrl: string; onClose: () => vo
     </div>
   );
 }
-
-
