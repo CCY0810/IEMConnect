@@ -82,14 +82,23 @@ export const processAvatarImage = async (tempFilePath, userId) => {
       .webp({ quality: 82 }) // Good balance between quality and size
       .toFile(outputPath);
 
-    // Delete temporary file
-    fs.unlinkSync(tempFilePath);
+    // Delete temporary file asynchronously to avoid Windows EBUSY errors
+    try {
+      await fs.promises.unlink(tempFilePath);
+    } catch (unlinkError) {
+      // Log but don't fail - file cleanup is not critical
+      console.warn(`Warning: Could not delete temp file ${tempFilePath}:`, unlinkError.message);
+    }
 
     return filename;
   } catch (error) {
     // Clean up temp file on error
-    if (fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath);
+    try {
+      if (fs.existsSync(tempFilePath)) {
+        await fs.promises.unlink(tempFilePath);
+      }
+    } catch (cleanupError) {
+      console.warn(`Warning: Could not clean up temp file ${tempFilePath}:`, cleanupError.message);
     }
     throw error;
   }
