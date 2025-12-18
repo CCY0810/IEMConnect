@@ -41,6 +41,7 @@ import {
   UserCheck, 
   UserPlus, 
   ChevronLeft, 
+  X,
 } from "lucide-react";
 
 import NotificationBell from "@/components/NotificationBell"; 
@@ -668,27 +669,67 @@ function UpcomingEventCard({ event, router }: { event: Event; router: any }) {
     const isRegistered = event.is_registered;
 
     return (
-        <button
-            onClick={() => router.push(`/view_event?id=${event.id}`)}
-            className={`w-full text-left p-4 rounded-xl border transition-all flex items-center gap-4 
-              ${isRegistered ? 'bg-emerald-900/40 border-emerald-700 hover:bg-emerald-900/50' : 'bg-amber-900/40 border-amber-700 hover:bg-amber-900/50'}`
+      <button
+        onClick={() => router.push(`/view_event?id=${event.id}`)}
+        className={`
+          group w-full text-left p-4 rounded-xl border transition-all duration-200
+          flex items-center gap-4 cursor-pointer
+          hover:-translate-y-0.5 hover:shadow-xl
+          ${
+            isRegistered
+              ? "bg-emerald-900/40 border-emerald-700 hover:bg-emerald-900/60 hover:border-emerald-500"
+              : "bg-amber-900/40 border-amber-700 hover:bg-amber-900/60 hover:border-amber-500"
+          }
+        `}
+      >
+        {/* DATE BOX */}
+        <div
+          className={`
+            flex flex-col items-center justify-center flex-shrink-0
+            w-12 h-12 rounded-lg shadow-sm transition
+            ${
+              isRegistered
+                ? "bg-emerald-600 group-hover:bg-emerald-500"
+                : "bg-amber-600 group-hover:bg-amber-500"
             }
+            text-white
+          `}
         >
-            <div className={`flex flex-col items-center justify-center flex-shrink-0 w-12 h-12 rounded-lg shadow-sm 
-              ${isRegistered ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'}`
-            }>
-                <span className="text-xs font-bold">{date.split(' ')[0]}</span>
-                <span className="text-base font-extrabold -mt-1">{date.split(' ')[1]}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="font-semibold text-base text-white truncate">{event.title}</div>
-                <div className="text-xs text-slate-400 mt-0.5">
-                    {time} | {isRegistered ? <Badge className="bg-emerald-500 text-white shadow-sm">Registered</Badge> : <Badge className="bg-amber-500 text-white shadow-sm">Not Registered</Badge>}
-                </div>
-            </div>
-            <ChevronRight size={18} className="text-slate-400 group-hover:text-indigo-400 flex-shrink-0" />
-        </button>
+          <span className="text-xs font-bold">{date.split(" ")[0]}</span>
+          <span className="text-base font-extrabold -mt-1">
+            {date.split(" ")[1]}
+          </span>
+        </div>
+
+        {/* EVENT INFO */}
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-base text-white truncate">
+            {event.title}
+          </div>
+
+          <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+            <span>{time}</span>
+            {isRegistered ? (
+              <Badge className="bg-emerald-500 text-white shadow-sm">
+                Registered
+              </Badge>
+            ) : (
+              <Badge className="bg-amber-500 text-white shadow-sm">
+                Not Registered
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* ARROW */}
+        <ChevronRight
+          size={18}
+          className="text-slate-400 transition-transform duration-200
+                    group-hover:translate-x-1 group-hover:text-white"
+        />
+      </button>
     );
+
 }
 
 
@@ -942,7 +983,17 @@ const handleDayClick = (dateKey?: string) => {
       {/* MULTI EVENT PICKER */}
       {showPicker && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-slate-800 p-6 rounded-xl w-full max-w-md shadow-2xl">
+          <div className="relative bg-slate-800 p-6 rounded-xl w-full max-w-md shadow-2xl">
+
+
+            <button
+              onClick={() => setShowPicker(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+
             <h3 className="text-lg font-bold text-white mb-4">
               Select an Event
             </h3>
@@ -965,13 +1016,7 @@ const handleDayClick = (dateKey?: string) => {
               ))}
             </div>
 
-            <Button
-              className="mt-5 w-full"
-              variant="secondary"
-              onClick={() => setShowPicker(false)}
-            >
-              Close
-            </Button>
+            
           </div>
 
         </div>
