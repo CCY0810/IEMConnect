@@ -788,17 +788,18 @@ const SimpleMonthView: React.FC<{
   };
 
   // 🔹 click logic
-  const handleDayClick = (dateKey?: string) => {
-    if (!dateKey) return;
-    const dayEvents = eventsMap.get(dateKey)?.events || [];
+const handleDayClick = (dateKey?: string) => {
+  if (!dateKey) return;
 
-    if (dayEvents.length === 1) {
-      onDateClick(new Date(dateKey), dayEvents);
-    } else if (dayEvents.length > 1) {
-      setSelectedEvents(dayEvents);
-      setShowPicker(true);
-    }
-  };
+  const dayEvents = eventsMap.get(dateKey)?.events || [];
+
+  // 🔹 NEW: always show selector if there is at least 1 event
+  if (dayEvents.length >= 1) {
+    setSelectedEvents(dayEvents);
+    setShowPicker(true);
+  }
+};
+
 
   // 🔹 hover tooltip
   const handleHover = (
