@@ -397,3 +397,143 @@ CREATE TABLE events (
 - Admin-only endpoints are protected by `verifyAdmin` middleware
 - Files are stored with unique names to prevent overwrites
 - Old files are automatically deleted when updating events
+
+---
+
+## Feedback Endpoints
+
+### 1. Submit Feedback
+
+**Endpoint:** `POST /feedback`
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "event_id": 1,
+  "rating": 5,
+  "comment": "Great event! Very informative."
+}
+```
+
+| Field    | Type   | Required | Description                    |
+| -------- | ------ | -------- | ------------------------------ |
+| event_id | number | Yes      | ID of the event                |
+| rating   | number | Yes      | Rating 1-5                     |
+| comment  | string | No       | Optional feedback comment      |
+
+**Response (201):**
+```json
+{
+  "message": "Feedback submitted successfully",
+  "feedback": {
+    "id": 1,
+    "user_id": 10,
+    "event_id": 1,
+    "rating": 5,
+    "comment": "Great event!",
+    "created_at": "2025-12-19T08:00:00Z"
+  }
+}
+```
+
+**Errors:**
+- `400`: Invalid rating or missing event_id
+- `403`: User did not attend this event
+- `404`: Event not found
+- `409`: Feedback already submitted
+
+---
+
+### 2. Get My Feedback
+
+**Endpoint:** `GET /feedback/my-feedback`
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "feedback": [
+    {
+      "id": 1,
+      "event_id": 1,
+      "event_title": "Engineering Summit 2025",
+      "rating": 5,
+      "comment": "Great event!",
+      "created_at": "2025-12-19T08:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 3. Check Feedback Eligibility
+
+**Endpoint:** `GET /feedback/can-submit/:eventId`
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "can_submit": true,
+  "reason": null
+}
+```
+
+---
+
+### 4. Get Event Feedback (Admin)
+
+**Endpoint:** `GET /feedback/event/:eventId`
+
+**Authentication:** Required (Admin only)
+
+**Response:**
+```json
+{
+  "event": { "id": 1, "title": "Engineering Summit 2025" },
+  "stats": {
+    "total_feedback": 25,
+    "average_rating": 4.5,
+    "rating_distribution": { "1": 1, "2": 2, "3": 3, "4": 8, "5": 11 }
+  },
+  "feedback": [
+    {
+      "id": 1,
+      "user_name": "John Doe",
+      "rating": 5,
+      "comment": "Great event!",
+      "created_at": "2025-12-19T08:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 5. Get Feedback Summary (Admin)
+
+**Endpoint:** `GET /feedback/reports/summary`
+
+**Authentication:** Required (Admin only)
+
+**Query Parameters:**
+| Parameter  | Type | Required | Description     |
+| ---------- | ---- | -------- | --------------- |
+| start_date | date | No       | Filter from date|
+| end_date   | date | No       | Filter to date  |
+
+---
+
+### 6. Export Feedback CSV (Admin)
+
+**Endpoint:** `GET /feedback/export/:eventId`
+
+**Authentication:** Required (Admin only)
+
+**Response:** CSV file download
+

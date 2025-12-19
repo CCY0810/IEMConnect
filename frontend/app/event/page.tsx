@@ -40,7 +40,9 @@ import {
   ChevronRight,
   FileText,
   ChevronLeft,
+  UserCheck,
 } from "lucide-react";
+import AdminSidebar from "@/components/AdminSidebar";
 
 export default function EventsPage() {
   const router = useRouter();
@@ -80,109 +82,12 @@ export default function EventsPage() {
   // admin check
   const isAdmin = user?.role === "admin";
 
-  // don't render until logged in (same as before)
   if (!user) return null;
 
   return (
-    // APPLY DARK BACKGROUND: bg-slate-900
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
-<aside
-  className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
-    sidebarOpen ? "w-64" : "w-20"
-  } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
->
-  {/* sidebar header */}
-  <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
-    <div className="flex items-center gap-3">
-      <div
-        className={`bg-white rounded-xl p-2 shadow-md flex items-center justify-center ${
-          sidebarOpen ? "w-12 h-12" : "w-10 h-10"
-        }`}
-      >
-        <img
-          src="/iem-logo.jpg"
-          alt="IEM UTM Logo"
-          className="object-contain w-full h-full"
-        />
-      </div>
-
-      {sidebarOpen && (
-        <div>
-          <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
-          <div className="text-xs text-slate-400 font-medium">
-            {isAdmin ? "Admin Portal" : "Member Dashboard"}
-          </div>
-        </div>
-      )}
-    </div>
-
-    <button
-      onClick={() => setSidebarOpen((s) => !s)}
-      className="p-2 text-slate-200 rounded-lg hover:bg-white/10"
-    >
-      <Menu size={18} />
-    </button>
-  </div>
-
-  {/* menu (MATCHED EXACT SPACING FROM DASHBOARD) */}
-  <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-    <SidebarButton
-      open={sidebarOpen}
-      icon={<PieChartIcon size={20} />}
-      label="Dashboard"
-      onClick={() => router.push("/dashboard")}
-    />
-
-    {isAdmin && (
-      <SidebarButton
-        open={sidebarOpen}
-        icon={<FileText size={20} />}
-        label="Analytics & Reports"
-        onClick={() => router.push("/admin/reports")}
-      />
-    )}
-
-    <SidebarButton
-      open={sidebarOpen}
-      icon={<Calendar size={20} />}
-      label="Events"
-      onClick={() => router.push("/event")}
-      active
-    />
-
-    <SidebarButton
-      open={sidebarOpen}
-      icon={<CheckSquare size={20} />}
-      label="Attendance"
-      onClick={() => router.push("/attendance")}
-    />
-
-    <SidebarButton
-      open={sidebarOpen}
-      icon={<Settings size={20} />}
-      label="Settings"
-      onClick={() => router.push("/settings")}
-    />
-
-    <SidebarButton
-      open={sidebarOpen}
-      icon={<HelpCircle size={20} />}
-      label="Help Center"
-      onClick={() => router.push("/admin/help")}
-    />
-
-    <div className="mt-6 border-t border-white/10 pt-4">
-      <SidebarButton
-        open={sidebarOpen}
-        icon={<LogOut size={20} />}
-        label="Logout"
-        onClick={logout}
-        variant="destructive"
-      />
-    </div>
-  </nav>
-</aside>
-
+      {/* SIDEBAR - Now using shared AdminSidebar component */}
+      <AdminSidebar activePage="events" />
 
       {/* MAIN */}
       <div className="flex-1 min-h-screen">
