@@ -39,6 +39,8 @@ import {
   ArrowUpRight,
   UserCheck,
   ChevronRight,
+  Maximize2, // Added for expand function
+  X,         // Added for close function
 } from "lucide-react";
 import React from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -88,6 +90,15 @@ export default function ReportsPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  // --- START: EXPAND FUNCTION STATE ---
+  const [detailModal, setDetailModal] = useState<{
+    isOpen: boolean;
+    type: "faculty" | "trend" | "status" | "methods" | "timeline" | null;
+    title: string;
+  }>({ isOpen: false, type: null, title: "" });
+  // --- END: EXPAND FUNCTION STATE ---
+
   // Analytics state
   const [usersInsights, setUsersInsights] =
     useState<null | Awaited<ReturnType<typeof fetchUsersInsights>>>(null);
@@ -584,6 +595,80 @@ export default function ReportsPage() {
                 </div>
               </div>
             )}
+
+      {/* --- START: EXPAND MODAL JSX --- */}
+      {detailModal.isOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+          <Card className="w-full max-w-5xl bg-slate-800 border-slate-700 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+            <button 
+              onClick={() => setDetailModal({ isOpen: false, type: null, title: "" })}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition-colors z-20"
+            >
+              <X size={24} />
+            </button>
+            
+            <CardHeader className="border-b border-slate-700 pb-4">
+              <CardTitle className="text-2xl font-bold text-white flex items-center gap-3">
+                <BarChart2 className="text-indigo-400" />
+                {detailModal.title}
+              </CardTitle>
+              <CardDescription className="text-slate-400 text-lg">Detailed View</CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-8 overflow-y-auto flex-1">
+              <div className="h-[60vh] w-full min-h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  {detailModal.type === "faculty" ? (
+                    <BarChart data={facultyData} layout="vertical">
+                      <XAxis type="number" stroke="#94a3b8" />
+                      <YAxis dataKey="name" type="category" width={150} stroke="#94a3b8" fontSize={12} />
+                      <ReTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f1f5f9' }} />
+                      <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  ) : detailModal.type === "trend" ? (
+                    <LineChart data={trendData}>
+                      <XAxis dataKey="month" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <ReTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
+                      <Line type="monotone" dataKey="registrations" stroke="#10b981" strokeWidth={4} dot={{ r: 6 }} name="Registrations" />
+                      <Line type="monotone" dataKey="attendees" stroke="#ef4444" strokeWidth={4} dot={{ r: 6 }} name="Attendees" />
+                    </LineChart>
+                  ) : detailModal.type === "status" ? (
+                    <PieChart>
+                      <Pie data={eventStatusData} dataKey="value" nameKey="name" outerRadius="80%" innerRadius="50%" label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}>
+                        <Cell fill="#f59e0b" />
+                        <Cell fill="#22c55e" />
+                      </Pie>
+                      <ReTooltip />
+                    </PieChart>
+                  ) : detailModal.type === "methods" && eventStats ? (
+                    <BarChart data={[
+                        { name: "QR Code", value: eventStats.attendance_methods.QR },
+                        { name: "Code", value: eventStats.attendance_methods.Code },
+                        { name: "Manual", value: eventStats.attendance_methods.Manual },
+                    ]}>
+                        <XAxis dataKey="name" stroke="#94a3b8" />
+                        <YAxis stroke="#94a3b8" />
+                        <ReTooltip contentStyle={{ backgroundColor: '#0f172a' }} />
+                        <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  ) : detailModal.type === "timeline" && eventStats ? (
+                    <LineChart data={eventStats.timeline}>
+                      <XAxis dataKey="date" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <ReTooltip contentStyle={{ backgroundColor: '#0f172a' }} />
+                      <Line type="monotone" dataKey="registrations" stroke="#10b981" strokeWidth={3} name="Total Reg." />
+                      <Line type="monotone" dataKey="attendance" stroke="#ef4444" strokeWidth={3} name="Total Attended" />
+                    </LineChart>
+                  ) : null}
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      {/* --- END: EXPAND MODAL JSX --- */}
+
       {/* SIDEBAR (matches dashboard style) */}
       <aside
         className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
@@ -939,14 +1024,24 @@ export default function ReportsPage() {
                   <>
                     {/* Chart 1: Attendance by Faculty (Horizontal Bar) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-1">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <BarChart2 className="w-5 h-5 text-indigo-400" />
-                          Attendance by Faculty
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Which faculty is most active? (Overall attendance count)
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <BarChart2 className="w-5 h-5 text-indigo-400" />
+                            Attendance by Faculty
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Which faculty is most active?
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "faculty", title: "Attendance by Faculty" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="h-64">
@@ -987,14 +1082,24 @@ export default function ReportsPage() {
 
                     {/* Chart 2: Registration vs Attendance (6 months) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-2">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <TrendingUp className="w-5 h-5 text-emerald-400" />
-                          Registration vs. Attendance Trend
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Last 6 months
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <TrendingUp className="w-5 h-5 text-emerald-400" />
+                            Registration vs. Attendance Trend
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Last 6 months
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "trend", title: "Registration vs. Attendance Trend" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="h-64">
@@ -1045,14 +1150,24 @@ export default function ReportsPage() {
 
                     {/* Chart 3: Event Status Pie (Doughnut with Center Label) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-1">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <PieChartIcon className="w-5 h-5 text-amber-400" />
-                          Event Status
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Open vs. Completed Events
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <PieChartIcon className="w-5 h-5 text-amber-400" />
+                            Event Status
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Open vs. Completed Events
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "status", title: "Event Status Breakdown" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent className="relative">
                         <div className="h-64">
@@ -1408,14 +1523,24 @@ export default function ReportsPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Attendance Methods (Doughnut with Center Label) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <QrCodeIcon />
-                          Attendance Methods
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Breakdown by check-in method
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <QrCodeIcon />
+                            Attendance Methods
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Breakdown by check-in method
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "methods", title: "Attendance Methods" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent className="relative">
                         <div className="h-64">
@@ -1468,14 +1593,24 @@ export default function ReportsPage() {
 
                     {/* Faculty Distribution (Horizontal Bar) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <BarChart2 className="w-5 h-5 text-purple-400" />
-                          Attendance by Faculty
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Faculty distribution for this event
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <BarChart2 className="w-5 h-5 text-purple-400" />
+                            Attendance by Faculty
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Faculty distribution for this event
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "faculty", title: "Faculty Distribution" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="h-64">
@@ -1520,14 +1655,24 @@ export default function ReportsPage() {
                   {/* Registration vs Attendance Timeline */}
                   {eventStats.timeline && eventStats.timeline.length > 0 && (
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <TrendingUp className="w-5 h-5 text-emerald-400" />
-                          Registration vs. Attendance Timeline
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Cumulative registrations and attendance over time
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <TrendingUp className="w-5 h-5 text-emerald-400" />
+                            Registration vs. Attendance Timeline
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Cumulative registrations and attendance over time
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "timeline", title: "Registration vs. Attendance Timeline" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="h-80">
