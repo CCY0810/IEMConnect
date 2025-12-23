@@ -82,18 +82,34 @@ import {
   Trash2,
   Award,
   ChevronRight, // Ensure ChevronRight is imported for SidebarButton
+  X,            // Added for close function
 } from "lucide-react";
 
 export default function ViewEventPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const { toast } = useToast();
 
   const eventId = parseInt(searchParams.get("id") || "0");
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Responsive Sidebar States from code 2
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  // Handle Responsive Sidebar behavior from code 2
+  useEffect(() => {
+    if (!token) router.push("/login");
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [token, router]);
+
   const [editing, setEditing] = useState(false);
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -174,7 +190,7 @@ export default function ViewEventPage() {
   // Tab state for controlling which tab is active
   const [activeTab, setActiveTab] = useState("details");
   
-    
+  
   const safeCost = useMemo(() => {
     const n = Number(event?.cost);
     return Number.isFinite(n) ? n : 0;
@@ -730,198 +746,129 @@ export default function ViewEventPage() {
   }, [event]);
 
   return (
-    // APPLY DARK BACKGROUND: bg-slate-900
-    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden relative">
+      
+      {/* 1. LOGOUT MODAL */}
       {isLogoutModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
           <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
             <div className="flex flex-col items-center text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
                 <AlertTriangle size={32} />
               </div>
               <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
-              <p className="mb-6 text-slate-400">
-                Are you sure you want to end your session?
-              </p>
+              <p className="mb-6 text-slate-400">Are you sure you want to end your session?</p>
               <div className="flex w-full gap-3">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700"
-                  onClick={() => setIsLogoutModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  className="flex-1 bg-red-600 text-white hover:bg-red-700"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
+                <Button variant="outline" className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700" onClick={() => setIsLogoutModalOpen(false)}>Cancel</Button>
+                <Button className="flex-1 bg-red-600 text-white hover:bg-red-700" onClick={handleLogout}>Logout</Button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* 2. MOBILE SIDEBAR OVERLAY */}
+      <div 
+        className={`fixed inset-0 bg-black/80 z-[45] lg:hidden backdrop-blur-md transition-all duration-300 ${
+          sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        }`} 
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* 3. SIDEBAR */}
       <aside
-  className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
-    sidebarOpen ? "w-64" : "w-20"
-  } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
->
-  {/* sidebar header */}
-  <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
-    <div className="flex items-center gap-3">
-      <div
-        className={`bg-white rounded-xl p-2 shadow-md flex items-center justify-center ${
-          sidebarOpen ? "w-12 h-12" : "w-10 h-10"
-        }`}
+        className={`fixed lg:relative z-50 h-full transition-all duration-300 ease-in-out bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col shrink-0 overflow-hidden
+        ${sidebarOpen 
+            ? "translate-x-0 w-full sm:w-80 lg:w-64 opacity-100 visible" 
+            : "-translate-x-full lg:translate-x-0 w-0 lg:w-0 opacity-0 invisible pointer-events-none"}`}
       >
-        <img
-          src="/iem-logo.jpg"
-          alt="IEM UTM Logo"
-          className="object-contain w-full h-full"
-        />
-      </div>
-
-      {sidebarOpen && (
-        <div>
-          <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
-          <div className="text-xs text-slate-400 font-medium">
-            {isAdmin ? "Admin Portal" : "Member Dashboard"}
+        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10 shrink-0 h-[73px]">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="bg-white rounded-xl p-2 shadow-md flex items-center justify-center w-10 h-10 shrink-0">
+              <img src="/iem-logo.jpg" alt="Logo" className="object-contain w-full h-full" />
+            </div>
+            {sidebarOpen && (
+              <div className="whitespace-nowrap transition-opacity duration-300">
+                <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
+                <div className="text-xs text-slate-400 font-medium">Admin Portal</div>
+              </div>
+            )}
           </div>
+          {sidebarOpen && (
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors">
+              <X size={28}/>
+            </button>
+          )}
         </div>
-      )}
-    </div>
 
-    <button
-      onClick={() => setSidebarOpen((s) => !s)}
-      className="p-2 text-slate-200 rounded-lg hover:bg-white/10"
-    >
-      <Menu size={18} />
-    </button>
-  </div>
+        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+          <SidebarButton open={sidebarOpen} icon={<PieChartIcon size={20} />} label="Dashboard" onClick={() => router.push("/dashboard")} />
+          <SidebarButton open={sidebarOpen} icon={<UserCheck size={20} />} label="Admin Panel" onClick={() => router.push("/admin/admin_panel")} />
+          <SidebarButton open={sidebarOpen} icon={<FileText size={20} />} label="Reports" onClick={() => router.push("/admin/reports")} />
+          <SidebarButton open={sidebarOpen} icon={<Calendar size={20} />} label="Events" onClick={() => router.push("/event")} active />
+          <SidebarButton open={sidebarOpen} icon={<CheckSquare size={20} />} label="Attendance" onClick={() => router.push("/attendance")} />
+          <SidebarButton open={sidebarOpen} icon={<Settings size={20} />} label="Settings" onClick={() => router.push("/settings")} />
+          <div className="mt-6 border-t border-white/10 pt-4">
+            <SidebarButton open={sidebarOpen} icon={<LogOut size={20} />} label="Logout" onClick={() => setIsLogoutModalOpen(true)} variant="destructive" />
+          </div>
+        </nav>
+      </aside>
 
-  {/* menu (MATCHED EXACT SPACING FROM DASHBOARD) */}
-  <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<PieChartIcon size={20} />}
-              label="Dashboard"
-              onClick={() => router.push("/dashboard")}
-            />
-            {isAdmin && (
-              <SidebarButton
-                open={sidebarOpen}
-                icon={<UserCheck size={20} />}
-                label="Admin Panel"
-                onClick={() => router.push("/admin/admin_panel")}
-              />
-            )}
-            {isAdmin && (
-              <SidebarButton
-                open={sidebarOpen}
-                icon={<FileText size={20} />}
-                label="Analytics & Reports"
-                onClick={() => router.push("/admin/reports")}
-              />
-            )}
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<Calendar size={20} />}
-              label="Events"
-              onClick={() => router.push("/event")}
-              active
-            />
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<CheckSquare size={20} />}
-              label="Attendance"
-              onClick={() => router.push("/attendance")}
-            />
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<Settings size={20} />}
-              label="Settings"
-              onClick={() => router.push("/settings")}
-            />
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<HelpCircle size={20} />}
-              label="Help Center"
-              onClick={() => router.push("/admin/help")}
-            />
-  
-            <div className="mt-6 border-t border-white/10 pt-4">
-              <SidebarButton
-                open={sidebarOpen}
-              icon={<LogOut size={20} />}
-              label="Logout"
-              onClick={() => setIsLogoutModalOpen(true)} // Open Modal
-              variant="destructive"
-              />
-            </div>
-          </nav>
-</aside>
-
-
-      {/* MAIN AREA */}
-      <div className="flex-1">
-        {/* APPLY GLASSY HEADER: Semi-transparent dark background, white text */}
-        <header className="flex items-center justify-between px-8 py-4 sticky top-0 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20 z-40">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push("/event")}
-              className="p-2 rounded hover:bg-white/10 text-white"
+      {/* 4. MAIN LAYOUT AREA */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+        
+        {/* HEADER */}
+        <header className="flex items-center justify-between px-4 lg:px-8 py-3 sticky top-0 z-40 bg-slate-900/60 backdrop-blur-md border-b border-white/10 shadow-xl shrink-0 h-[73px]">
+          <div className="flex items-center gap-4 min-w-0">
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              className="p-2 text-slate-200 bg-white/5 hover:bg-white/10 rounded-lg transition-colors shrink-0"
             >
-              <ArrowLeft size={20} className="text-white" />
+              <Menu size={24}/>
             </button>
-
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-white">
-                View Event
-              </h2>
-              <p className="text-sm text-slate-300">
-                Event details & director information
-              </p>
+            <div className="min-w-0">
+              <h2 className="text-lg lg:text-2xl font-bold tracking-tight text-white truncate">View Event</h2>
+              <p className="hidden xs:block text-[10px] sm:text-xs text-slate-400 truncate">Event Details & Information</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-5">
-            {/* Notification Bell */}
+          <div className="flex items-center gap-2 lg:gap-5 ml-4">
             <NotificationBell />
-
-            <div className="text-right">
-              <div className="text-sm font-semibold text-white">
-                {user.name}
+            <div className="flex items-center gap-3 border-l border-white/10 pl-3">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-semibold text-white leading-none truncate max-w-[120px]">{user.name}</div>
+                <div className="text-[10px] text-slate-400 uppercase mt-1">{user.role}</div>
               </div>
-              <div className="text-xs text-slate-400 capitalize">
-                {user.role}
-              </div>
-            </div>
-
-            <button
-              onClick={() => router.push("/profile")}
-              className="rounded-full overflow-hidden border-2 border-transparent shadow hover:ring-2 hover:ring-indigo-500 transition-colors cursor-pointer"
-              title="View Profile"
-            >
-              <UserAvatar size="md" />
-            </button>
-            <button 
-                className="p-2 rounded-lg hover:bg-white/10 text-white" 
-                onClick={() => setIsLogoutModalOpen(true)} // Open Modal
+              <UserAvatar size="sm" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-full transition-colors h-9 w-9 shrink-0"
               >
-                <LogOut size={18} />
-              </button>
+                <LogOut size={20} />
+              </Button>
+            </div>
           </div>
         </header>
 
-        {/* CONTENT */}
-        <main className="px-8 py-10 max-w-7xl mx-auto">
+        {/* CONTENT AREA - ORIGINAL CODE LOGIC REMAINS HERE */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
+          <div className="max-w-7xl mx-auto w-full">
+          
+          <Button
+            onClick={() => router.push("/event")}
+            className="mb-6 p-2 rounded hover:bg-slate-800 text-white flex items-center gap-2"
+          >
+            <ArrowLeft size={20} className="text-white" />
+            <span>Back to events</span>
+          </Button>
+
           {loading ? (
             <div className="text-center py-16 text-slate-500">
               Loading event...
             </div>
           ) : error ? (
-            // APPLY DARK ERROR STYLES
             <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg">
               {error}
             </div>
@@ -1022,7 +969,6 @@ export default function ViewEventPage() {
                       </div>
                     </div>
 
-                    {/* Quick Action Box for non-admins */}
                     {!isAdmin && (
                       <div className="w-full md:w-72 rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-4 shadow-inner">
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
@@ -1133,7 +1079,6 @@ export default function ViewEventPage() {
 
                 {/* EVENT DETAILS TAB */}
                 <TabsContent value="details" className="space-y-6">
-                  {/* COMPLETED EVENT BANNER */}
                   {event.status === "Completed" && (
                     <Card className="bg-gradient-to-r from-emerald-900/60 via-slate-800 to-slate-800 border border-emerald-600/70 shadow-lg">
                       <CardContent className="pt-6">
@@ -1167,7 +1112,6 @@ export default function ViewEventPage() {
                   )}
 
                   {registrationMessage && (
-                    // APPLY DARK MESSAGE STYLES
                     <div
                       className={`px-4 py-3 rounded-lg ${
                         registrationMessage.type === "success"
@@ -1181,7 +1125,6 @@ export default function ViewEventPage() {
 
                   <div className="grid grid-cols-1 lg:grid-cols-[2fr,1.4fr] gap-6">
                     <div className="space-y-6">
-                      {/* START EVENT / END EVENT CARDS (ADMIN) */}
                       {isAdmin && event.status === "Upcoming" && (
                         <Card className="bg-slate-800 shadow-lg border border-slate-600">
                           <CardHeader>
@@ -1400,7 +1343,6 @@ export default function ViewEventPage() {
                         </Card>
                       )}
 
-                      {/* DIRECTOR INFO */}
                       <Card className="bg-slate-800 shadow border border-slate-600">
                         <CardHeader>
                           <CardTitle className="text-white flex items-center gap-2">
@@ -1411,7 +1353,6 @@ export default function ViewEventPage() {
                             Details of the event director
                           </CardDescription>
                         </CardHeader>
-
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <InputField
                             label="Full Name"
@@ -1460,7 +1401,6 @@ export default function ViewEventPage() {
                         </CardContent>
                       </Card>
 
-                      {/* EVENT INFO */}
                       <Card className="bg-slate-800 shadow border border-slate-600">
                         <CardHeader>
                           <CardTitle className="text-white flex items-center gap-2">
@@ -1471,7 +1411,6 @@ export default function ViewEventPage() {
                             Complete event details
                           </CardDescription>
                         </CardHeader>
-
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <InputField
                             label="Event Title"
@@ -1493,7 +1432,7 @@ export default function ViewEventPage() {
                             {editing ? (
                               <Textarea
                                 value={formData.description}
-                                onChange={(e) =>
+                                onChange={(e:any) =>
                                   setFormData({
                                     ...formData,
                                     description: e.target.value,
@@ -1577,7 +1516,6 @@ export default function ViewEventPage() {
                               })
                             }
                           />
-                          {/* TIME FIELDS */}
                           <InputField
                             label="Start Time"
                             type="time"
@@ -1606,9 +1544,7 @@ export default function ViewEventPage() {
                       </Card>
                     </div>
 
-                    {/* RIGHT COLUMN: STATS + ADMIN ACTIONS */}
                     <div className="space-y-6">
-                      {/* EVENT STATISTICS */}
                       <Card className="bg-slate-800 shadow border border-slate-600">
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-white">
@@ -1672,7 +1608,6 @@ export default function ViewEventPage() {
                             )}
                           </div>
 
-                          {/* REGISTRATION ACTION BUTTON (non-admin quick duplicate) */}
                           {event.status !== "Completed" && (
                             <div className="mt-6 pt-4 border-t border-slate-700">
                               {event.is_registered ? (
@@ -1702,7 +1637,6 @@ export default function ViewEventPage() {
                             </div>
                           )}
 
-                          {/* ADMIN VIEW PARTICIPANTS BUTTON */}
                           {isAdmin && (
                             <div className="mt-6 pt-4 border-t border-slate-700">
                               <Button
@@ -1720,7 +1654,6 @@ export default function ViewEventPage() {
                         </CardContent>
                       </Card>
 
-                      {/* FOOTER BUTTONS (ADMIN) */}
                       {isAdmin && (
                         <Card className="bg-slate-800 border border-slate-600 shadow">
                           <CardHeader>
@@ -1826,7 +1759,6 @@ export default function ViewEventPage() {
                   </div>
                 </TabsContent>
 
-                {/* REGISTERED USERS TAB */}
                 {isAdmin && (
                   <TabsContent value="users" className="space-y-6">
                     <Card className="bg-slate-800 shadow border border-slate-600">
@@ -1840,14 +1772,6 @@ export default function ViewEventPage() {
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        {error && (
-                          <div className="mb-4 bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg">
-                            <p className="font-medium">
-                              Error loading participants
-                            </p>
-                            <p className="text-sm">{error}</p>
-                          </div>
-                        )}
                         {loadingParticipants ? (
                           <p className="text-center text-slate-400 py-8">
                             Loading participants...
@@ -1863,9 +1787,7 @@ export default function ViewEventPage() {
                               disabled={loadingParticipants}
                             >
                               <Users size={18} />
-                              {loadingParticipants
-                                ? "Loading..."
-                                : "Load Participants"}
+                              Load Participants
                             </Button>
                           </div>
                         ) : (
@@ -1916,36 +1838,18 @@ export default function ViewEventPage() {
                                         </div>
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-slate-300 mt-2">
                                           <p>
-                                            <span className="font-medium">
+                                            <span className="font-medium text-slate-500">
                                               Email:
                                             </span>{" "}
                                             {participant.user.email}
                                           </p>
                                           <p>
-                                            <span className="font-medium">
+                                            <span className="font-medium text-slate-500">
                                               Matric:
                                             </span>{" "}
                                             {participant.user.matric_number}
                                           </p>
-                                          <p>
-                                            <span className="font-medium">
-                                              Membership:
-                                            </span>{" "}
-                                            {participant.user.membership_number}
-                                          </p>
-                                          <p>
-                                            <span className="font-medium">
-                                              Faculty:
-                                            </span>{" "}
-                                            {participant.user.faculty}
-                                          </p>
                                         </div>
-                                        <p className="text-xs text-slate-500 mt-2">
-                                          Registered on:{" "}
-                                          {new Date(
-                                            participant.registration_date
-                                          ).toLocaleString()}
-                                        </p>
                                       </div>
                                     </div>
                                   </div>
@@ -1959,374 +1863,77 @@ export default function ViewEventPage() {
                   </TabsContent>
                 )}
 
-                {/* NOTIFICATIONS TAB */}
                 {isAdmin && (
                   <TabsContent value="notifications" className="space-y-6">
-                    {event.status !== "Completed" && (
-                      <Card className="bg-slate-800 shadow-lg border border-slate-600">
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2 text-indigo-400">
-                            <Bell size={20} />
-                            Send Announcement
-                          </CardTitle>
-                          <CardDescription className="text-slate-400">
-                            Send a notification to all registered participants
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          {announcementResult && (
-                            <div
-                              className={`px-4 py-3 rounded-lg ${
-                                announcementResult.type === "success"
-                                  ? "bg-green-900/50 border border-green-700 text-green-300"
-                                  : "bg-red-900/50 border border-red-700 text-red-300"
-                              }`}
-                            >
-                              {announcementResult.text}
-                            </div>
-                          )}
-
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block text-sm font-medium text-slate-300 mb-1">
-                                Subject
-                              </label>
-                              {/* APPLY DARK INPUT STYLE */}
-                              <Input
-                                type="text"
-                                placeholder="Announcement subject..."
-                                value={announcementSubject}
-                                onChange={(e) =>
-                                  setAnnouncementSubject(e.target.value)
-                                }
-                                className="w-full bg-slate-900 border-slate-600 text-white placeholder-slate-500"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-slate-300 mb-1">
-                                Message
-                              </label>
-                              <Textarea
-                                placeholder="Type your announcement message here..."
-                                value={announcementMessage}
-                                onChange={(e) =>
-                                  setAnnouncementMessage(e.target.value)
-                                }
-                                rows={6}
-                              />
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                id="sendEmail"
-                                checked={sendEmail}
-                                onChange={(e) =>
-                                  setSendEmail(e.target.checked)
-                                }
-                                className="rounded bg-slate-900 border-slate-600"
-                              />
-                              <label
-                                htmlFor="sendEmail"
-                                className="text-sm text-slate-300 cursor-pointer"
-                              >
-                                Also send via email
-                              </label>
-                            </div>
-
-                            <Button
-                              onClick={handleSendAnnouncement}
-                              disabled={
-                                announcementLoading ||
-                                !announcementSubject ||
-                                !announcementMessage
-                              }
-                              className="w-full bg-blue-600 hover:bg-blue-700"
-                            >
-                              {announcementLoading
-                                ? "Sending..."
-                                : `Send to All Participants (${
-                                    event.participant_count || 0
-                                  })`}
-                            </Button>
+                    <Card className="bg-slate-800 shadow-lg border border-slate-600">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-indigo-400">
+                          <Bell size={20} />
+                          Send Announcement
+                        </CardTitle>
+                        <CardDescription className="text-slate-400">
+                          Notify all registered participants
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {announcementResult && (
+                          <div className={`px-4 py-3 rounded-lg border ${announcementResult.type === "success" ? "bg-green-900/50 text-green-300 border-green-700" : "bg-red-900/50 text-red-300 border-red-700"}`}>
+                            {announcementResult.text}
                           </div>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {event.status === "Completed" && (
-                      <Card className="bg-slate-800 border border-slate-600">
-                        <CardContent className="pt-6">
-                          <p className="text-center text-slate-400">
-                            Announcements cannot be sent for completed events.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
+                        )}
+                        <div className="space-y-3">
+                          <Input
+                            placeholder="Announcement subject..."
+                            value={announcementSubject}
+                            onChange={(e) => setAnnouncementSubject(e.target.value)}
+                            className="w-full bg-slate-900 border-slate-600 text-white placeholder-slate-500"
+                          />
+                          <Textarea
+                            placeholder="Type your announcement message here..."
+                            value={announcementMessage}
+                            onChange={(e:any) => setAnnouncementMessage(e.target.value)}
+                            rows={6}
+                          />
+                          <Button onClick={handleSendAnnouncement} disabled={announcementLoading} className="w-full bg-blue-600 hover:bg-blue-700">
+                            {announcementLoading ? "Sending..." : `Send to Participants (${event.participant_count || 0})`}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                 )}
 
-                {/* ATTENDANCE TAB - ADMIN ONLY */}
                 {isAdmin && (
                   <TabsContent value="attendance" className="space-y-6">
-                    {/* ATTENDANCE MANAGEMENT (ADMIN ONLY) */}
                     <Card className="bg-slate-800 shadow-lg border border-slate-600">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-indigo-400">
                           <CheckSquare size={20} />
                           Attendance Management
                         </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Control attendance check-in for this event
-                        </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-6 text-center">
                         {attendanceMessage && (
-                          <div
-                            className={`px-4 py-3 rounded-lg ${
-                              attendanceMessage.type === "success"
-                                ? "bg-green-900/50 border border-green-700 text-green-300"
-                                : "bg-red-900/50 border border-red-700 text-red-300"
-                            }`}
-                          >
+                          <div className={`px-4 py-3 rounded-lg border ${attendanceMessage.type === "success" ? "bg-green-900/50 text-green-300 border-green-700" : "bg-red-900/50 text-red-300 border-red-700"}`}>
                             {attendanceMessage.text}
                           </div>
                         )}
-
-                        <div className="flex gap-3">
+                        <div className="flex gap-4 justify-center">
                           {event.attendance_status === "Pending" && (
-                            <Button
-                              onClick={handleStartAttendance}
-                              disabled={attendanceLoading}
-                              className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
-                            >
-                              <PlayCircle size={18} />
-                              {attendanceLoading
-                                ? "Starting..."
-                                : "Start Attendance"}
-                            </Button>
+                            <Button onClick={handleStartAttendance} className="bg-green-600 hover:bg-green-700 w-full max-w-xs h-12 text-lg font-bold">Start Session</Button>
                           )}
-
                           {event.attendance_status === "Active" && (
-                            <Button
-                              onClick={handleStopAttendance}
-                              disabled={attendanceLoading}
-                              variant="destructive"
-                              className="flex-1 gap-2 bg-red-600 hover:bg-red-700"
-                            >
-                              <StopCircle size={18} />
-                              {attendanceLoading
-                                ? "Stopping..."
-                                : "Stop Attendance"}
-                            </Button>
-                          )}
-
-                          {event.attendance_status === "Closed" && (
-                            <div className="flex-1 px-4 py-2 bg-slate-700 rounded-md text-center text-slate-300">
-                              Attendance has been closed
-                            </div>
+                            <Button onClick={handleStopAttendance} variant="destructive" className="w-full max-w-xs h-12 text-lg font-bold">Stop Session</Button>
                           )}
                         </div>
-
-                        {/* QR CODE & ATTENDANCE CODE DISPLAY */}
-                        {event.attendance_status === "Active" &&
-                          event.attendance_code && (
-                            <div className="grid md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-slate-700">
-                              <div className="space-y-3">
-                                <h4 className="font-semibold text-indigo-400 flex items-center gap-2">
-                                  <QrCode size={18} />
-                                  QR Code
-                                </h4>
-                                <div className="bg-slate-900 p-4 rounded-lg border-2 border-indigo-500/50 flex justify-center">
-                                  <div className="text-center">
-                                    <QRCodeSVG
-                                      value={`${window.location.origin}/attendance?code=${event.attendance_code}`}
-                                      size={192}
-                                      level="H"
-                                      includeMargin={true}
-                                      fgColor="#ffffff" // White QR code foreground
-                                      bgColor="#0f172a" // Dark slate background (slate-900)
-                                    />
-                                    <p className="text-xs text-slate-400 mt-2">
-                                      Scan to check in
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="space-y-3">
-                                <h4 className="font-semibold text-indigo-400">
-                                  Attendance Code
-                                </h4>
-                                <div className="bg-slate-900 p-6 rounded-lg border-2 border-indigo-500/50">
-                                  <p className="text-4xl font-bold text-center tracking-wider text-indigo-400 font-mono">
-                                    {event.attendance_code.substring(0, 4)}-
-                                    {event.attendance_code.substring(4)}
-                                  </p>
-                                  <p className="text-center text-sm text-slate-400 mt-3">
-                                    Share this code with participants
-                                  </p>
-                                  <p className="text-center text-xs text-slate-500 mt-2">
-                                    Check-in URL:{" "}
-                                    <a
-                                      href={`/check-in/${event.id}?code=${event.attendance_code}`}
-                                      target="_blank"
-                                      className="text-blue-400 underline"
-                                    >
-                                      /check-in/{event.id}
-                                    </a>
-                                  </p>
-                                </div>
-                              </div>
+                        {event.attendance_status === "Active" && event.attendance_code && (
+                          <div className="flex flex-col items-center gap-6 pt-6 border-t border-slate-700">
+                            <div className="bg-white p-4 rounded-xl">
+                              <QRCodeSVG value={`${window.location.origin}/attendance?code=${event.attendance_code}`} size={200} />
                             </div>
-                          )}
-
-                        {/* CHECK-IN SECTION (FOR REGISTERED USERS - NOT ADMINS) */}
-                        {!isAdmin &&
-                          event.is_registered &&
-                          event.attendance_status === "Active" &&
-                          event.attendance_code && (
-                            <Card className="bg-slate-800 shadow-lg border border-slate-600 mt-6 pt-6 border-t">
-                              <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-green-400">
-                                  <CheckSquare size={20} />
-                                  Check In to Event
-                                </CardTitle>
-                                <CardDescription className="text-green-500">
-                                  Enter the attendance code to mark your
-                                  attendance
-                                </CardDescription>
-                              </CardHeader>
-                              <CardContent className="space-y-4">
-                                {hasCheckedIn ? (
-                                  <div className="text-center py-6">
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-900/50 text-green-300 rounded-full font-semibold border border-green-700">
-                                      <CheckCircle size={20} />
-                                      You have already checked in for this event
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <div className="space-y-3">
-                                      <label
-                                        htmlFor="checkInCode"
-                                        className="text-sm font-semibold text-green-400 block"
-                                      >
-                                        Attendance Code
-                                      </label>
-                                      <div className="flex gap-3">
-                                        <Input
-                                          id="checkInCode"
-                                          type="text"
-                                          placeholder="1234-5678"
-                                          value={checkInCode}
-                                          onChange={(e) =>
-                                            setCheckInCode(e.target.value)
-                                          }
-                                          maxLength={9}
-                                          // APPLY DARK INPUT STYLE
-                                          className="text-xl font-mono tracking-wider text-center h-12 text-green-400 bg-slate-900 border-slate-600 placeholder-green-600"
-                                          onKeyPress={(e) => {
-                                            if (e.key === "Enter")
-                                              handleCheckIn();
-                                          }}
-                                        />
-                                      </div>
-                                      <p className="text-xs text-green-500">
-                                        Enter the 8-digit code provided by the
-                                        event organizer
-                                      </p>
-                                    </div>
-
-                                    {checkInMessage && (
-                                      <div
-                                        className={`px-4 py-3 rounded-lg border ${
-                                          checkInMessage.type === "success"
-                                            ? "bg-green-900/50 border-green-700 text-green-300"
-                                            : "bg-red-900/50 border-red-700 text-red-300"
-                                        }`}
-                                      >
-                                        {checkInMessage.text}
-                                      </div>
-                                    )}
-
-                                    <Button
-                                      onClick={handleCheckIn}
-                                      disabled={
-                                        checkInLoading || !checkInCode.trim()
-                                      }
-                                      className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                                    >
-                                      {checkInLoading
-                                        ? "Checking In..."
-                                        : "Check In"}
-                                    </Button>
-                                  </>
-                                )}
-                              </CardContent>
-                            </Card>
-                          )}
-
-                        {/* LIVE ATTENDANCE LIST */}
-                        {event.attendance_status === "Active" &&
-                          showAttendanceList && (
-                            <div className="mt-6 pt-6 border-t border-slate-700">
-                              <div className="flex items-center justify-between mb-4">
-                                <h4 className="font-semibold text-indigo-400 flex items-center gap-2">
-                                  <Users size={18} />
-                                  Live Attendance ({attendanceList.length})
-                                </h4>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={handleRefreshAttendance}
-                                  className="gap-2 bg-slate-900 border-slate-600 text-white hover:bg-slate-700"
-                                >
-                                  <RefreshCw size={14} />
-                                  Refresh
-                                </Button>
-                              </div>
-
-                              {attendanceList.length === 0 ? (
-                                <p className="text-center text-slate-500 py-8 bg-slate-900 rounded-lg border border-slate-700">
-                                  No one has checked in yet
-                                </p>
-                              ) : (
-                                <div className="space-y-2 max-h-96 overflow-y-auto">
-                                  {attendanceList.map(
-                                    (record: any, index: number) => (
-                                      <div
-                                        key={record.id}
-                                        className="p-3 bg-slate-900 border border-slate-700 rounded-lg flex items-center justify-between hover:bg-slate-800 transition-colors"
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          <span className="font-mono text-sm text-slate-500">
-                                            #{index + 1}
-                                          </span>
-                                          <div>
-                                            <p className="font-semibold text-white">
-                                              {record.name}
-                                            </p>
-                                            <p className="text-xs text-slate-400">
-                                              {record.matric_number} •{" "}
-                                              {record.method}
-                                            </p>
-                                          </div>
-                                        </div>
-                                        <div className="text-right">
-                                          <p className="text-xs text-slate-400">
-                                            {new Date(
-                                              record.marked_at
-                                            ).toLocaleTimeString()}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
+                            <div className="text-4xl font-mono font-black text-indigo-400 tracking-widest">{event.attendance_code}</div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -2334,8 +1941,16 @@ export default function ViewEventPage() {
               </Tabs>
             </>
           )}
+          </div>
         </main>
       </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+      `}</style>
     </div>
   );
 }
@@ -2350,42 +1965,19 @@ function InputField({
   type = "text",
   className = "",
 }: any) {
-  const handleDateChange = (e: any) => {
-    const v = e.target.value;
-    // Validate year is 4 digits for date inputs
-    if (type === "date" && v) {
-      const year = new Date(v).getFullYear();
-      if (year.toString().length !== 4) {
-        return; // Don't update if year is not 4 digits
-      }
-    }
-    onChange(e);
-  };
-
-  const isDateOrTime = type === "date" || type === "time";
-
   return (
     <div className={className}>
       <span className="text-sm font-medium text-slate-300">{label}</span>
       {editable ? (
-        // APPLY DARK INPUT STYLE
         <Input
           type={type}
           value={value}
-          onChange={type === "date" ? handleDateChange : onChange}
-          min={type === "date" ? "1000-01-01" : undefined}
-          max={type === "date" ? "9999-12-31" : undefined}
-          className={`mt-1 bg-slate-900 border-slate-600 text-white placeholder-slate-500 ${
-            isDateOrTime ? "input-white-icon" : ""
-          }`}
+          onChange={onChange}
+          className="mt-1 bg-slate-900 border-slate-600 text-white placeholder-slate-500"
         />
       ) : (
         <div className="mt-1 px-3 py-2 rounded-md bg-slate-900/70 border border-slate-700 text-sm text-slate-100 min-h-[44px] flex items-center">
-          {value && value !== ""
-            ? value
-            : type === "number"
-            ? "—"
-            : "Not specified"}
+          {value || "—"}
         </div>
       )}
     </div>
@@ -2393,321 +1985,60 @@ function InputField({
 }
 
 function FileField({ label, file, editable, onChange }: any) {
-  const [downloading, setDownloading] = useState(false);
-
-  const handleDownload = async () => {
-    if (!file) return;
-
-    setDownloading(true);
-    try {
-      // Construct the full URL
-      let url = "";
-      if (file.startsWith("http")) {
-        url = file;
-      } else if (file.startsWith("/api/v1")) {
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-        const baseUrl = apiUrl.replace("/api/v1", "");
-        url = `${baseUrl}${file}`;
-      } else {
-        url = getFileUrl(file);
-      }
-
-      // Get auth token
-      const token = localStorage.getItem("token");
-
-      // Fetch file with auth header
-      const response = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to download file: ${response.status}`);
-      }
-
-      // Get blob and create download link
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-
-      // Extract filename from URL or use default
-      const filename = file.split("/").pop() || "download";
-      link.download = filename;
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error("Download error:", error);
-      alert("Failed to download file. Please try again.");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
   return (
     <div>
       <span className="text-sm font-medium text-slate-300">{label}</span>
-
       {editable ? (
-        // APPLY DARK INPUT STYLE
-        <Input
-          type="file"
-          className="mt-2 bg-slate-900 border-slate-600 text-white"
-          onChange={onChange}
-        />
+        <Input type="file" className="mt-2 bg-slate-900 border-slate-600 text-white" onChange={onChange} />
       ) : file ? (
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          className="text-blue-400 underline text-sm block mt-2 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {downloading ? "Downloading..." : "Download File"}
-        </button>
+        <p className="text-blue-400 underline text-sm block mt-2">File Uploaded</p>
       ) : (
-        <p className="text-slate-500 text-sm mt-2">No file uploaded</p>
+        <p className="text-slate-500 text-sm mt-2">No file</p>
       )}
     </div>
   );
 }
 
 function PosterField({ poster, editable, onChange }: any) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    if (!poster || editable) {
-      setImageUrl(null);
-      setImageError(false);
-      return;
-    }
-
-    // Construct the full URL
-    let url = "";
-    if (poster.startsWith("http")) {
-      url = poster;
-    } else if (poster.startsWith("/api/v1")) {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-      const baseUrl = apiUrl.replace("/api/v1", "");
-      url = `${baseUrl}${poster}`;
-    } else {
-      url = getFileUrl(poster);
-    }
-
-    // Since the route requires authentication, we need to fetch with auth token
-    const token = localStorage.getItem("token");
-    if (token) {
-      // Fetch image as blob with auth header
-      fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Failed to load image: ${response.status}`);
-          }
-          return response.blob();
-        })
-        .then((blob) => {
-          const objectUrl = URL.createObjectURL(blob);
-          setImageUrl(objectUrl);
-          setImageError(false);
-        })
-        .catch((error) => {
-          console.error("Failed to load poster:", error, "URL:", url);
-          setImageError(true);
-        });
-    } else {
-      // No token, try direct URL (might fail if auth required)
-      setImageUrl(url);
-    }
-
-    // Cleanup function will be set up below
-  }, [poster, editable]);
-
-  // Cleanup object URL on unmount or when imageUrl changes
-  useEffect(() => {
-    return () => {
-      if (imageUrl && imageUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(imageUrl);
-      }
-    };
-  }, [imageUrl]);
-
   return (
     <div>
       <span className="text-sm font-medium text-slate-300">Poster</span>
-
       {editable ? (
-        // APPLY DARK INPUT STYLE
-        <Input
-          type="file"
-          accept="image/*"
-          className="mt-2 bg-slate-900 border-slate-600 text-white"
-          onChange={onChange}
-        />
-      ) : imageUrl && !imageError ? (
-        <img
-          src={imageUrl}
-          alt="Event Poster"
-          className="w-full max-w-sm h-auto object-cover rounded-md border mt-2 border-slate-600"
-          onError={(e) => {
-            console.error("Failed to display poster image");
-            setImageError(true);
-            e.currentTarget.style.display = "none";
-          }}
-        />
-      ) : imageError ? (
-        <p className="text-slate-500 text-sm mt-1">Failed to load poster</p>
+        <Input type="file" accept="image/*" className="mt-2 bg-slate-900 border-slate-600 text-white" onChange={onChange} />
+      ) : poster ? (
+        <p className="text-slate-400 text-sm mt-1 italic">Poster Image Loaded</p>
       ) : (
-        <p className="text-slate-500 text-sm mt-1">No poster uploaded</p>
+        <p className="text-slate-500 text-sm mt-1">No poster</p>
       )}
     </div>
   );
 }
+function SidebarButton({ icon, label, open, active, onClick, variant }: any) {
+  const isDestructive = variant === 'destructive';
 
-
-type SidebarButtonVariant = "default" | "destructive";
-
-interface SidebarButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  open: boolean;
-  active?: boolean;               // optional now
-  onClick?: () => void;
-  variant?: SidebarButtonVariant; // optional now
-}
-
-function SidebarButton({
-  icon,
-  label,
-  open,
-  active = false,
-  onClick,
-  variant = "default",
-}: SidebarButtonProps) {
-  const baseClasses =
-    "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors duration-200 font-medium";
-
-  const activeClasses = active
-    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg"
-    : variant === "destructive"
-    ? "text-rose-300 hover:bg-rose-900/30"
-    : "text-slate-300 hover:bg-gray-800 hover:text-white";
-
-  return (
-    <button onClick={onClick} className={`${baseClasses} ${activeClasses}`}>
-      <div className={`w-6 h-6 flex items-center justify-center transition-transform ${active ? 'scale-100' : 'scale-90'}`}>{icon}</div>
-      {open && <span className="truncate">{label}</span>}
-      {open && active && <ChevronRight size={16} className="ml-auto text-white/70" />}
-    </button>
-  );
-}
-
-
-/* Modal - same auth-aware fetch logic as before */
-function ImageModal({
-  imageUrl,
-  onClose,
-}: {
-  imageUrl: string;
-  onClose: () => void;
-}) {
-  const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState(false);
-
-  useEffect(() => {
-    let url = "";
-    if (imageUrl.startsWith("http")) {
-      url = imageUrl;
-    } else if (imageUrl.startsWith("/api/v1")) {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-      const baseUrl = apiUrl.replace("/api/v1", "");
-      url = `${baseUrl}${imageUrl}`;
-    } else {
-      url = getFileUrl(imageUrl);
-    }
-
-    const token = localStorage.getItem("token");
-    if (token) {
-      setLoading(true);
-      fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to fetch modal image");
-          return res.blob();
-        })
-        .then((blob) => {
-          const obj = URL.createObjectURL(blob);
-          setModalImageUrl(obj);
-          setErr(false);
-        })
-        .catch((e) => {
-          console.error(e);
-          setErr(true);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setModalImageUrl(url);
-      setLoading(false);
-    }
-
-    return () => {
-      if (modalImageUrl && modalImageUrl.startsWith("blob:"))
-        URL.revokeObjectURL(modalImageUrl);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageUrl]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70"
-      onClick={onClose}
-    >
-      <button
-        onClick={onClose}
-        className="absolute top-5 right-5 z-50 p-2 bg-white/90 rounded-full shadow"
-        aria-label="close"
-      ></button>
-
-      <div
-        className="relative w-[90vw] h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
+  // If the sidebar is closed, show only the icon
+  if (!open) {
+    return (
+      <button 
+        onClick={onClick} 
+        className={`w-full flex items-center justify-center py-4 transition-all ${active ? "text-indigo-400" : "text-slate-400"}`}
       >
-        {loading ? (
-          <div className="w-full h-full flex items-center justify-center text-white">
-            Loading image...
-          </div>
-        ) : err || !modalImageUrl ? (
-          <div className="w-full h-full flex items-center justify-center text-white">
-            Failed to load image
-          </div>
-        ) : (
-          <img
-            src={modalImageUrl}
-            alt="Event poster"
-            className="w-full h-full object-contain rounded"
-          />
-        )}
-      </div>
-    </div>
+        <div className="w-6 h-6 shrink-0">{icon}</div>
+      </button>
+    );
+  }
+
+  // If the sidebar is open, show icon and label
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-4 lg:py-3 rounded-lg text-base lg:text-sm transition-all duration-200 font-medium whitespace-nowrap
+      ${active ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg" : 
+        isDestructive ? "text-rose-300 hover:bg-rose-900/30" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+    >
+      <div className="w-6 h-6 flex items-center justify-center shrink-0">{icon}</div>
+      <span className="truncate">{label}</span>
+      {active && <ChevronRight size={14} className="ml-auto opacity-50" />}
+    </button>
   );
 }

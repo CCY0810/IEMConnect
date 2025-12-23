@@ -11,49 +11,34 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { getUnverifiedUsers, verifyUser } from "@/lib/admin-api";
-import { getEvents, Event } from "@/lib/event-api"; 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-
+import { getUnverifiedUsers } from "@/lib/admin-api";
+import { getEvents, Event } from "@/lib/event-api";
 import {
   Menu,
   LogOut,
-  Users,
   FileText,
   AlertTriangle,
   Calendar,
   CheckSquare,
   Settings,
-  HelpCircle,
   PieChart as PieChartIcon,
   TrendingUp,
   Clock,
   CheckCircle2,
-  ChevronRight, 
-  UserCheck, 
-  UserPlus, 
-  ChevronLeft, 
+  ChevronRight,
+  UserCheck,
+  UserPlus,
+  ChevronLeft,
   X,
 } from "lucide-react";
 
-import NotificationBell from "@/components/NotificationBell"; 
-import UserAvatar from "@/components/UserAvatar"; 
+import NotificationBell from "@/components/NotificationBell";
+import UserAvatar from "@/components/UserAvatar";
 import React from "react";
 
-
-/* --- START: TYPE DEFINITIONS --- */
-
+/* --- TYPE DEFINITIONS --- */
 interface UnverifiedUser {
-  id: number; 
+  id: number;
   name: string;
   email: string;
   membership_number: string;
@@ -61,39 +46,41 @@ interface UnverifiedUser {
 }
 
 interface DashboardUser {
-  id: string; 
+  id: string;
   name: string;
   email: string;
-  role: 'member' | 'admin';
+  role: "member" | "admin";
   membership_number: string;
-  matric_number?: string; 
-  faculty?: string;       
+  matric_number?: string;
+  faculty?: string;
 }
-
-/* --- END: TYPE DEFINITIONS --- */
-
 
 export default function DashboardPage() {
   const { user: authUser, token, logout } = useAuth();
   const router = useRouter();
   const user = authUser as DashboardUser;
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showApprovalPanel, setShowApprovalPanel] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>([]);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [approvalLoading, setApprovalLoading] = useState<number | null>(null); 
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
 
-  // --- Core Backend Logic (Preserved) ---
   useEffect(() => {
     if (!token) router.push("/login");
+
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [token, router]);
 
   useEffect(() => {
@@ -101,7 +88,7 @@ export default function DashboardPage() {
       if (!token) return;
       try {
         setEventsLoading(true);
-        const data = await getEvents(); 
+        const data = await getEvents();
         setEvents(data);
       } catch (error) {
         console.error("Failed to fetch events:", error);
@@ -112,880 +99,509 @@ export default function DashboardPage() {
     fetchEvents();
   }, [token]);
 
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      if (!token || user?.role !== "admin") return;
+      try {
+        setPendingLoading(true);
+        const response = await getUnverifiedUsers();
+        setUnverifiedUsers(response.users || []);
+      } catch (error) {
+        console.error("Failed to fetch pending user count:", error);
+      } finally {
+        setPendingLoading(false);
+      }
+    };
+    fetchPendingCount();
+  }, [token, user?.role]);
+
   const handleLogout = async () => {
     setIsLogoutModalOpen(false);
     await logout();
   };
 
- useEffect(() => {
-  const fetchPendingCount = async () => {
-    if (!token || user?.role !== "admin") return;
-    try {
-      setPendingLoading(true);
-      const response = await getUnverifiedUsers();
-      setUnverifiedUsers(response.users || []);
-    } catch (error) {
-      console.error("Failed to fetch pending user count:", error);
-    } finally {
-      setPendingLoading(false);
-    }
-  };
-  fetchPendingCount();
-}, [token, user?.role]);    
-
-const pendingApprovalsCount = unverifiedUsers.length;
-
-
-  const handleApproveUser = async (id: number) => {
-    try {
-      setApprovalLoading(id);
-      const res = await verifyUser(id);
-
-      setMessage({ type: "success", text: res.message });
-      setUnverifiedUsers((prev) => prev.filter((u) => u.id !== id)); 
-    } catch (error: any) {
-      setMessage({
-        type: "error",
-        text: error.response?.data?.error || "Failed to verify user",
-      });
-    } finally {
-      setApprovalLoading(null);
-    }
-  };
-
-  const toggleApprovalPanel = () => {
-    const open = !showApprovalPanel;
-    setShowApprovalPanel(open);
-  };
-  // --- End Core Backend Logic ---
-
   const isAdmin = user?.role === "admin";
-
-  // Calculate stats
   const totalEvents = events.length;
-  const upcomingEvents = events.filter(
-    (e) => e.status === "Upcoming" || e.status === "Open"
-  ).length;
+  const upcomingEvents = events.filter((e) => e.status === "Upcoming" || e.status === "Open").length;
   const registeredEvents = events.filter((e) => e.is_registered === true).length;
   const completedEvents = events.filter((e) => e.status === "Completed").length;
-  const pendingApprovals = unverifiedUsers.length;
 
   const handleCalendarDateClick = (date: Date, dateEvents: Event[]) => {
-    if (dateEvents.length > 0) {
-      router.push(`/view_event?id=${dateEvents[0].id}`);
-    }
+    if (dateEvents.length > 0) router.push(`/view_event?id=${dateEvents[0].id}`);
   };
 
   if (!user) return null;
 
   return (
-
-    
-    // AESTHETIC FIX: Main background set to deep slate color
-    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden relative">
+      
+      {/* 1. LOGOUT MODAL */}
       {isLogoutModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
           <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
             <div className="flex flex-col items-center text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
                 <AlertTriangle size={32} />
               </div>
               <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
-              <p className="mb-6 text-slate-400">
-                Are you sure you want to end your session?
-              </p>
+              <p className="mb-6 text-slate-400">Are you sure you want to end your session?</p>
               <div className="flex w-full gap-3">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700"
-                  onClick={() => setIsLogoutModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  className="flex-1 bg-red-600 text-white hover:bg-red-700"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
+                <Button variant="outline" className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700" onClick={() => setIsLogoutModalOpen(false)}>Cancel</Button>
+                <Button className="flex-1 bg-red-600 text-white hover:bg-red-700" onClick={handleLogout}>Logout</Button>
               </div>
             </div>
           </div>
         </div>
       )}
-      {/* SIDEBAR (Maintains dark blue/indigo gradient) */}
-      <aside
-        className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "w-64" : "w-20"
-        } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
-      >
-        {/* sidebar header */}
-        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div
-              className={`bg-white rounded-xl p-2 shadow-md flex items-center justify-center ${
-                sidebarOpen ? "w-12 h-12" : "w-10 h-10"
-              }`}
-            >
-              <img
-                src="/iem-logo.jpg"
-                alt="IEM UTM Logo"
-                className="object-contain w-full h-full"
-              />
-            </div>
 
+      {/* 2. MOBILE SIDEBAR OVERLAY */}
+      <div 
+        className={`fixed inset-0 bg-black/80 z-[45] lg:hidden backdrop-blur-md transition-all duration-300 ${
+          sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        }`} 
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* 3. SIDEBAR */}
+      <aside
+        className={`fixed lg:relative z-50 h-full transition-all duration-300 ease-in-out bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col shrink-0 overflow-hidden
+        ${sidebarOpen 
+            ? "translate-x-0 w-full sm:w-80 lg:w-64 opacity-100 visible" 
+            : "-translate-x-full lg:translate-x-0 w-0 lg:w-0 opacity-0 invisible pointer-events-none"}`}
+      >
+        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10 shrink-0 h-[73px]">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="bg-white rounded-xl p-2 shadow-md flex items-center justify-center w-10 h-10 shrink-0">
+              <img src="/iem-logo.jpg" alt="Logo" className="object-contain w-full h-full" />
+            </div>
             {sidebarOpen && (
-              <div>
+              <div className="whitespace-nowrap transition-opacity duration-300">
                 <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
-                <div className="text-xs text-slate-400 font-medium">
-                  {isAdmin ? "Admin Portal" : "Member Dashboard"}
-                </div>
+                <div className="text-xs text-slate-400 font-medium">{isAdmin ? "Admin Portal" : "Member Dashboard"}</div>
               </div>
             )}
           </div>
-
-          <button
-            onClick={() => setSidebarOpen((s) => !s)}
-            className="p-2 text-slate-200 rounded-lg hover:bg-white/10"
-          >
-            <Menu size={18} />
-          </button>
+          
+          {sidebarOpen && (
+            <button 
+              onClick={() => setSidebarOpen(false)} 
+              className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors"
+            >
+              <X size={28}/>
+            </button>
+          )}
         </div>
 
-        {/* menu */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<PieChartIcon size={20} />}
-            label="Dashboard"
-            onClick={() => router.push("/dashboard")}
-            active
-          />
-          {isAdmin && (
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<UserCheck size={20} />}
-              label="Admin Panel"
-              onClick={() => router.push("/admin/admin_panel")}
-            />
-          )}
-          {isAdmin && (
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<FileText size={20} />}
-              label="Analytics & Reports"
-              onClick={() => router.push("/admin/reports")}
-            />
-          )}
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<Calendar size={20} />}
-            label="Events"
-            onClick={() => router.push("/event")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<CheckSquare size={20} />}
-            label="Attendance"
-            onClick={() => router.push("/attendance")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<Settings size={20} />}
-            label="Settings"
-            onClick={() => router.push("/settings")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<HelpCircle size={20} />}
-            label="Help Center"
-            onClick={() => router.push("/admin/help")}
-          />
-
+        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+          <SidebarButton open={sidebarOpen} icon={<PieChartIcon size={20} />} label="Dashboard" onClick={() => { router.push("/dashboard"); if(window.innerWidth < 1024) setSidebarOpen(false); }} active />
+          {isAdmin && <SidebarButton open={sidebarOpen} icon={<UserCheck size={20} />} label="Admin Panel" onClick={() => { router.push("/admin/admin_panel"); if(window.innerWidth < 1024) setSidebarOpen(false); }} />}
+          {isAdmin && <SidebarButton open={sidebarOpen} icon={<FileText size={20} />} label="Reports" onClick={() => { router.push("/admin/reports"); if(window.innerWidth < 1024) setSidebarOpen(false); }} />}
+          <SidebarButton open={sidebarOpen} icon={<Calendar size={20} />} label="Events" onClick={() => { router.push("/event"); if(window.innerWidth < 1024) setSidebarOpen(false); }} />
+          <SidebarButton open={sidebarOpen} icon={<CheckSquare size={20} />} label="Attendance" onClick={() => { router.push("/attendance"); if(window.innerWidth < 1024) setSidebarOpen(false); }} />
+          <SidebarButton open={sidebarOpen} icon={<Settings size={20} />} label="Settings" onClick={() => { router.push("/settings"); if(window.innerWidth < 1024) setSidebarOpen(false); }} />
           <div className="mt-6 border-t border-white/10 pt-4">
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<LogOut size={20} />}
-              label="Logout"
-              onClick={() => setIsLogoutModalOpen(true)} // Open Modal
-              variant="destructive"
-            />
+            <SidebarButton open={sidebarOpen} icon={<LogOut size={20} />} label="Logout" onClick={() => setIsLogoutModalOpen(true)} variant="destructive" />
           </div>
         </nav>
       </aside>
 
-      {/* MAIN AREA */}
-      <div className="flex-1 min-h-screen">
-        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Dashboard</h2>
-            <p className="text-sm text-slate-300">Welcome back, {user.name}.</p>
+      {/* 4. MAIN LAYOUT AREA */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+        
+        {/* GLASSY STICKY HEADER */}
+        <header className="flex items-center justify-between px-4 lg:px-8 py-3 sticky top-0 z-40 bg-slate-900/60 backdrop-blur-md border-b border-white/10 shadow-xl shrink-0 h-[73px]">
+          <div className="flex items-center gap-4 min-w-0">
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              className="p-2 text-slate-200 bg-white/5 hover:bg-white/10 rounded-lg transition-colors shrink-0"
+              aria-label="Toggle Sidebar"
+            >
+              <Menu size={24}/>
+            </button>
+
+            <div className="min-w-0">
+              <h2 className="text-lg lg:text-2xl font-bold tracking-tight text-white truncate">Dashboard</h2>
+              <p className="hidden xs:block text-[10px] sm:text-xs text-slate-400 truncate">Welcome back, {user.name}.</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-5">
-            {/* Notification Bell (Assuming it handles dark/light contrast internally) */}
+          <div className="flex items-center gap-2 lg:gap-5 ml-4">
             <NotificationBell />
-
-            {/* Admin Approval Quick Access */}
-            {isAdmin && pendingApprovals > 0 && (
-                <Button 
-                  onClick={toggleApprovalPanel} 
-                  variant="default" 
-                  size="sm" 
-                  className="relative bg-red-600 hover:bg-red-700 shadow-md transition-all text-white"
-                >
-                  <UserCheck size={16} className="mr-2" />
-                  {pendingApprovals} Approvals
+            {isAdmin && unverifiedUsers.length > 0 && (
+                <Button onClick={() => router.push("/admin/admin_panel")} size="sm" className="hidden md:flex bg-red-600/80 hover:bg-red-700 text-white h-8">
+                  <UserCheck size={14} className="mr-2" /> {unverifiedUsers.length}
                 </Button>
             )}
-
-            {/* User Info & Profile Link */}
-            <div className="flex items-center gap-3">
+            
+            <div className="flex items-center gap-3 border-l border-white/10 pl-3">
               <div className="text-right hidden sm:block">
-                <div className="text-sm font-semibold text-white">{user.name}</div>
-                <div className="text-xs text-slate-400 capitalize">
-                  {user.role}
-                </div>
+                <div className="text-sm font-semibold text-white leading-none truncate max-w-[120px]">{user.name}</div>
+                <div className="text-[10px] text-slate-400 uppercase mt-1">{user.role}</div>
               </div>
-
-              <button
-                onClick={() => router.push("/profile")}
-                className="rounded-full overflow-hidden border-2 border-transparent shadow hover:ring-2 hover:ring-indigo-500 transition-all cursor-pointer"
-                title="View Profile"
+              <button onClick={() => router.push("/profile")} className="rounded-full border-2 border-transparent hover:ring-2 hover:ring-indigo-500 transition-all shrink-0">
+                <UserAvatar size="sm" />
+              </button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-full transition-colors h-9 w-9 shrink-0"
               >
-                <UserAvatar size="md" />
-              </button>
-
-              <button 
-              className="p-2 rounded-lg hover:bg-white/10 text-white" 
-                onClick={() => setIsLogoutModalOpen(true)} // Open Modal
-                >
-                <LogOut size={18} />
-              </button>
+                <LogOut size={20} />
+              </Button>
             </div>
           </div>
         </header>
 
-        {/* content */}
-        <main className="px-8 py-10 space-y-10 max-w-7xl mx-auto">
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard
-              title="Total Events"
-              value={totalEvents}
-              icon={<Calendar className="h-6 w-6" />}
-              description="Total events available"
-              loading={eventsLoading}
-              color="blue"
-            />
-            <StatsCard
-              title="Upcoming"
-              value={upcomingEvents}
-              icon={<Clock className="h-6 w-6" />}
-              description="Events currently open"
-              loading={eventsLoading}
-              color="amber"
-            />
-            <StatsCard
-              title="My Registrations"
-              value={registeredEvents}
-              icon={<CheckCircle2 className="h-6 w-6" />}
-              description="Active event registrations"
-              loading={eventsLoading}
-              color="emerald"
-            />
-            {isAdmin ? (
-              <StatsCard
-              title="Pending Approvals"
-              value={pendingApprovalsCount} // Connected to unverifiedUsers.length
-              icon={<UserPlus size={20} />}
-              description="New users awaiting verification"
-              loading={pendingLoading} // Shows "..." while fetching
-              color="red"
-            />
-            ) : (
-              <StatsCard
-                title="Completed Events"
-                value={completedEvents}
-                icon={<TrendingUp size={20} />}
-                description="Past events attended"
-                loading={eventsLoading}
-                color="violet"
-              />
-            )}
-          </div>
-
-          {/* MAIN CONTENT GRID */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* LEFT COLUMN - Calendar & Profile */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* CALENDAR VIEW (Dark card body) */}
-              <Card className="bg-slate-700 shadow-xl border border-slate-600 rounded-xl h-full flex flex-col">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-indigo-400">Event Calendar</CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Visual summary of scheduled events. Click on a date to view details.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 pb-8">
-                  {eventsLoading ? (
-                    <div className="flex items-center justify-center h-96 text-slate-500 bg-slate-800 border border-dashed rounded-xl">
-                      Loading calendar data...
-                    </div>
-                  ) : (
-                    <SimpleMonthView
-                      events={events}
-                      onDateClick={handleCalendarDateClick}
-                    />
-                  )}
-                </CardContent>
-              </Card>
+        {/* SCROLLABLE DASHBOARD CONTENT */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
+          <div className="max-w-7xl mx-auto w-full space-y-6 lg:space-y-10">
+            
+            {/* STATS CARDS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              <StatsCard title="Total Events" value={totalEvents} icon={<Calendar />} description="Total available" loading={eventsLoading} color="blue" />
+              <StatsCard title="Upcoming" value={upcomingEvents} icon={<Clock />} description="Open events" loading={eventsLoading} color="amber" />
+              <StatsCard title="My Registrations" value={registeredEvents} icon={<CheckCircle2 />} description="Active events" loading={eventsLoading} color="emerald" />
+              {isAdmin ? (
+                <StatsCard title="Pending" value={unverifiedUsers.length} icon={<UserPlus />} description="New users" loading={pendingLoading} color="red" />
+              ) : (
+                <StatsCard title="Completed" value={completedEvents} icon={<TrendingUp />} description="Past events" loading={eventsLoading} color="violet" />
+              )}
             </div>
 
-            {/* RIGHT COLUMN - Quick Actions & Recent Events */}
-            <div className="space-y-8">
-              {/* QUICK ACTIONS (Dark card body) */}
-              <Card className="bg-slate-700 shadow-xl border border-slate-600 rounded-xl">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold text-indigo-400">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <QuickActionButton
-                    icon={<Calendar className="h-5 w-5" />}
-                    label="Browse Events"
-                    onClick={() => router.push("/event")}
-                  />
-                  {isAdmin && (
-                    <QuickActionButton
-                      icon={<FileText className="h-5 w-5" />}
-                      label="Create New Event"
-                      onClick={() => router.push("/create_event")}
-                    />
-                  )}
-                  <QuickActionButton
-                    icon={<CheckSquare className="h-5 w-5" />}
-                    label="View Attendance"
-                    onClick={() => router.push("/attendance")}
-                  />
-                  <QuickActionButton
-                    icon={<Settings className="h-5 w-5" />}
-                    label="Manage Settings"
-                    onClick={() => router.push("/settings")}
-                  />
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start pb-10">
+              <div className="lg:col-span-2 space-y-8 min-w-0">
+                <Card className="bg-slate-700/50 backdrop-blur-sm shadow-xl border border-slate-600 rounded-xl overflow-hidden">
+                  <CardHeader className="p-4 lg:p-6">
+                    <CardTitle className="text-lg lg:text-xl font-bold text-indigo-400">Event Calendar</CardTitle>
+                    <CardDescription className="text-slate-400">Visual summary of scheduled events.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-2 lg:p-6">
+                    {eventsLoading ? (
+                      <div className="flex items-center justify-center h-64 lg:h-96 text-slate-500 bg-slate-800 border border-dashed rounded-xl">Loading calendar...</div>
+                    ) : (
+                      <div className="overflow-x-auto pb-4">
+                        <div className="min-w-[600px] lg:min-w-0">
+                          <SimpleMonthView events={events} onDateClick={handleCalendarDateClick} />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
 
-              {/* UPCOMING EVENTS (Dark card body) */}
-              <Card className="bg-slate-700 shadow-xl border border-slate-600 rounded-xl">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold text-indigo-400">Upcoming Events</CardTitle>
-                  <CardDescription className="text-slate-400">Your next 5 scheduled activities</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {eventsLoading ? (
-                    <p className="text-slate-500 text-sm py-4 text-center">Loading event schedule...</p>
-                  ) : upcomingEvents === 0 ? (
-                    <p className="text-slate-500 text-sm py-4 text-center">No upcoming events scheduled.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {events
-                        .filter((e) => e.status === "Upcoming" || e.status === "Open")
-                        .slice(0, 5)
-                        .map((event) => (
-                          <UpcomingEventCard key={event.id} event={event} router={router} />
-                        ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="space-y-6 lg:space-y-8">
+                <Card className="bg-slate-700/50 backdrop-blur-sm shadow-xl border border-slate-600 rounded-xl">
+                  <CardHeader className="p-4 lg:p-6 pb-2"><CardTitle className="text-lg font-bold text-indigo-400">Quick Actions</CardTitle></CardHeader>
+                  <CardContent className="p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+                    <QuickActionButton icon={<Calendar className="h-4 w-4" />} label="Browse Events" onClick={() => router.push("/event")} />
+                    {isAdmin && <QuickActionButton icon={<FileText className="h-4 w-4" />} label="Create Event" onClick={() => router.push("/create_event")} />}
+                    <QuickActionButton icon={<CheckSquare className="h-4 w-4" />} label="Attendance" onClick={() => router.push("/attendance")} />
+                    <QuickActionButton icon={<Settings className="h-4 w-4" />} label="Settings" onClick={() => router.push("/settings")} />
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-slate-700/50 backdrop-blur-sm shadow-xl border border-slate-600 rounded-xl">
+                  <CardHeader className="p-4 lg:p-6 pb-2">
+                    <CardTitle className="text-lg font-bold text-indigo-400">Upcoming Events</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 lg:p-6">
+                    {eventsLoading ? (
+                      <p className="text-slate-500 text-sm text-center py-4">Loading...</p>
+                    ) : upcomingEvents === 0 ? (
+                      <p className="text-slate-500 text-sm text-center py-4">No upcoming events.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {events
+                          .filter((e) => e.status === "Upcoming" || e.status === "Open")
+                          .slice(0, 5)
+                          .map((event) => (
+                            <UpcomingEventCard key={event.id} event={event} router={router} />
+                          ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
-
-          
         </main>
       </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #334155;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #475569;
+        }
+      `}</style>
     </div>
   );
 }
 
-/* --- ENHANCED COMPONENTS --- */
+/* --- REUSABLE COMPONENTS --- */
 
-function Info({ label, value }: { label: string; value: any }) {
-  // FIX: Info box background changed to slate-800
+function SidebarButton({ icon, label, open, active, onClick, variant }: any) {
+  const isDestructive = variant === 'destructive';
+  if (!open) return (
+     <button onClick={onClick} className={`w-full flex items-center justify-center py-4 lg:py-3 transition-all ${active ? "text-indigo-400" : "text-slate-400"}`}>
+        <div className="w-6 h-6">{icon}</div>
+     </button>
+  );
+
   return (
-    <div className="p-5 border border-slate-600 rounded-lg bg-slate-800 shadow-sm min-w-0">
-      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider whitespace-normal">{label}</p>
-      <p className="text-base font-medium text-white mt-1 whitespace-normal break-all">{value || "N/A"}</p>
-    </div>
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-4 lg:py-3 rounded-lg text-base lg:text-sm transition-all duration-200 font-medium whitespace-nowrap
+      ${active ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg" : 
+        isDestructive ? "text-rose-300 hover:bg-rose-900/30" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+    >
+      <div className="w-6 h-6 flex items-center justify-center shrink-0">{icon}</div>
+      <span className="truncate">{label}</span>
+    </button>
   );
 }
 
-function StatsCard({
-  title,
-  value,
-  icon,
-  description,
-  loading,
-  color = "blue",
-}: {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  description: string;
-  loading?: boolean;
-  color?: "blue" | "amber" | "emerald" | "red" | "violet";
-}) {
-  const iconColor = {
-    blue: "text-blue-400",
-    amber: "text-amber-400",
-    emerald: "text-emerald-400",
-    red: "text-red-400",
-    violet: "text-violet-400",
-  }[color];
-  const borderColor = {
-    blue: "border-indigo-500",
-    amber: "border-yellow-500",
-    emerald: "border-emerald-500",
-    red: "border-red-500",
-    violet: "border-violet-500",
-  }[color];
-  const bgColor = {
-      blue: "bg-blue-900/40", // Darker icon backgrounds
-      amber: "bg-amber-900/40",
-      emerald: "bg-emerald-900/40",
-      red: "bg-red-900/40",
-      violet: "bg-violet-900/40",
-  }[color];
+function StatsCard({ title, value, icon, description, loading, color }: any) {
+  const config: Record<string, { borderColor: string, iconBg: string, iconText: string }> = {
+    blue: { borderColor: "border-indigo-500", iconBg: "bg-blue-900/40", iconText: "text-blue-400" },
+    amber: { borderColor: "border-yellow-500", iconBg: "bg-amber-900/40", iconText: "text-amber-400" },
+    emerald: { borderColor: "border-emerald-500", iconBg: "bg-emerald-900/40", iconText: "text-emerald-400" },
+    red: { borderColor: "border-red-500", iconBg: "bg-red-900/40", iconText: "text-red-400" },
+    violet: { borderColor: "border-violet-500", iconBg: "bg-violet-900/40", iconText: "text-violet-400" },
+  };
+
+  const style = config[color] || config.blue;
 
   return (
-    <Card className={`bg-slate-700 shadow-lg transition-all duration-300 hover:shadow-xl border-t-4 ${borderColor} rounded-xl`}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-semibold text-slate-300">{title}</p>
-            <p className="text-4xl font-extrabold mt-1 text-white">
-              {loading ? "..." : value}
-            </p>
-            <p className="text-xs text-slate-400 mt-1">{description}</p>
-          </div>
-          <div className={`p-3 rounded-xl ${iconColor} ${bgColor}`}>
-            {icon}
-          </div>
+    <Card className={`bg-slate-700/80 rounded-xl shadow-lg relative overflow-hidden border-2 transition-all duration-300 ${style.borderColor}`}>
+      <CardContent className="p-4 lg:p-6 flex justify-between items-start">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold text-slate-300 truncate">{title}</p>
+          <p className="text-2xl lg:text-3xl font-extrabold mt-1 text-white truncate">{loading ? "..." : value}</p>
+          <p className="text-[10px] text-slate-400 mt-1 truncate">{description}</p>
+        </div>
+        <div className={`p-2 lg:p-3 rounded-xl shrink-0 ml-2 ${style.iconBg} ${style.iconText}`}>
+          {icon}
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function SidebarButton({
-  icon,
-  label,
-  open,
-  active,
-  onClick,
-  variant,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  open: boolean;
-  active?: boolean;
-  onClick?: () => void;
-  variant?: 'default' | 'destructive';
-}) {
-  const baseClasses = "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors duration-200 font-medium";
-  const activeClasses = active ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg" : variant === 'destructive' ? "text-rose-300 hover:bg-rose-900/30" : "text-slate-300 hover:bg-gray-800 hover:text-white";
-
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseClasses} ${activeClasses}`}
-    >
-      <div className={`w-6 h-6 flex items-center justify-center transition-transform ${active ? 'scale-100' : 'scale-90'}`}>{icon}</div>
-      {open && <span className="truncate">{label}</span>}
-      {open && active && <ChevronRight size={16} className="ml-auto text-white/70" />}
-    </button>
-  );
-}
-
-function QuickActionButton({ icon, label, onClick, variant }: { icon: React.ReactNode; label: string; onClick: () => void; variant?: 'primary' | 'secondary' }) {
-    const isPrimary = variant === 'primary';
-    
-    // FIX: Ensures default state is dark/outline, and hover state applies primary colors.
-    const classes = isPrimary 
-        ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md" 
-        : "bg-slate-800 text-slate-300 border border-slate-600 hover:bg-indigo-900 hover:text-indigo-400 hover:border-indigo-500 transition-all shadow-sm"; 
-
+function QuickActionButton({ icon, label, onClick }: any) {
     return (
         <Button
             variant="outline"
-            className={`w-full justify-start font-semibold rounded-lg ${classes}`}
+            className="w-full justify-start font-semibold rounded-lg bg-slate-800/50 text-slate-300 border-slate-600 hover:bg-indigo-900/50 hover:text-indigo-400 hover:border-indigo-500 transition-all text-xs lg:text-sm"
             onClick={onClick}
         >
-            <span className="mr-2">{icon}</span>
-            {label}
+            <span className="mr-2 shrink-0">{icon}</span>
+            <span className="truncate">{label}</span>
         </Button>
     );
 }
 
 function UpcomingEventCard({ event, router }: { event: Event; router: any }) {
     const date = new Date(event.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    const time = event.start_time ? event.start_time.substring(0, 5) : "TBD";
     const isRegistered = event.is_registered;
 
     return (
       <button
         onClick={() => router.push(`/view_event?id=${event.id}`)}
-        className={`
-          group w-full text-left p-4 rounded-xl border transition-all duration-200
-          flex items-center gap-4 cursor-pointer
-          hover:-translate-y-0.5 hover:shadow-xl
-          ${
-            isRegistered
-              ? "bg-emerald-900/40 border-emerald-700 hover:bg-emerald-900/60 hover:border-emerald-500"
-              : "bg-amber-900/40 border-amber-700 hover:bg-amber-900/60 hover:border-amber-500"
-          }
-        `}
+        className={`group w-full text-left p-3 rounded-xl border transition-all duration-200 flex items-center gap-3
+          ${isRegistered ? "bg-emerald-900/20 border-emerald-700/50 hover:border-emerald-500" : "bg-amber-900/20 border-amber-700/50 hover:border-amber-500"}`}
       >
-        {/* DATE BOX */}
-        <div
-          className={`
-            flex flex-col items-center justify-center flex-shrink-0
-            w-12 h-12 rounded-lg shadow-sm transition
-            ${
-              isRegistered
-                ? "bg-emerald-600 group-hover:bg-emerald-500"
-                : "bg-amber-600 group-hover:bg-amber-500"
-            }
-            text-white
-          `}
-        >
-          <span className="text-xs font-bold">{date.split(" ")[0]}</span>
-          <span className="text-base font-extrabold -mt-1">
-            {date.split(" ")[1]}
-          </span>
+        <div className={`flex flex-col items-center justify-center shrink-0 w-10 h-10 rounded-lg text-white text-[10px] font-bold
+            ${isRegistered ? "bg-emerald-600" : "bg-amber-600"}`}>
+          <span>{date.split(" ")[0]}</span>
+          <span className="text-sm -mt-1">{date.split(" ")[1]}</span>
         </div>
-
-        {/* EVENT INFO */}
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-base text-white truncate">
-            {event.title}
-          </div>
-
-          <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
-            <span>{time}</span>
-            {isRegistered ? (
-              <Badge className="bg-emerald-500 text-white shadow-sm">
-                Registered
-              </Badge>
-            ) : (
-              <Badge className="bg-amber-500 text-white shadow-sm">
-                Not Registered
-              </Badge>
-            )}
-          </div>
+          <div className="font-semibold text-xs lg:text-sm text-white truncate">{event.title}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">{event.start_time || "TBD"}</div>
         </div>
-
-        {/* ARROW */}
-        <ChevronRight
-          size={18}
-          className="text-slate-400 transition-transform duration-200
-                    group-hover:translate-x-1 group-hover:text-white"
-        />
+        <ChevronRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0" />
       </button>
     );
-
 }
 
+/* --- UPDATED DATE UTILS --- */
 
-/* --- SIMPLE MONTH VIEW CALENDAR COMPONENT --- */
-
-// Helper to correctly parse dates from ISO string without time zone conversion issue
 const parseDate = (dateString: string): Date => {
-    const parts = dateString.split('-');
-    return new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
 };
 
-
-const SimpleMonthView: React.FC<{
-  events: Event[];
-  onDateClick: (date: Date, dateEvents: Event[]) => void;
-}> = ({ events, onDateClick }) => {
-  const router = useRouter();
-
+const SimpleMonthView: React.FC<{ events: Event[]; onDateClick: (date: Date, dateEvents: Event[]) => void; }> = ({ events, onDateClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-
-  // hover tooltip
-  const [hoveredEvents, setHoveredEvents] = useState<Event[] | null>(null);
-  const [hoverPos, setHoverPos] = useState({ top: 0, left: 0 });
-
-  // multi-event picker
   const [selectedEvents, setSelectedEvents] = useState<Event[]>([]);
   const [showPicker, setShowPicker] = useState(false);
+  const router = useRouter();
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
 
-  // 🔹 map events by date
   const eventsMap = useMemo(() => {
-    const map = new Map<
-      string,
-      { events: Event[]; hasRegistered: boolean }
-    >();
-
+    const map = new Map<string, { events: Event[]; hasRegistered: boolean }>();
     events.forEach((e) => {
-      const key = parseDate(e.start_date).toISOString().split("T")[0];
+      const d = parseDate(e.start_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      
       const entry = map.get(key) || { events: [], hasRegistered: false };
       entry.events.push(e);
       if (e.is_registered) entry.hasRegistered = true;
       map.set(key, entry);
     });
-
     return map;
   }, [events]);
 
-  // 🔹 build calendar days
   const daysInMonth = useMemo(() => {
-    const date = parseDate(`${currentYear}-${currentMonth + 1}-01`);
+    const firstOfMonth = new Date(currentYear, currentMonth, 1);
     const days: any[] = [];
-
-    const firstDay = date.getUTCDay();
-    for (let i = 0; i < firstDay; i++) {
+    const startDay = firstOfMonth.getDay(); 
+    
+    for (let i = 0; i < startDay; i++) {
       days.push({ day: null });
     }
 
-    while (date.getUTCMonth() === currentMonth) {
-      const day = date.getUTCDate();
-      const key = date.toISOString().split("T")[0];
-
+    const workingDate = new Date(firstOfMonth);
+    while (workingDate.getMonth() === currentMonth) {
+      const dayNum = workingDate.getDate();
+      const key = `${workingDate.getFullYear()}-${String(workingDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
       const today = new Date();
-      const todayKey = parseDate(
-        `${today.getUTCFullYear()}-${today.getUTCMonth() + 1}-${today.getUTCDate()}`
-      )
-        .toISOString()
-        .split("T")[0];
-
+      const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const eventData = eventsMap.get(key);
-      let type: "registered" | "open" | "none" = "none";
-
-      if (eventData) {
-        type = eventData.hasRegistered ? "registered" : "open";
-      }
-
-      days.push({
-        day,
-        dateKey: key,
-        isToday: key === todayKey,
-        type,
+      days.push({ 
+        day: dayNum, 
+        dateKey: key, 
+        isToday: key === todayKey, 
+        type: eventData ? (eventData.hasRegistered ? "registered" : "open") : "none" 
       });
-
-      date.setUTCDate(day + 1);
+      workingDate.setDate(workingDate.getDate() + 1);
     }
-
     return days;
   }, [currentMonth, currentYear, eventsMap]);
 
-  const changeMonth = (delta: number) => {
-    setCurrentDate((prev) => {
-      const d = new Date(prev);
-      d.setMonth(d.getMonth() + delta);
-      return d;
-    });
-  };
-
-  // 🔹 click logic
-const handleDayClick = (dateKey?: string) => {
-  if (!dateKey) return;
-
-  const dayEvents = eventsMap.get(dateKey)?.events || [];
-
-  // 🔹 NEW: always show selector if there is at least 1 event
-  if (dayEvents.length >= 1) {
-    setSelectedEvents(dayEvents);
-    setShowPicker(true);
-  }
-};
-
-
-  // 🔹 hover tooltip
-  const handleHover = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    dateKey?: string
-  ) => {
-    if (!dateKey) return;
-    const dayEvents = eventsMap.get(dateKey)?.events;
-    if (!dayEvents || dayEvents.length === 0) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    setHoveredEvents(dayEvents);
-    setHoverPos({ top: rect.bottom + 10, left: rect.left + rect.width / 2 });
-  };
-
-  const CalendarLegend = () => (
-  <div className="flex justify-center items-center gap-6 text-xs text-slate-200 mt-8">
-    <div className="flex items-center gap-2">
-      <span className="w-3 h-3 rounded-full bg-indigo-600 border border-indigo-700"></span>
-      <span>Today</span>
-    </div>
-
-    <div className="flex items-center gap-2">
-      <span className="w-3 h-3 rounded-full bg-emerald-400"></span>
-      <span>Registered</span>
-    </div>
-
-    <div className="flex items-center gap-2">
-      <span className="w-3 h-3 rounded-full bg-amber-400"></span>
-      <span>Open / Not Registered</span>
-    </div>
-  </div>
-
-
-);
-
 
   return (
-    <>
-      {/* TOOLTIP */}
-      {hoveredEvents && (
-        <div
-          style={{
-            position: "fixed",
-            top: hoverPos.top,
-            left: hoverPos.left,
-            transform: "translateX(-50%)",
-            zIndex: 50,
-          }}
-          className="bg-gray-800 text-white p-3 rounded-lg shadow-2xl min-w-[220px]"
-        >
-          <h4 className="font-bold text-sm border-b border-gray-600 mb-1">
-            Events
-          </h4>
-          <ul className="text-xs space-y-1">
-            {hoveredEvents.map((e) => (
-              <li key={e.id}>
-                <b>{e.title}</b> ({e.start_time || "TBD"})
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+    <div className="p-2 lg:p-4 bg-slate-800/40 rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <Button variant="ghost" size="icon" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentMonth - 1)))} className="text-white hover:bg-slate-700"><ChevronLeft/></Button>
+        <h3 className="text-sm lg:text-lg font-bold text-white">{currentDate.toLocaleString("default", { month: "long", year: "numeric" })}</h3>
+        <Button variant="ghost" size="icon" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentMonth + 1)))} className="text-white hover:bg-slate-700"><ChevronRight/></Button>
+      </div>
 
-      {/* CALENDAR */}
-      <div className="p-4 bg-slate-800 rounded-lg calendar-container">
-        <div className="flex justify-between items-center mb-6">
-          <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => changeMonth(-1)}
-          className="text-white hover:bg-slate-700"
-        >
-          <ChevronLeft className="text-white" />
-        </Button>
-
-
-          <h3 className="text-xl font-extrabold text-white">
-            {currentDate.toLocaleString("default", {
-              month: "long",
-              year: "numeric",
-            })}
-          </h3>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => changeMonth(1)}
-            className="text-white hover:bg-slate-700"
+      <div className="grid grid-cols-7 gap-1 lg:gap-2 text-center text-[10px] lg:text-xs">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+          <div key={d} className="text-indigo-400 font-bold py-2">{d}</div>
+        ))}
+        {daysInMonth.map((d, i) => (
+          <button
+            key={i}
+            onClick={() => {
+                if (!d.dateKey) return;
+                const evs = eventsMap.get(d.dateKey)?.events || [];
+                if (evs.length > 0) { setSelectedEvents(evs); setShowPicker(true); }
+            }}
+            disabled={!d.day}
+            className={`min-h-[60px] lg:min-h-[80px] p-1 rounded-md border transition-all flex flex-col items-center
+              ${!d.day ? "border-transparent opacity-0 cursor-default" : "border-slate-700 hover:bg-slate-700"}
+              ${d.isToday ? "bg-indigo-600/20 border-indigo-500" : ""}
+              ${d.type === "registered" ? "bg-emerald-900/20 text-emerald-400" : ""}
+              ${d.type === "open" ? "bg-amber-900/20 text-amber-400" : ""}`}
           >
-            <ChevronRight className="text-white" />
-          </Button>
+            <span className={`text-[10px] lg:text-sm ${d.isToday ? "font-bold text-white" : "text-slate-300"}`}>{d.day}</span>
+            {d.type !== "none" && (
+              <div className={`w-1.5 h-1.5 rounded-full mt-auto mb-1 ${d.type === "registered" ? "bg-emerald-400" : "bg-amber-400"}`} />
+            )}
+          </button>
+        ))}
+      </div>
 
+      {/* --- LEGEND --- */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-[10px] lg:text-xs text-slate-400 border-t border-white/5 pt-5">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+          <span>Registered</span>
         </div>
-
-
-        <div className="grid grid-cols-7 gap-2 text-center text-sm">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-            <div key={d} className="text-indigo-400 font-bold text-xs">
-              {d}
-            </div>
-          ))}
-
-          {daysInMonth.map((d, i) => (
-            <button
-              key={i}
-              onClick={() => handleDayClick(d.dateKey)}
-              onMouseEnter={(e) => handleHover(e, d.dateKey)}
-              onMouseLeave={() => setHoveredEvents(null)}
-              disabled={!d.day}
-              className={`
-                min-h-[5rem] p-2 rounded-lg border transition-all
-                ${!d.day && "border-transparent"}
-                ${d.isToday && "bg-indigo-600 text-white border-indigo-700 shadow-lg"}
-                ${d.type === "registered" && !d.isToday && "bg-emerald-900/40 text-emerald-400 border-emerald-700"}
-                ${d.type === "open" && !d.isToday && "bg-amber-900/40 text-amber-400 border-amber-700"}
-                ${d.type === "none" && d.day && !d.isToday && "bg-slate-700 hover:bg-slate-600 border-slate-600"}
-              `}
-            >
-              <span className="text-white">{d.day}</span>
-
-              {d.day && d.type !== "none" && (
-                <div className="mt-auto flex gap-1 pt-2">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      d.type === "registered"
-                        ? "bg-emerald-400"
-                        : "bg-amber-400"
-                    }`}
-                  />
-                </div>
-
-)}
-
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+          <span>Open/Available</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-sm bg-indigo-600/30 border border-indigo-500" />
+          <span>Today</span>
         </div>
       </div>
-<CalendarLegend />
-      {/* MULTI EVENT PICKER */}
+
+      {/* --- MODAL POPUP (FIXED ON SCREEN) --- */}
       {showPicker && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="relative bg-slate-800 p-6 rounded-xl w-full max-w-md shadow-2xl">
-
-
-            <button
-              onClick={() => setShowPicker(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition"
-              aria-label="Close"
-            >
-              <X size={20} />
-            </button>
-
-            <h3 className="text-lg font-bold text-white mb-4">
-              Select an Event
-            </h3>
-
-            <div className="space-y-3 max-h-[300px] overflow-y-auto">
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+          {/* Backdrop Blur Layer */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            onClick={() => setShowPicker(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative w-full max-w-2xl max-h-[80vh] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Top Bar */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-800/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
+                  <Calendar size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Event Schedule</h3>
+                  <p className="text-xs text-slate-400">Select an event to view details</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowPicker(false)} 
+                className="p-2 bg-white/5 hover:bg-red-500/20 text-slate-300 hover:text-red-400 rounded-full transition-all"
+              >
+                <X size={20}/>
+              </button>
+            </div>
+            
+            {/* Scrollable Event List within the Popup */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
               {selectedEvents.map((e) => (
-                <button
-                  key={e.id}
-                  onClick={() => {
-                    setShowPicker(false);
-                    router.push(`/view_event?id=${e.id}`);
-                  }}
-                  className="w-full text-left p-3 rounded-lg bg-slate-700 hover:bg-slate-600"
+                <button 
+                  key={e.id} 
+                  onClick={() => router.push(`/view_event?id=${e.id}`)} 
+                  className="w-full text-left p-4 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500 transition-all group flex items-center justify-between shadow-lg"
                 >
-                  <div className="font-semibold text-white">{e.title}</div>
-                  <div className="text-xs text-slate-400">
-                    {e.start_time || "TBD"}
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`p-3 rounded-xl shrink-0 ${e.is_registered ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                      {e.is_registered ? <CheckCircle2 size={20} /> : <Clock size={20} />}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-base font-bold text-white group-hover:text-indigo-400 transition-colors truncate">
+                        {e.title}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
+                        <span className="flex items-center gap-1"><Clock size={12} /> {e.start_time || "TBD"}</span>
+                        {e.is_registered && <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[9px] uppercase font-bold rounded">Registered</span>}
+                      </div>
+                    </div>
                   </div>
+                  <ChevronRight size={18} className="text-slate-500 group-hover:text-white" />
                 </button>
               ))}
             </div>
-
-            
           </div>
-
         </div>
-        
       )}
-    </>
+    </div>
   );
 };
