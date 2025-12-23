@@ -29,6 +29,7 @@ import {
   LogOut,
   Users,
   FileText,
+  AlertTriangle,
   Calendar,
   CheckSquare,
   Settings,
@@ -81,6 +82,7 @@ export default function DashboardPage() {
   const [showApprovalPanel, setShowApprovalPanel] = useState(false);
   const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>([]);
   const [pendingLoading, setPendingLoading] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [approvalLoading, setApprovalLoading] = useState<number | null>(null); 
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -111,6 +113,7 @@ export default function DashboardPage() {
   }, [token]);
 
   const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
     await logout();
   };
 
@@ -176,8 +179,40 @@ const pendingApprovalsCount = unverifiedUsers.length;
   if (!user) return null;
 
   return (
+
+    
     // AESTHETIC FIX: Main background set to deep slate color
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
+              <p className="mb-6 text-slate-400">
+                Are you sure you want to end your session?
+              </p>
+              <div className="flex w-full gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700"
+                  onClick={() => setIsLogoutModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* SIDEBAR (Maintains dark blue/indigo gradient) */}
       <aside
         className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
@@ -272,7 +307,7 @@ const pendingApprovalsCount = unverifiedUsers.length;
               open={sidebarOpen}
               icon={<LogOut size={20} />}
               label="Logout"
-              onClick={handleLogout}
+              onClick={() => setIsLogoutModalOpen(true)} // Open Modal
               variant="destructive"
             />
           </div>
@@ -321,7 +356,10 @@ const pendingApprovalsCount = unverifiedUsers.length;
                 <UserAvatar size="md" />
               </button>
 
-              <button className="p-2 rounded-lg hover:bg-white/10 text-white" onClick={handleLogout}>
+              <button 
+              className="p-2 rounded-lg hover:bg-white/10 text-white" 
+                onClick={() => setIsLogoutModalOpen(true)} // Open Modal
+                >
                 <LogOut size={18} />
               </button>
             </div>

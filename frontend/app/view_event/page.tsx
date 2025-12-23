@@ -72,6 +72,7 @@ import {
   ArrowLeft,
   PieChartIcon,
   UserCheck,
+  AlertTriangle,
   UserX,
   Users,
   PlayCircle,
@@ -92,7 +93,7 @@ export default function ViewEventPage() {
   const eventId = parseInt(searchParams.get("id") || "0");
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -377,6 +378,7 @@ export default function ViewEventPage() {
 
   
   const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
     await logout();
   };
 
@@ -730,6 +732,36 @@ export default function ViewEventPage() {
   return (
     // APPLY DARK BACKGROUND: bg-slate-900
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
+              <p className="mb-6 text-slate-400">
+                Are you sure you want to end your session?
+              </p>
+              <div className="flex w-full gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700"
+                  onClick={() => setIsLogoutModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <aside
   className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
     sidebarOpen ? "w-64" : "w-20"
@@ -821,10 +853,10 @@ export default function ViewEventPage() {
             <div className="mt-6 border-t border-white/10 pt-4">
               <SidebarButton
                 open={sidebarOpen}
-                icon={<LogOut size={20} />}
-                label="Logout"
-                onClick={handleLogout}
-                variant="destructive"
+              icon={<LogOut size={20} />}
+              label="Logout"
+              onClick={() => setIsLogoutModalOpen(true)} // Open Modal
+              variant="destructive"
               />
             </div>
           </nav>
@@ -873,12 +905,12 @@ export default function ViewEventPage() {
             >
               <UserAvatar size="md" />
             </button>
-            <button
-              onClick={logout}
-              className="p-2 rounded-lg hover:bg-white/10 text-white"
-            >
-              <LogOut size={18} className="text-white" />
-            </button>
+            <button 
+                className="p-2 rounded-lg hover:bg-white/10 text-white" 
+                onClick={() => setIsLogoutModalOpen(true)} // Open Modal
+              >
+                <LogOut size={18} />
+              </button>
           </div>
         </header>
 

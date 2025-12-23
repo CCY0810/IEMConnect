@@ -50,6 +50,7 @@ import {
   Bell,
   Settings,
   HelpCircle,
+  AlertTriangle,
   PieChart,
   PieChartIcon,
   UserCheck,
@@ -62,6 +63,7 @@ export default function CreateEventPage() {
   const { user, logout } = useAuth();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -85,6 +87,7 @@ export default function CreateEventPage() {
   const [paperworkFile, setPaperworkFile] = useState<File | null>(null);
   
   const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
     await logout();
   };
 
@@ -101,6 +104,7 @@ export default function CreateEventPage() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        
         <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-12 max-w-md text-center text-white">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-900/50 rounded-2xl mb-4 border border-red-700">
             <svg
@@ -308,10 +312,41 @@ export default function CreateEventPage() {
   return (
     // APPLY DARK BACKGROUND: bg-slate-900
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
+              <p className="mb-6 text-slate-400">
+                Are you sure you want to end your session?
+              </p>
+              <div className="flex w-full gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700"
+                  onClick={() => setIsLogoutModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <aside
   className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
     sidebarOpen ? "w-64" : "w-20"
   } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
+  
 >
   {/* sidebar header */}
   <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
@@ -401,7 +436,7 @@ export default function CreateEventPage() {
               open={sidebarOpen}
               icon={<LogOut size={20} />}
               label="Logout"
-              onClick={handleLogout}
+              onClick={() => setIsLogoutModalOpen(true)} // Open Modal
               variant="destructive"
             />
           </div>
@@ -437,9 +472,12 @@ export default function CreateEventPage() {
               <UserAvatar size="md" />
             </button>
 
-            <button onClick={logout} className="p-2 rounded-lg hover:bg-white/10 text-white" title="Logout">
-              <LogOut size={18} className="text-white" />
-            </button>
+            <button 
+                className="p-2 rounded-lg hover:bg-white/10 text-white" 
+                onClick={() => setIsLogoutModalOpen(true)} // Open Modal
+              >
+                <LogOut size={18} />
+              </button>
           </div>
         </header>
 
