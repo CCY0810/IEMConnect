@@ -49,6 +49,8 @@ import {
   Server,
   CheckCircle,
   ArrowLeft,
+  UserCheck,
+  Settings,
   Save,
   AlertTriangle,
   PieChart as PieChartIcon,
@@ -239,6 +241,10 @@ export default function SettingsPage() {
     }
   };
 
+    const handleLogout = async () => {
+    await logout();
+  };
+
   const handleExportData = async () => {
     try {
       const data = await exportUserData();
@@ -375,56 +381,64 @@ export default function SettingsPage() {
 
         {/* menu */}
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<PieChartIcon size={20} />}
-            label="Dashboard"
-            onClick={() => router.push("/dashboard")}
-          />
-          {isAdmin && (
             <SidebarButton
               open={sidebarOpen}
-              icon={<FileText size={20} />}
-              label="Analytics & Reports"
-              onClick={() => router.push("/admin/reports")}
+              icon={<PieChartIcon size={20} />}
+              label="Dashboard"
+              onClick={() => router.push("/dashboard")}
             />
-          )}
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<Calendar size={20} />}
-            label="Events"
-            onClick={() => router.push("/event")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<CheckSquare size={20} />}
-            label="Attendance"
-            onClick={() => router.push("/attendance")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<SettingsIcon size={20} />}
-            label="Settings"
-            onClick={() => router.push("/settings")}
-            active
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<HelpCircle size={20} />}
-            label="Help Center"
-            onClick={() => router.push("/admin/help")}
-          />
-
-          <div className="mt-6 border-t border-white/10 pt-4">
+            {isAdmin && (
+              <SidebarButton
+                open={sidebarOpen}
+                icon={<UserCheck size={20} />}
+                label="Admin Panel"
+                onClick={() => router.push("/admin/admin_panel")}
+              />
+            )}
+            {isAdmin && (
+              <SidebarButton
+                open={sidebarOpen}
+                icon={<FileText size={20} />}
+                label="Analytics & Reports"
+                onClick={() => router.push("/admin/reports")}
+              />
+            )}
             <SidebarButton
               open={sidebarOpen}
-              icon={<LogOut size={20} />}
-              label="Logout"
-              onClick={logout}
-              variant="destructive"
+              icon={<Calendar size={20} />}
+              label="Events"
+              onClick={() => router.push("/event")}
             />
-          </div>
-        </nav>
+            <SidebarButton
+              open={sidebarOpen}
+              icon={<CheckSquare size={20} />}
+              label="Attendance"
+              onClick={() => router.push("/attendance")}
+            />
+            <SidebarButton
+              open={sidebarOpen}
+              icon={<Settings size={20} />}
+              label="Settings"
+              onClick={() => router.push("/settings")}
+              active
+            />
+            <SidebarButton
+              open={sidebarOpen}
+              icon={<HelpCircle size={20} />}
+              label="Help Center"
+              onClick={() => router.push("/admin/help")}
+            />
+  
+            <div className="mt-6 border-t border-white/10 pt-4">
+              <SidebarButton
+                open={sidebarOpen}
+                icon={<LogOut size={20} />}
+                label="Logout"
+                onClick={handleLogout}
+                variant="destructive"
+              />
+            </div>
+          </nav>
       </aside>
 
       {/* MAIN AREA */}

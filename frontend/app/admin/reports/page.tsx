@@ -595,54 +595,64 @@ export default function ReportsPage() {
 
         {/* menu (matches dashboard nav structure) */}
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<PieChartIcon size={20} />}
-            label="Dashboard"
-            onClick={() => router.push("/dashboard")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<FileText size={20} />}
-            label="Analytics & Reports"
-            onClick={() => router.push("/admin/reports")}
-            active
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<Calendar size={20} />}
-            label="Events"
-            onClick={() => router.push("/event")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<CheckSquare size={20} />}
-            label="Attendance"
-            onClick={() => router.push("/attendance")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<Settings size={20} />}
-            label="Settings"
-            onClick={() => router.push("/settings")}
-          />
-          <SidebarButton
-            open={sidebarOpen}
-            icon={<HelpCircle size={20} />}
-            label="Help Center"
-            onClick={() => router.push("/admin/help")}
-          />
-
-          <div className="mt-6 border-t border-white/10 pt-4">
-            <SidebarButton
-              open={sidebarOpen}
-              icon={<LogOut size={20} />}
-              label="Logout"
-              onClick={handleLogout}
-              variant="destructive"
-            />
-          </div>
-        </nav>
+                  <SidebarButton
+                    open={sidebarOpen}
+                    icon={<PieChartIcon size={20} />}
+                    label="Dashboard"
+                    onClick={() => router.push("/dashboard")}
+                  />
+                  {isAdmin && (
+                    <SidebarButton
+                      open={sidebarOpen}
+                      icon={<UserCheck size={20} />}
+                      label="Admin Panel"
+                      onClick={() => router.push("/admin/admin_panel")}
+                    />
+                  )}
+                  {isAdmin && (
+                    <SidebarButton
+                      open={sidebarOpen}
+                      icon={<FileText size={20} />}
+                      label="Analytics & Reports"
+                      onClick={() => router.push("/admin/reports")}
+                      active
+                    />
+                  )}
+                  <SidebarButton
+                    open={sidebarOpen}
+                    icon={<Calendar size={20} />}
+                    label="Events"
+                    onClick={() => router.push("/event")}
+                  />
+                  <SidebarButton
+                    open={sidebarOpen}
+                    icon={<CheckSquare size={20} />}
+                    label="Attendance"
+                    onClick={() => router.push("/attendance")}
+                  />
+                  <SidebarButton
+                    open={sidebarOpen}
+                    icon={<Settings size={20} />}
+                    label="Settings"
+                    onClick={() => router.push("/settings")}
+                  />
+                  <SidebarButton
+                    open={sidebarOpen}
+                    icon={<HelpCircle size={20} />}
+                    label="Help Center"
+                    onClick={() => router.push("/admin/help")}
+                  />
+        
+                  <div className="mt-6 border-t border-white/10 pt-4">
+                    <SidebarButton
+                      open={sidebarOpen}
+                      icon={<LogOut size={20} />}
+                      label="Logout"
+                      onClick={handleLogout}
+                      variant="destructive"
+                    />
+                  </div>
+                </nav>
       </aside>
 
       {/* MAIN AREA */}
@@ -850,7 +860,7 @@ export default function ReportsPage() {
                         <button
                           className="text-left w-full group"
                           onClick={() => {
-                            router.push("/dashboard");
+                            router.push("/admin/admin_panel");
                             setTimeout(() => {
                               const el =
                                 document.getElementById("approvals-panel");

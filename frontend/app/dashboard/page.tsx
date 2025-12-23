@@ -80,7 +80,7 @@ export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showApprovalPanel, setShowApprovalPanel] = useState(false);
   const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [pendingLoading, setPendingLoading] = useState(false);
   const [approvalLoading, setApprovalLoading] = useState<number | null>(null); 
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -114,21 +114,24 @@ export default function DashboardPage() {
     await logout();
   };
 
-  const fetchUnverifiedUsers = async () => {
+ useEffect(() => {
+  const fetchPendingCount = async () => {
+    if (!token || user?.role !== "admin") return;
     try {
-      setLoading(true);
+      setPendingLoading(true);
       const response = await getUnverifiedUsers();
-      setUnverifiedUsers(response.users);
-      setMessage(null);
-    } catch (error: any) {
-      setMessage({
-        type: "error",
-        text: error.response?.data?.error || "Failed to fetch unverified users",
-      });
+      setUnverifiedUsers(response.users || []);
+    } catch (error) {
+      console.error("Failed to fetch pending user count:", error);
     } finally {
-      setLoading(false);
+      setPendingLoading(false);
     }
   };
+  fetchPendingCount();
+}, [token, user?.role]);    
+
+const pendingApprovalsCount = unverifiedUsers.length;
+
 
   const handleApproveUser = async (id: number) => {
     try {
@@ -150,7 +153,6 @@ export default function DashboardPage() {
   const toggleApprovalPanel = () => {
     const open = !showApprovalPanel;
     setShowApprovalPanel(open);
-    if (open && user?.role === "admin") fetchUnverifiedUsers();
   };
   // --- End Core Backend Logic ---
 
@@ -224,6 +226,14 @@ export default function DashboardPage() {
             onClick={() => router.push("/dashboard")}
             active
           />
+          {isAdmin && (
+            <SidebarButton
+              open={sidebarOpen}
+              icon={<UserCheck size={20} />}
+              label="Admin Panel"
+              onClick={() => router.push("/admin/admin_panel")}
+            />
+          )}
           {isAdmin && (
             <SidebarButton
               open={sidebarOpen}
@@ -348,13 +358,13 @@ export default function DashboardPage() {
             />
             {isAdmin ? (
               <StatsCard
-                title="Pending Approvals"
-                value={pendingApprovals}
-                icon={<UserPlus size={20} />}
-                description="New users awaiting verification"
-                loading={loading}
-                color="red"
-              />
+              title="Pending Approvals"
+              value={pendingApprovalsCount} // Connected to unverifiedUsers.length
+              icon={<UserPlus size={20} />}
+              description="New users awaiting verification"
+              loading={pendingLoading} // Shows "..." while fetching
+              color="red"
+            />
             ) : (
               <StatsCard
                 title="Completed Events"
@@ -453,91 +463,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ADMIN PANEL (Dark card body) */}
-          {user.role === "admin" && (
-            <Card className="bg-slate-700 shadow-xl border border-slate-600 rounded-xl">
-              {/* FIX: Conditional Border Logic Added Here */}
-              <CardHeader className={showApprovalPanel ? "border-b border-slate-600" : ""}>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-blue-400"><UserCheck size={20} /> Admin Panel</CardTitle>
-                    <CardDescription className="text-slate-400">
-                      Review and verify new user registrations.
-                    </CardDescription>
-                  </div>
-                  <Button 
-                    onClick={toggleApprovalPanel} 
-                    variant={showApprovalPanel ? "secondary" : "default"} 
-                    className={pendingApprovals > 0 && !showApprovalPanel ? "bg-red-600 hover:bg-red-700 text-white" : "text-indigo-400 border-indigo-400 hover:bg-slate-800"}
-                  >
-                    {showApprovalPanel ? "Hide Approvals" : `Show Approvals (${pendingApprovals})`}
-                  </Button>
-                </div>
-              </CardHeader>
-
-              {showApprovalPanel && (
-                <CardContent className="mt-4 p-6" id="approvals-panel">
-
-                  {message && (
-                    <Alert
-                      className="mb-4 rounded-lg bg-slate-800 text-white"
-                      variant={message.type === "error" ? "destructive" : "default"}
-                    >
-                      <AlertTitle className="font-bold">
-                        {message.type === "error" ? "Error" : "Success"}
-                      </AlertTitle>
-                      <AlertDescription className="text-sm text-slate-300">**{message.text}**</AlertDescription>
-                    </Alert>
-                  )}
-
-                  {loading ? (
-                    <p className="text-slate-500">Loading users...</p>
-                  ) : unverifiedUsers.length === 0 ? (
-                    <div className="text-slate-500 text-center py-4 border border-dashed rounded-lg bg-slate-800">All users verified. No pending registrations.</div>
-                  ) : (
-                    /* FIX: Added Fixed Height Scroll Container for Admin Table */
-                    <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
-                      <Table>
-                        <TableHeader className="bg-slate-800 sticky top-0 z-10">
-                          <TableRow>
-                            <TableHead className="font-bold text-slate-300">Name</TableHead>
-                            <TableHead className="font-bold text-slate-300">Email</TableHead>
-                            <TableHead className="font-bold text-slate-300">Membership No.</TableHead>
-                            <TableHead className="font-bold text-slate-300">Registered</TableHead>
-                            <TableHead className="font-bold text-slate-300 text-right">Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody className="bg-slate-700">
-                          {unverifiedUsers.map((u) => (
-                            <TableRow key={u.id} className="hover:bg-slate-600">
-                              <TableCell className="font-medium text-white">{u.name}</TableCell>
-                              <TableCell className="text-sm text-slate-300">{u.email}</TableCell>
-                              <TableCell className="text-white">{u.membership_number}</TableCell>
-                              <TableCell className="text-slate-300">
-                                {new Date(u.createdAt).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button
-                                  size="sm"
-                                  disabled={approvalLoading === u.id}
-                                  onClick={() => handleApproveUser(u.id)}
-                                  className="bg-emerald-600 hover:bg-emerald-700 shadow-md text-white"
-                                >
-                                  {approvalLoading === u.id
-                                    ? "Verifying..."
-                                    : "Verify"}
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </CardContent>
-              )}
-            </Card>
-          )}
+          
         </main>
       </div>
     </div>
