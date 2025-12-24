@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { getEvents, Event } from "@/lib/event-api";
+import { formatDateDDMMYYYY } from "@/lib/dateFormatter";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
 import { getFileUrl } from "@/lib/event-api";
@@ -112,10 +113,6 @@ export default function EventsPage() {
               title="View Profile"
             >
               <UserAvatar size="md" />
-            </button>
-
-            <button className="p-2 rounded-lg hover:bg-white/10 text-white" onClick={logout}>
-              <LogOut size={18} />
             </button>
           </div>
         </header>
@@ -252,7 +249,7 @@ export default function EventsPage() {
 
                     <div className="flex items-center justify-between gap-4 mb-4">
                       <div className="text-sm text-slate-400">
-                        {event.start_date ? new Date(event.start_date).toLocaleDateString() : "TBA"}
+                        {event.start_date ? formatDateDDMMYYYY(event.start_date) : "TBA"}
                       </div>
 
                       <div>

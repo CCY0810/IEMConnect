@@ -717,9 +717,7 @@ export default function ViewEventPage() {
     }
   };
 
-  if (!user) return null;
-
-  // Simple status badge styling
+  // Simple status badge styling (must be before any early returns to satisfy hooks rules)
   const statusConfig = useMemo(() => {
     const base =
       "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border";
@@ -748,6 +746,8 @@ export default function ViewEventPage() {
         };
     }
   }, [event]);
+
+  if (!user) return null;
 
   return (
     // APPLY DARK BACKGROUND: bg-slate-900

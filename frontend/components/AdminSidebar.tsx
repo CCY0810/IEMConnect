@@ -15,7 +15,11 @@ import {
   ChevronRight,
   UserCheck,
   MessageSquare,
+  History,
+  AlertTriangle,
+  X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export type ActivePage =
   | "dashboard"
@@ -24,6 +28,7 @@ export type ActivePage =
   | "feedback"
   | "events"
   | "attendance"
+  | "my-events"
   | "settings"
   | "help";
 
@@ -43,19 +48,52 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const isAdmin = user?.role === "admin";
 
   const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
     await logout();
   };
 
   return (
-    <aside
-      className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
-        sidebarOpen ? "w-64" : "w-20"
-      } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
-    >
+    <>
+      {/* LOGOUT CONFIRMATION MODAL */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
+              <p className="mb-6 text-slate-400">Are you sure you want to end your session?</p>
+              <div className="flex w-full gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700" 
+                  onClick={() => setIsLogoutModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 bg-red-600 text-white hover:bg-red-700" 
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <aside
+        className={`sticky top-0 h-screen transition-all duration-300 ease-in-out ${
+          sidebarOpen ? "w-64" : "w-20"
+        } bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col`}
+      >
       {/* Sidebar Header */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
@@ -145,6 +183,15 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
           active={activePage === "attendance"}
         />
 
+        {/* My Events - For all users */}
+        <SidebarButton
+          open={sidebarOpen}
+          icon={<History size={20} />}
+          label="My Events"
+          onClick={() => router.push("/my-events")}
+          active={activePage === "my-events"}
+        />
+
         {/* Settings */}
         <SidebarButton
           open={sidebarOpen}
@@ -169,12 +216,13 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
             open={sidebarOpen}
             icon={<LogOut size={20} />}
             label="Logout"
-            onClick={handleLogout}
+            onClick={() => setIsLogoutModalOpen(true)}
             variant="destructive"
           />
         </div>
       </nav>
     </aside>
+    </>
   );
 }
 

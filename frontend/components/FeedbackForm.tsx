@@ -97,7 +97,7 @@ export default function FeedbackForm({
 
   if (submitted) {
     return (
-      <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+      <Card className="w-full max-w-[95vw] sm:max-w-md bg-slate-800 border-slate-700 shadow-xl">
         <CardContent className="py-12 text-center">
           <div className="flex justify-center mb-4">
             <div className="bg-green-900/50 rounded-full p-4 border border-green-700">
@@ -116,7 +116,7 @@ export default function FeedbackForm({
   }
 
   return (
-    <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+    <Card className="w-full max-w-md max-w-[95vw] sm:max-w-md bg-slate-800 border-slate-700 shadow-xl">
       <CardHeader className="relative">
         <Button
           variant="ghost"

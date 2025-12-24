@@ -23,6 +23,7 @@ import {
 import { checkInToEvent, getMyAttendedEvents } from "@/lib/attendance-api";
 import { downloadCertificate } from "@/lib/certificate-api";
 import { canSubmitFeedback } from "@/lib/feedback-api";
+import { formatDateDDMMYYYY, formatDateTimeDDMMYYYY } from "@/lib/dateFormatter";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
 import FeedbackForm from "@/components/FeedbackForm";
@@ -320,7 +321,7 @@ export default function AttendancePage() {
                             {attendanceResult.event.title}
                           </p>
                           <p className="text-sm text-slate-400 mt-1">
-                            {new Date(attendanceResult.attendance.marked_at).toLocaleString()}
+                            {formatDateTimeDDMMYYYY(attendanceResult.attendance.marked_at)}
                           </p>
                         </div>
                         <Button
@@ -455,7 +456,7 @@ export default function AttendancePage() {
 
                           <div className="flex items-center gap-2 text-sm text-slate-400">
                             <Calendar size={14} />
-                            <span>{new Date(event.start_date).toLocaleDateString()}</span>
+                            <span>{formatDateDDMMYYYY(event.start_date)}</span>
                             {event.start_time && (
                               <>
                                 <Clock size={14} className="ml-2" />

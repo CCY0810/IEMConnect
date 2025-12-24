@@ -38,6 +38,8 @@ import {
   ArrowUpRight,
   UserCheck,
   ChevronRight,
+  X,
+  Maximize2,
 } from "lucide-react";
 import React from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -51,7 +53,10 @@ import {
   getRegistrationsVsAttendance as fetchTrend,
   getRecentActivity as fetchRecentActivity,
   getTopEvents as fetchTopEvents,
+  getFeedbackSummary as fetchFeedbackSummary,
+  FeedbackSummary,
 } from "@/lib/reports-api";
+import FeedbackStats from "@/components/FeedbackStats";
 import { getEvents, getEventById, Event } from "@/lib/event-api";
 import { getEventParticipants } from "@/lib/event-api";
 import { getAttendanceList } from "@/lib/attendance-api";
@@ -107,6 +112,10 @@ export default function ReportsPage() {
     useState<Awaited<ReturnType<typeof fetchRecentActivity>>>([]);
   const [topEvents, setTopEvents] =
     useState<Awaited<ReturnType<typeof fetchTopEvents>>>([]);
+  
+  // Feedback analytics state
+  const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary | null>(null);
+  const [loadingFeedback, setLoadingFeedback] = useState(true);
 
   // Loading states for progressive rendering
   const [loadingStates, setLoadingStates] = useState({
@@ -123,6 +132,13 @@ export default function ReportsPage() {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [eventStats, setEventStats] = useState<any>(null);
   const [loadingEventStats, setLoadingEventStats] = useState(false);
+
+  // Chart expand modal state
+  const [detailModal, setDetailModal] = useState<{
+    isOpen: boolean;
+    type: "faculty" | "trend" | "status" | "methods" | "timeline" | null;
+    title: string;
+  }>({ isOpen: false, type: null, title: "" });
 
   const isAdmin = user?.role === "admin";
 
@@ -328,6 +344,19 @@ export default function ReportsPage() {
       }
     };
 
+    // Load feedback summary
+    const loadFeedback = async () => {
+      try {
+        setLoadingFeedback(true);
+        const feedbackData = await fetchFeedbackSummary();
+        setFeedbackSummary(feedbackData);
+      } catch (err) {
+        console.error("Failed to load feedback summary:", err);
+      } finally {
+        setLoadingFeedback(false);
+      }
+    };
+
     // Load tables last
     const loadTables = async () => {
       try {
@@ -344,10 +373,11 @@ export default function ReportsPage() {
       }
     };
 
-    // Progressive loading: KPIs -> Charts -> Tables
+    // Progressive loading: KPIs -> Charts -> Tables -> Feedback
     loadKPIs();
     setTimeout(() => loadCharts(), 100);
     setTimeout(() => loadTables(), 200);
+    setTimeout(() => loadFeedback(), 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
@@ -421,6 +451,31 @@ export default function ReportsPage() {
           activitySheet,
           "Recent Activity"
         );
+
+        // Feedback Summary Sheet
+        if (feedbackSummary) {
+          const feedbackSheetData = [
+            ["Feedback Summary", ""],
+            ["Total Feedback Received", feedbackSummary.total_feedback || 0],
+            ["Overall Average Rating", (feedbackSummary.overall_average_rating || 0).toFixed(2)],
+            ["Events with Feedback", feedbackSummary.events_with_feedback || 0],
+            ["", ""],
+            ["Rating Distribution", "Count"],
+            ["5 Stars", feedbackSummary.rating_distribution?.["5"] || 0],
+            ["4 Stars", feedbackSummary.rating_distribution?.["4"] || 0],
+            ["3 Stars", feedbackSummary.rating_distribution?.["3"] || 0],
+            ["2 Stars", feedbackSummary.rating_distribution?.["2"] || 0],
+            ["1 Star", feedbackSummary.rating_distribution?.["1"] || 0],
+            ["", ""],
+            ["Top Rated Events", "Avg Rating"],
+            ...(feedbackSummary.top_rated_events || []).map((e) => [
+              e.title,
+              e.avg_rating.toFixed(2),
+            ]),
+          ];
+          const feedbackSheet = XLSX.utils.aoa_to_sheet(feedbackSheetData);
+          XLSX.utils.book_append_sheet(workbook, feedbackSheet, "Feedback Summary");
+        }
 
         const fileName = `analytics-overall-${new Date()
           .toISOString()
@@ -555,6 +610,78 @@ export default function ReportsPage() {
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
       {/* SIDEBAR - Now using shared AdminSidebar component */}
       <AdminSidebar activePage="reports" />
+
+      {/* Chart Expand Modal */}
+      {detailModal.isOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+          <Card className="w-full max-w-5xl bg-slate-800 border-slate-700 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+            <button 
+              onClick={() => setDetailModal({ isOpen: false, type: null, title: "" })}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition-colors z-20"
+            >
+              <X size={24} />
+            </button>
+            
+            <CardHeader className="border-b border-slate-700 pb-4">
+              <CardTitle className="text-2xl font-bold text-white flex items-center gap-3">
+                <BarChart2 className="text-indigo-400" />
+                {detailModal.title}
+              </CardTitle>
+              <CardDescription className="text-slate-400 text-lg">Expanded View</CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-8 overflow-y-auto flex-1">
+              <div className="h-[60vh] w-full min-h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  {detailModal.type === "faculty" ? (
+                    <BarChart data={facultyData} layout="vertical">
+                      <XAxis type="number" stroke="#94a3b8" />
+                      <YAxis dataKey="name" type="category" width={150} stroke="#94a3b8" fontSize={12} />
+                      <ReTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f1f5f9' }} />
+                      <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  ) : detailModal.type === "trend" ? (
+                    <LineChart data={trendData}>
+                      <XAxis dataKey="month" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <ReTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
+                      <Line type="monotone" dataKey="registrations" stroke="#10b981" strokeWidth={4} dot={{ r: 6 }} name="Registrations" />
+                      <Line type="monotone" dataKey="attendees" stroke="#ef4444" strokeWidth={4} dot={{ r: 6 }} name="Attendees" />
+                    </LineChart>
+                  ) : detailModal.type === "status" ? (
+                    <PieChart>
+                      <Pie data={eventStatusData} dataKey="value" nameKey="name" outerRadius="80%" innerRadius="50%" label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}>
+                        <Cell fill="#f59e0b" />
+                        <Cell fill="#22c55e" />
+                      </Pie>
+                      <ReTooltip />
+                    </PieChart>
+                  ) : detailModal.type === "methods" && eventStats ? (
+                    <BarChart data={[
+                        { name: "QR Code", value: eventStats.attendance_methods.QR },
+                        { name: "Code", value: eventStats.attendance_methods.Code },
+                        { name: "Manual", value: eventStats.attendance_methods.Manual },
+                    ]}>
+                        <XAxis dataKey="name" stroke="#94a3b8" />
+                        <YAxis stroke="#94a3b8" />
+                        <ReTooltip contentStyle={{ backgroundColor: '#0f172a' }} />
+                        <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  ) : detailModal.type === "timeline" && eventStats ? (
+                    <LineChart data={eventStats.timeline}>
+                      <XAxis dataKey="date" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <ReTooltip contentStyle={{ backgroundColor: '#0f172a' }} />
+                      <Line type="monotone" dataKey="registrations" stroke="#10b981" strokeWidth={3} name="Total Reg." />
+                      <Line type="monotone" dataKey="attendance" stroke="#ef4444" strokeWidth={3} name="Total Attended" />
+                    </LineChart>
+                  ) : null}
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* MAIN AREA */}
       <div className="flex-1 min-h-screen">
@@ -808,7 +935,14 @@ export default function ReportsPage() {
                   <>
                     {/* Chart 1: Attendance by Faculty (Horizontal Bar) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-1">
-                      <CardHeader>
+                      <CardHeader className="relative">
+                        <button
+                          onClick={() => setDetailModal({ isOpen: true, type: "faculty", title: "Attendance by Faculty" })}
+                          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                          title="Expand chart"
+                        >
+                          <Maximize2 size={16} />
+                        </button>
                         <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
                           <BarChart2 className="w-5 h-5 text-indigo-400" />
                           Attendance by Faculty
@@ -856,7 +990,14 @@ export default function ReportsPage() {
 
                     {/* Chart 2: Registration vs Attendance (6 months) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-2">
-                      <CardHeader>
+                      <CardHeader className="relative">
+                        <button
+                          onClick={() => setDetailModal({ isOpen: true, type: "trend", title: "Registration vs. Attendance Trend" })}
+                          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                          title="Expand chart"
+                        >
+                          <Maximize2 size={16} />
+                        </button>
                         <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
                           <TrendingUp className="w-5 h-5 text-emerald-400" />
                           Registration vs. Attendance Trend
@@ -914,7 +1055,14 @@ export default function ReportsPage() {
 
                     {/* Chart 3: Event Status Pie (Doughnut with Center Label) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-1">
-                      <CardHeader>
+                      <CardHeader className="relative">
+                        <button
+                          onClick={() => setDetailModal({ isOpen: true, type: "status", title: "Event Status Distribution" })}
+                          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                          title="Expand chart"
+                        >
+                          <Maximize2 size={16} />
+                        </button>
                         <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
                           <PieChartIcon className="w-5 h-5 text-amber-400" />
                           Event Status
@@ -1139,6 +1287,42 @@ export default function ReportsPage() {
                     </Card>
                   </>
                 ) : null}
+              </div>
+
+              {/* Feedback Analytics Section */}
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <span className="text-2xl">📊</span>
+                  Feedback Analytics
+                </h3>
+                {feedbackSummary ? (
+                  <FeedbackStats
+                    averageRating={feedbackSummary.overall_average_rating || 0}
+                    totalFeedback={feedbackSummary.total_feedback || 0}
+                    ratingDistribution={feedbackSummary.rating_distribution || {}}
+                    recentFeedback={feedbackSummary.recent_feedback || []}
+                    loading={loadingFeedback}
+                  />
+                ) : loadingFeedback ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
+                      <CardContent className="pt-6">
+                        <Skeleton className="h-32 w-full" />
+                      </CardContent>
+                    </Card>
+                    <Card className="lg:col-span-2 bg-slate-800 border-0 shadow-lg rounded-xl">
+                      <CardContent className="pt-6">
+                        <Skeleton className="h-48 w-full" />
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
+                    <CardContent className="py-8 text-center text-slate-400">
+                      No feedback data available yet.
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </TabsContent>
 

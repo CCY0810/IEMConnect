@@ -360,10 +360,6 @@ export default function SettingsPage() {
             >
               <UserAvatar size="md" />
             </button>
-
-            <button className="p-2 rounded-lg hover:bg-white/10 text-white" onClick={logout}>
-              <LogOut size={18} />
-            </button>
           </div>
         </header>
 
