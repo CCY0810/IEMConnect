@@ -1,3 +1,9 @@
+# environment variables (NEVER commit these!)
+.env
+*.env
+backend/.env
+frontend/.env
+
 # dependencies
 /node_modules/
 /backend/node_modules/
