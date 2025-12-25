@@ -33,13 +33,14 @@ import {
   Download,
   Users,
   Activity,
+  AlertTriangle,
   TrendingUp,
   BarChart2,
   ArrowUpRight,
   UserCheck,
   ChevronRight,
-  X,
-  Maximize2,
+  Maximize2, // Added for expand function
+  X,          // Added for close function
 } from "lucide-react";
 import React from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -91,7 +92,29 @@ export default function ReportsPage() {
   const router = useRouter();
   const { user, token, logout } = useAuth();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Sidebar States from the new responsive version
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  // Responsive logic from code 2
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // --- START: EXPAND FUNCTION STATE ---
+  const [detailModal, setDetailModal] = useState<{
+    isOpen: boolean;
+    type: "faculty" | "trend" | "status" | "methods" | "timeline" | null;
+    title: string;
+  }>({ isOpen: false, type: null, title: "" });
+  // --- END: EXPAND FUNCTION STATE ---
 
   // Analytics state
   const [usersInsights, setUsersInsights] =
@@ -148,6 +171,7 @@ export default function ReportsPage() {
   }, [token, isAdmin, router]);
 
   const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
     await logout();
   };
 
@@ -607,11 +631,36 @@ export default function ReportsPage() {
     : 0;
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-slate-100">
-      {/* SIDEBAR - Now using shared AdminSidebar component */}
-      <AdminSidebar activePage="reports" />
+    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden relative">
+      
+      {/* 1. LOGOUT MODAL - Applied from Code 2 */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
+              <p className="mb-6 text-slate-400">Are you sure you want to end your session?</p>
+              <div className="flex w-full gap-3">
+                <Button variant="outline" className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700" onClick={() => setIsLogoutModalOpen(false)}>Cancel</Button>
+                <Button className="flex-1 bg-red-600 text-white hover:bg-red-700" onClick={handleLogout}>Logout</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Chart Expand Modal */}
+      {/* 2. MOBILE SIDEBAR OVERLAY - Applied from Code 2 */}
+      <div 
+        className={`fixed inset-0 bg-black/80 z-[45] lg:hidden backdrop-blur-md transition-all duration-300 ${
+          sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        }`} 
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* --- START: EXPAND MODAL JSX - From Code 1 --- */}
       {detailModal.isOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
           <Card className="w-full max-w-5xl bg-slate-800 border-slate-700 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
@@ -627,7 +676,7 @@ export default function ReportsPage() {
                 <BarChart2 className="text-indigo-400" />
                 {detailModal.title}
               </CardTitle>
-              <CardDescription className="text-slate-400 text-lg">Expanded View</CardDescription>
+              <CardDescription className="text-slate-400 text-lg">Detailed View</CardDescription>
             </CardHeader>
 
             <CardContent className="p-8 overflow-y-auto flex-1">
@@ -683,71 +732,111 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* MAIN AREA */}
-      <div className="flex-1 min-h-screen">
-        {/* Glassy dark header (matches dashboard) */}
-        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">
-              Analytics
-            </h2>
-            <p className="text-sm text-slate-300">
-              Monitor membership, events, and attendance performance in one
-              place.
-            </p>
+      {/* 3. SIDEBAR - Applied from Code 2 Structure */}
+      <aside
+        className={`fixed lg:relative z-50 h-full transition-all duration-300 ease-in-out bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col shrink-0 overflow-hidden
+        ${sidebarOpen 
+            ? "translate-x-0 w-full sm:w-80 lg:w-64 opacity-100 visible" 
+            : "-translate-x-full lg:translate-x-0 w-0 lg:w-0 opacity-0 invisible pointer-events-none"}`}
+      >
+        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10 shrink-0 h-[73px]">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="bg-white rounded-xl p-2 shadow-md flex items-center justify-center w-10 h-10 shrink-0">
+              <img src="/iem-logo.jpg" alt="Logo" className="object-contain w-full h-full" />
+            </div>
+            {sidebarOpen && (
+              <div className="whitespace-nowrap transition-opacity duration-300">
+                <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
+                <div className="text-xs text-slate-400 font-medium">Admin Portal</div>
+              </div>
+            )}
+          </div>
+          {sidebarOpen && (
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors">
+              <X size={28}/>
+            </button>
+          )}
+        </div>
+
+        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+          <SidebarButton open={sidebarOpen} icon={<PieChartIcon size={20} />} label="Dashboard" onClick={() => router.push("/dashboard")} />
+          <SidebarButton open={sidebarOpen} icon={<UserCheck size={20} />} label="Admin Panel" onClick={() => router.push("/admin/admin_panel")} />
+          <SidebarButton open={sidebarOpen} icon={<FileText size={20} />} label="Analytics & Reports" onClick={() => router.push("/admin/reports")} active />
+          <SidebarButton open={sidebarOpen} icon={<Calendar size={20} />} label="Events" onClick={() => router.push("/event")} />
+          <SidebarButton open={sidebarOpen} icon={<CheckSquare size={20} />} label="Attendance" onClick={() => router.push("/attendance")} />
+          <SidebarButton open={sidebarOpen} icon={<Settings size={20} />} label="Settings" onClick={() => router.push("/settings")} />
+          <div className="mt-6 border-t border-white/10 pt-4">
+            <SidebarButton open={sidebarOpen} icon={<LogOut size={20} />} label="Logout" onClick={() => setIsLogoutModalOpen(true)} variant="destructive" />
+          </div>
+        </nav>
+      </aside>
+
+      {/* 4. MAIN LAYOUT AREA - Applied from Code 2 Shell */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+        
+        {/* HEADER - Applied from Code 2 Style */}
+        <header className="flex items-center justify-between px-4 lg:px-8 py-3 sticky top-0 z-40 bg-slate-900/60 backdrop-blur-md border-b border-white/10 shadow-xl shrink-0 h-[73px]">
+          <div className="flex items-center gap-4 min-w-0">
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              className="p-2 text-slate-200 bg-white/5 hover:bg-white/10 rounded-lg transition-colors shrink-0"
+            >
+              <Menu size={24}/>
+            </button>
+            <div className="min-w-0">
+              <h2 className="text-lg lg:text-2xl font-bold tracking-tight text-white truncate">Analytics</h2>
+              <p className="hidden xs:block text-[10px] sm:text-xs text-slate-400 truncate">Monitor membership and performance</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-5">
-            {/* Notification Bell */}
+          <div className="flex items-center gap-2 lg:gap-5 ml-4">
             <NotificationBell />
-
-            {/* User Info */}
-            <div className="text-right hidden sm:block">
-              <div className="text-sm font-semibold text-white">
-                {user.name}
+            <div className="flex items-center gap-3 border-l border-white/10 pl-3">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-semibold text-white leading-none truncate max-w-[120px]">{user.name}</div>
+                <div className="text-[10px] text-slate-400 uppercase mt-1">{user.role}</div>
               </div>
-              <div className="text-xs text-slate-400 capitalize">
-                {user.role}
-              </div>
+              <UserAvatar size="sm" />
+              {/* Profile Picture - Clickable (from code 1) */}
+              <button
+                onClick={() => router.push("/profile")}
+                className="rounded-full overflow-hidden border-2 border-transparent shadow hover:ring-2 hover:ring-indigo-500 transition-all cursor-pointer hidden sm:block"
+                title="View Profile"
+              >
+                
+              </button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-full transition-colors h-9 w-9 shrink-0"
+              >
+                <LogOut size={20} />
+              </Button>
             </div>
-
-            {/* Profile Picture - Clickable */}
-            <button
-              onClick={() => router.push("/profile")}
-              className="rounded-full overflow-hidden border-2 border-transparent shadow hover:ring-2 hover:ring-indigo-500 transition-all cursor-pointer"
-              title="View Profile"
-            >
-              <UserAvatar size="md" />
-            </button>
-
-            {/* Download Button */}
-            <Button
-              onClick={() =>
-                downloadExcel(activeTab === "overall" ? "overall" : "event")
-              }
-              disabled={downloading || (activeTab === "event" && !eventStats)}
-              className="gap-2 shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              <Download size={18} />
-              {downloading
-                ? "Preparing Export..."
-                : activeTab === "overall"
-                ? "Export Overall Data"
-                : "Export Event Data"}
-            </Button>
-
-            {/* Top-right Logout (same style as dashboard) */}
-            <button
-              className="p-2 rounded-lg hover:bg-white/10 text-white"
-              onClick={handleLogout}
-            >
-              <LogOut size={18} />
-            </button>
           </div>
         </header>
 
-        {/* content (kept same analytics layout, just sitting on dark bg) */}
-        <main className="px-8 py-10 space-y-8 max-w-[90rem] mx-auto">
+        {/* content (kept same analytics layout, just sitting in responsive main container) */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
+          <div className="max-w-[90rem] mx-auto w-full">
+          
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-white">Analytics</h2>
+              <p className="text-sm text-slate-300">Monitor membership, events, and attendance performance.</p>
+            </div>
+            {/* Download Button moved to main area for better prominence */}
+            <Button
+                onClick={() => downloadExcel(activeTab === "overall" ? "overall" : "event")}
+                disabled={downloading || (activeTab === "event" && !eventStats)}
+                className="gap-2 shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto"
+              >
+                <Download size={18} />
+                {downloading ? "Preparing Export..." : activeTab === "overall" ? "Export Overall Data" : "Export Event Data"}
+              </Button>
+          </div>
+
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
@@ -888,12 +977,7 @@ export default function ReportsPage() {
                         <button
                           className="text-left w-full group"
                           onClick={() => {
-                            router.push("/dashboard");
-                            setTimeout(() => {
-                              const el =
-                                document.getElementById("approvals-panel");
-                              el?.scrollIntoView({ behavior: "smooth" });
-                            }, 100);
+                            router.push("/admin/admin_panel");
                           }}
                         >
                           <div className="flex items-end justify-between">
@@ -935,21 +1019,24 @@ export default function ReportsPage() {
                   <>
                     {/* Chart 1: Attendance by Faculty (Horizontal Bar) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-1">
-                      <CardHeader className="relative">
-                        <button
-                          onClick={() => setDetailModal({ isOpen: true, type: "faculty", title: "Attendance by Faculty" })}
-                          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                          title="Expand chart"
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <BarChart2 className="w-5 h-5 text-indigo-400" />
+                            Attendance by Faculty
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Which faculty is most active?
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "faculty", title: "Attendance by Faculty" })}
                         >
-                          <Maximize2 size={16} />
-                        </button>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <BarChart2 className="w-5 h-5 text-indigo-400" />
-                          Attendance by Faculty
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Which faculty is most active? (Overall attendance count)
-                        </CardDescription>
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="h-64">
@@ -990,21 +1077,24 @@ export default function ReportsPage() {
 
                     {/* Chart 2: Registration vs Attendance (6 months) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-2">
-                      <CardHeader className="relative">
-                        <button
-                          onClick={() => setDetailModal({ isOpen: true, type: "trend", title: "Registration vs. Attendance Trend" })}
-                          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                          title="Expand chart"
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <TrendingUp className="w-5 h-5 text-emerald-400" />
+                            Registration vs. Attendance Trend
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Last 6 months
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "trend", title: "Registration vs. Attendance Trend" })}
                         >
-                          <Maximize2 size={16} />
-                        </button>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <TrendingUp className="w-5 h-5 text-emerald-400" />
-                          Registration vs. Attendance Trend
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Last 6 months
-                        </CardDescription>
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="h-64">
@@ -1055,21 +1145,24 @@ export default function ReportsPage() {
 
                     {/* Chart 3: Event Status Pie (Doughnut with Center Label) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl lg:col-span-1">
-                      <CardHeader className="relative">
-                        <button
-                          onClick={() => setDetailModal({ isOpen: true, type: "status", title: "Event Status Distribution" })}
-                          className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                          title="Expand chart"
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <PieChartIcon className="w-5 h-5 text-amber-400" />
+                            Event Status
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Open vs. Completed Events
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "status", title: "Event Status Breakdown" })}
                         >
-                          <Maximize2 size={16} />
-                        </button>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <PieChartIcon className="w-5 h-5 text-amber-400" />
-                          Event Status
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Open vs. Completed Events
-                        </CardDescription>
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent className="relative">
                         <div className="h-64">
@@ -1155,7 +1248,7 @@ export default function ReportsPage() {
                           Last 5 users registered or checked in
                         </CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow className="bg-slate-900/60">
@@ -1230,7 +1323,7 @@ export default function ReportsPage() {
                           Sorted by highest attendance
                         </CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow className="bg-slate-900/60">
@@ -1350,7 +1443,7 @@ export default function ReportsPage() {
                     <SelectTrigger className="w-full max-w-lg bg-slate-900 border-slate-600 text-slate-100 shadow-sm">
                       <SelectValue placeholder="Select an event to load data..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border border-slate-700 text-slate-100">
+                    <SelectContent className="bg-slate-900 border border-slate-700 text-slate-100 font-medium">
                       {events.map((event) => (
                         <SelectItem
                           key={event.id}
@@ -1461,14 +1554,24 @@ export default function ReportsPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Attendance Methods (Doughnut with Center Label) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <QrCodeIcon />
-                          Attendance Methods
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Breakdown by check-in method
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <QrCodeIcon />
+                            Attendance Methods
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Breakdown by check-in method
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "methods", title: "Attendance Methods" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent className="relative">
                         <div className="h-64">
@@ -1521,14 +1624,24 @@ export default function ReportsPage() {
 
                     {/* Faculty Distribution (Horizontal Bar) */}
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <BarChart2 className="w-5 h-5 text-purple-400" />
-                          Attendance by Faculty
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Faculty distribution for this event
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <BarChart2 className="w-5 h-5 text-purple-400" />
+                            Attendance by Faculty
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Faculty distribution for this event
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "faculty", title: "Faculty Distribution" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="h-64">
@@ -1573,14 +1686,24 @@ export default function ReportsPage() {
                   {/* Registration vs Attendance Timeline */}
                   {eventStats.timeline && eventStats.timeline.length > 0 && (
                     <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-                          <TrendingUp className="w-5 h-5 text-emerald-400" />
-                          Registration vs. Attendance Timeline
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Cumulative registrations and attendance over time
-                        </CardDescription>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                            <TrendingUp className="w-5 h-5 text-emerald-400" />
+                            Registration vs. Attendance Timeline
+                            </CardTitle>
+                            <CardDescription className="text-slate-400">
+                            Cumulative registrations and attendance over time
+                            </CardDescription>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="hover:bg-slate-700" 
+                            onClick={() => setDetailModal({ isOpen: true, type: "timeline", title: "Registration vs. Attendance Timeline" })}
+                        >
+                            <Maximize2 size={18} className="text-white" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="h-80">
@@ -1639,122 +1762,120 @@ export default function ReportsPage() {
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between text-lg font-semibold text-slate-100">
                         <span>Participant List</span>
-                        <span className="text-sm text-slate-400">
+                        <span className="text-sm text-slate-400 font-medium">
                           Total: {eventStats.participants.length} participant(s)
                         </span>
                       </CardTitle>
-                      <CardDescription className="text-slate-400">
+                      <CardDescription className="text-slate-400 font-medium">
                         Full list of registered users and their attendance status.
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-slate-900/60">
-                              <TableHead className="text-slate-200">
-                                Name
-                              </TableHead>
-                              <TableHead className="text-slate-200">
-                                Email
-                              </TableHead>
-                              <TableHead className="text-slate-200">
-                                Matric
-                              </TableHead>
-                              <TableHead className="text-slate-200">
-                                Faculty
-                              </TableHead>
-                              <TableHead className="text-slate-200">
-                                Status
-                              </TableHead>
-                              <TableHead className="text-slate-200">
-                                Registration Date
-                              </TableHead>
-                              <TableHead className="text-slate-200">
-                                Attendance
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {eventStats.participants.length > 0 ? (
-                              eventStats.participants.map(
-                                (p: any, index: number) => (
-                                  <TableRow
-                                    key={index}
-                                    className={
-                                      index % 2 === 1
-                                        ? "bg-slate-900/40"
-                                        : "bg-transparent"
-                                    }
-                                  >
-                                    <TableCell className="text-sm font-medium text-slate-100">
-                                      {p.user.name}
-                                    </TableCell>
-                                    <TableCell className="text-sm text-slate-200">
-                                      {p.user.email}
-                                    </TableCell>
-                                    <TableCell className="text-xs text-slate-300">
-                                      {p.user.matric_number || "-"}
-                                    </TableCell>
-                                    <TableCell className="text-xs text-slate-300">
-                                      {p.user.faculty || "-"}
-                                    </TableCell>
-                                    <TableCell>
-                                      <span
-                                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                          p.attendance_date
-                                            ? "bg-emerald-900/50 text-emerald-200 border border-emerald-600"
-                                            : "bg-blue-900/50 text-blue-200 border border-blue-600"
-                                        }`}
-                                      >
-                                        {p.attendance_date
-                                          ? "Attended"
-                                          : "Registered"}
-                                      </span>
-                                    </TableCell>
-                                    <TableCell className="text-xs text-slate-400">
-                                      {p.registration_date
-                                        ? new Date(
-                                            p.registration_date
-                                          ).toLocaleDateString()
-                                        : "-"}
-                                    </TableCell>
-                                    <TableCell>
-                                      {p.attendance_date ? (
-                                        <div>
-                                          <div className="text-xs text-slate-300">
-                                            {new Date(
-                                              p.attendance_date
-                                            ).toLocaleString()}
-                                          </div>
-                                          {p.method && (
-                                            <div className="text-xs text-slate-500">
-                                              via {p.method}
-                                            </div>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <span className="text-slate-500 text-xs">
-                                          N/A
-                                        </span>
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                )
-                              )
-                            ) : (
-                              <TableRow>
-                                <TableCell
-                                  colSpan={7}
-                                  className="text-center text-slate-500 py-6"
+                    <CardContent className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-slate-900/60 border-slate-700">
+                            <TableHead className="text-slate-200">
+                              Name
+                            </TableHead>
+                            <TableHead className="text-slate-200">
+                              Email
+                            </TableHead>
+                            <TableHead className="text-slate-200">
+                              Matric
+                            </TableHead>
+                            <TableHead className="text-slate-200">
+                              Faculty
+                            </TableHead>
+                            <TableHead className="text-slate-200">
+                              Status
+                            </TableHead>
+                            <TableHead className="text-slate-200">
+                              Registration Date
+                            </TableHead>
+                            <TableHead className="text-slate-200">
+                              Attendance
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {eventStats.participants.length > 0 ? (
+                            eventStats.participants.map(
+                              (p: any, index: number) => (
+                                <TableRow
+                                  key={index}
+                                  className={
+                                    index % 2 === 1
+                                      ? "bg-slate-900/40 border-slate-700"
+                                      : "bg-transparent border-slate-700"
+                                  }
                                 >
-                                  No participants found
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
+                                  <TableCell className="text-sm font-medium text-slate-100">
+                                    {p.user.name}
+                                  </TableCell>
+                                  <TableCell className="text-sm text-slate-200">
+                                    {p.user.email}
+                                  </TableCell>
+                                  <TableCell className="text-xs text-slate-300">
+                                    {p.user.matric_number || "-"}
+                                  </TableCell>
+                                  <TableCell className="text-xs text-slate-300">
+                                    {p.user.faculty || "-"}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span
+                                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                        p.attendance_date
+                                          ? "bg-emerald-900/50 text-emerald-200 border border-emerald-600"
+                                          : "bg-blue-900/50 text-blue-200 border border-blue-600"
+                                      }`}
+                                    >
+                                      {p.attendance_date
+                                        ? "Attended"
+                                        : "Registered"}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="text-xs text-slate-400">
+                                    {p.registration_date
+                                      ? new Date(
+                                          p.registration_date
+                                        ).toLocaleDateString()
+                                      : "-"}
+                                  </TableCell>
+                                  <TableCell>
+                                    {p.attendance_date ? (
+                                      <div>
+                                        <div className="text-xs text-slate-300">
+                                          {new Date(
+                                            p.attendance_date
+                                          ).toLocaleString()}
+                                        </div>
+                                        {p.method && (
+                                          <div className="text-xs text-slate-500">
+                                            via {p.method}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span className="text-slate-500 text-xs">
+                                        N/A
+                                      </span>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            )
+                          ) : (
+                            <TableRow>
+                              <TableCell
+                                colSpan={7}
+                                className="text-center text-slate-500 py-6"
+                              >
+                                No participants found
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
                     </CardContent>
                   </Card>
                 </>
@@ -1778,8 +1899,16 @@ export default function ReportsPage() {
               )}
             </TabsContent>
           </Tabs>
+          </div>
         </main>
       </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+      `}</style>
     </div>
   );
 }
@@ -1791,7 +1920,7 @@ export default function ReportsPage() {
 /* Simple QR icon so we don't mess with imports or dependencies */
 function QrCodeIcon() {
   return (
-    <div className="w-4 h-4 rounded-sm border border-slate-400 grid grid-cols-2 grid-rows-2 overflow-hidden">
+    <div className="w-4 h-4 rounded-sm border border-slate-400 grid grid-cols-2 grid-rows-2 overflow-hidden shrink-0">
       <div className="bg-slate-800" />
       <div className="bg-slate-800" />
       <div className="bg-slate-800" />
@@ -1800,43 +1929,25 @@ function QrCodeIcon() {
   );
 }
 
-/* Sidebar Button Component – same style as dashboard */
-function SidebarButton({
-  icon,
-  label,
-  open,
-  active,
-  onClick,
-  variant,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  open: boolean;
-  active?: boolean;
-  onClick?: () => void;
-  variant?: "default" | "destructive";
-}) {
-  const baseClasses =
-    "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors duration-200 font-medium";
-  const activeClasses = active
-    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg"
-    : variant === "destructive"
-    ? "text-rose-300 hover:bg-rose-900/30"
-    : "text-slate-300 hover:bg-gray-800 hover:text-white";
+/* Sidebar Button Component – from Code 2 structure */
+function SidebarButton({ icon, label, open, active, onClick, variant }: any) {
+  const isDestructive = variant === 'destructive';
+  if (!open) return (
+     <button onClick={onClick} className={`w-full flex items-center justify-center py-4 transition-all ${active ? "text-indigo-400" : "text-slate-400"}`}>
+        <div className="w-6 h-6 shrink-0">{icon}</div>
+     </button>
+  );
 
   return (
-    <button onClick={onClick} className={`${baseClasses} ${activeClasses}`}>
-      <div
-        className={`w-6 h-6 flex items-center justify-center transition-transform ${
-          active ? "scale-100" : "scale-90"
-        }`}
-      >
-        {icon}
-      </div>
-      {open && <span className="truncate">{label}</span>}
-      {open && active && (
-        <ChevronRight size={16} className="ml-auto text-white/70" />
-      )}
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-4 lg:py-3 rounded-lg text-base lg:text-sm transition-all duration-200 font-medium whitespace-nowrap
+      ${active ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg" : 
+        isDestructive ? "text-rose-300 hover:bg-rose-900/30" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+    >
+      <div className="w-6 h-6 flex items-center justify-center shrink-0">{icon}</div>
+      <span className="truncate">{label}</span>
+      {active && <ChevronRight size={14} className="ml-auto opacity-50" />}
     </button>
   );
 }

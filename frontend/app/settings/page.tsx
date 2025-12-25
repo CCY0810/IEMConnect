@@ -49,6 +49,8 @@ import {
   Server,
   CheckCircle,
   ArrowLeft,
+  UserCheck,
+  Settings,
   Save,
   AlertTriangle,
   PieChart as PieChartIcon,
@@ -56,7 +58,8 @@ import {
   Calendar,
   CheckSquare,
   HelpCircle,
-  UserCheck,
+  ChevronRight, // Ensure ChevronRight is imported
+  X,            // Added for close function
 } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
@@ -94,7 +97,23 @@ export default function SettingsPage() {
   const { user, token, logout } = useAuth();
   const { toast } = useToast();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Responsive Sidebar States
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  // Handle Responsive Sidebar behavior
+  useEffect(() => {
+    if (!token) router.push("/login");
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [token, router]);
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -241,6 +260,11 @@ export default function SettingsPage() {
     }
   };
 
+  const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
+    await logout();
+  };
+
   const handleExportData = async () => {
     try {
       const data = await exportUserData();
@@ -311,6 +335,7 @@ export default function SettingsPage() {
 
   const handleLogoutSession = async (sessionId: string) => {
     try {
+      setIsLogoutModalOpen(false);
       await logoutSession(sessionId);
       if (sessionId === "current") {
         logout();
@@ -334,36 +359,116 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-slate-100">
-      {/* SIDEBAR - Now using shared AdminSidebar component */}
-      <AdminSidebar activePage="settings" />
+    <div className="flex h-screen bg-slate-900 text-slate-100 overflow-hidden relative">
+      
+      {/* 1. LOGOUT MODAL */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
+            <div className="flex flex-col items-center text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
+              <p className="mb-6 text-slate-400">Are you sure you want to end your session?</p>
+              <div className="flex w-full gap-3">
+                <Button variant="outline" className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700" onClick={() => setIsLogoutModalOpen(false)}>Cancel</Button>
+                <Button className="flex-1 bg-red-600 text-white hover:bg-red-700" onClick={handleLogout}>Logout</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* MAIN AREA */}
-      <div className="flex-1 min-h-screen">
-        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/5 backdrop-blur-md border-b border-white/10">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Settings</h2>
-            <p className="text-sm text-slate-400">Manage your account settings & preferences</p>
+      {/* 2. MOBILE SIDEBAR OVERLAY */}
+      <div 
+        className={`fixed inset-0 bg-black/80 z-[45] lg:hidden backdrop-blur-md transition-all duration-300 ${
+          sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        }`} 
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* 3. SIDEBAR */}
+      <aside
+        className={`fixed lg:relative z-50 h-full transition-all duration-300 ease-in-out bg-gradient-to-b from-[#071129] to-gray-900 text-white shadow-2xl border-r border-slate-700 flex flex-col shrink-0 overflow-hidden
+        ${sidebarOpen 
+            ? "translate-x-0 w-full sm:w-80 lg:w-64 opacity-100 visible" 
+            : "-translate-x-full lg:translate-x-0 w-0 lg:w-0 opacity-0 invisible pointer-events-none"}`}
+      >
+        <div className="flex items-center justify-between px-4 py-5 border-b border-white/10 shrink-0 h-[73px]">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="bg-white rounded-xl p-2 shadow-md flex items-center justify-center w-10 h-10 shrink-0">
+              <img src="/iem-logo.jpg" alt="Logo" className="object-contain w-full h-full" />
+            </div>
+            {sidebarOpen && (
+              <div className="whitespace-nowrap transition-opacity duration-300">
+                <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
+                <div className="text-xs text-slate-400 font-medium">Admin Portal</div>
+              </div>
+            )}
+          </div>
+          {sidebarOpen && (
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors">
+              <X size={28}/>
+            </button>
+          )}
+        </div>
+
+        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+          <SidebarButton open={sidebarOpen} icon={<PieChartIcon size={20} />} label="Dashboard" onClick={() => router.push("/dashboard")} />
+          {isAdmin && <SidebarButton open={sidebarOpen} icon={<UserCheck size={20} />} label="Admin Panel" onClick={() => router.push("/admin/admin_panel")} />}
+          {isAdmin && <SidebarButton open={sidebarOpen} icon={<FileText size={20} />} label="Analytics & Reports" onClick={() => router.push("/admin/reports")} />}
+          <SidebarButton open={sidebarOpen} icon={<Calendar size={20} />} label="Events" onClick={() => router.push("/event")} />
+          <SidebarButton open={sidebarOpen} icon={<CheckSquare size={20} />} label="Attendance" onClick={() => router.push("/attendance")} />
+          <SidebarButton open={sidebarOpen} icon={<Settings size={20} />} label="Settings" onClick={() => router.push("/settings")} active />
+          <SidebarButton open={sidebarOpen} icon={<HelpCircle size={20} />} label="Help Center" onClick={() => router.push("/admin/help")} />
+          <div className="mt-6 border-t border-white/10 pt-4">
+            <SidebarButton open={sidebarOpen} icon={<LogOut size={20} />} label="Logout" onClick={() => setIsLogoutModalOpen(true)} variant="destructive" />
+          </div>
+        </nav>
+      </aside>
+
+      {/* 4. MAIN LAYOUT AREA */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+        
+        {/* GLASSY STICKY HEADER */}
+        <header className="flex items-center justify-between px-4 lg:px-8 py-3 sticky top-0 z-40 bg-slate-900/60 backdrop-blur-md border-b border-white/10 shadow-xl shrink-0 h-[73px]">
+          <div className="flex items-center gap-4 min-w-0">
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              className="p-2 text-slate-200 bg-white/5 hover:bg-white/10 rounded-lg transition-colors shrink-0"
+            >
+              <Menu size={24}/>
+            </button>
+            <div className="min-w-0">
+              <h2 className="text-lg lg:text-2xl font-bold tracking-tight text-white truncate">Settings</h2>
+              <p className="hidden xs:block text-[10px] sm:text-xs text-slate-400 truncate">Manage account preferences</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 lg:gap-5 ml-4">
             <NotificationBell />
-            <div className="text-right hidden sm:block">
-              <div className="text-sm font-semibold text-white">{user.name}</div>
-              <div className="text-xs text-slate-400 capitalize">{user.role}</div>
+            <div className="flex items-center gap-3 border-l border-white/10 pl-3">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-semibold text-white leading-none truncate max-w-[120px]">{user.name}</div>
+                <div className="text-[10px] text-slate-400 uppercase mt-1">{user.role}</div>
+              </div>
+              <UserAvatar size="sm" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-full transition-colors h-9 w-9 shrink-0"
+              >
+                <LogOut size={20} />
+              </Button>
             </div>
-
-            <button
-              onClick={() => router.push("/profile")}
-              className="rounded-full overflow-hidden border-2 border-transparent shadow hover:ring-2 hover:ring-indigo-500 transition-all cursor-pointer"
-              title="View Profile"
-            >
-              <UserAvatar size="md" />
-            </button>
           </div>
         </header>
 
-        <main className="px-8 py-10 max-w-7xl mx-auto space-y-6">
+        {/* SCROLLABLE SETTINGS CONTENT */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
+          <div className="max-w-4xl mx-auto w-full space-y-6">
           {message && (
             <Alert
               className={
@@ -923,45 +1028,48 @@ export default function SettingsPage() {
               )}
             </>
           )}
+          </div>
         </main>
       </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+      `}</style>
     </div>
   );
 }
 
-/* Sidebar Button Component (typed, optional props with defaults) */
-type SidebarButtonVariant = "default" | "destructive";
+/* --- REUSABLE COMPONENTS --- */
 
-interface SidebarButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  open: boolean;
-  active?: boolean;
-  onClick?: () => void;
-  variant?: SidebarButtonVariant;
-}
+function SidebarButton({ icon, label, open, active, onClick, variant }: any) {
+  const isDestructive = variant === 'destructive';
 
-function SidebarButton({
-  icon,
-  label,
-  open,
-  active = false,
-  onClick,
-  variant = "default",
-}: SidebarButtonProps) {
-  const baseClasses =
-    "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors duration-200 font-medium";
+  // If the sidebar is closed, show only the icon
+  if (!open) {
+    return (
+      <button 
+        onClick={onClick} 
+        className={`w-full flex items-center justify-center py-4 transition-all ${active ? "text-indigo-400" : "text-slate-400"}`}
+      >
+        <div className="w-6 h-6 shrink-0">{icon}</div>
+      </button>
+    );
+  }
 
-  const activeClasses = active
-    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg"
-    : variant === "destructive"
-    ? "text-rose-300 hover:bg-rose-900/30"
-    : "text-slate-300 hover:bg-gray-800 hover:text-white";
-
+  // If the sidebar is open, show icon and label
   return (
-    <button onClick={onClick} className={`${baseClasses} ${activeClasses}`}>
-      <div className={`w-6 h-6 flex items-center justify-center transition-transform ${active ? "scale-100" : "scale-90"}`}>{icon}</div>
-      {open && <span className="truncate">{label}</span>}
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-4 lg:py-3 rounded-lg text-base lg:text-sm transition-all duration-200 font-medium whitespace-nowrap
+      ${active ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg" : 
+        isDestructive ? "text-rose-300 hover:bg-rose-900/30" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+    >
+      <div className="w-6 h-6 flex items-center justify-center shrink-0">{icon}</div>
+      <span className="truncate">{label}</span>
+      {active && <ChevronRight size={14} className="ml-auto opacity-50" />}
     </button>
   );
 }
