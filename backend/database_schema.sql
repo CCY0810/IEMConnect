@@ -180,6 +180,33 @@ CREATE TABLE IF NOT EXISTS notifications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
+-- TABLE: feedback
+-- Description: Stores participant feedback for events
+-- =====================================================
+CREATE TABLE IF NOT EXISTS feedback (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  event_id INT NOT NULL,
+  rating TINYINT NOT NULL,
+  comment TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  -- Foreign keys
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+  
+  -- One feedback per user per event
+  UNIQUE KEY unique_user_event_feedback (user_id, event_id),
+  
+  -- Indexes for performance
+  INDEX idx_feedback_event_id (event_id),
+  INDEX idx_feedback_user_id (user_id),
+  INDEX idx_feedback_created_at (created_at),
+  INDEX idx_feedback_rating (rating)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
 -- END OF SCHEMA
 -- =====================================================
 -- 
@@ -189,6 +216,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- 3. event_registrations - User event registrations (with status tracking)
 -- 4. attendance - Attendance records (linked to registrations)
 -- 5. notifications - User notifications (in-app messaging)
+-- 6. feedback - Participant feedback for events
 --
 -- All foreign keys are set with ON DELETE CASCADE
 -- All tables use InnoDB engine with utf8mb4 charset for full Unicode support
@@ -200,6 +228,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- - Attendance: marked_at, created_at, updated_at
 -- - Users: created_at, updated_at, two_fa_code_expiry, reset_password_expiry
 -- - Notifications: created_at
+-- - Feedback: created_at, updated_at
 --
 -- Performance Indexes for Reports & Analytics:
 -- Users Table:
@@ -221,6 +250,12 @@ CREATE TABLE IF NOT EXISTS notifications (
 --   - idx_attendance_marked_at: For time-based attendance queries
 --   - idx_attendance_method: For method distribution queries (GROUP BY method)
 --   - idx_attendance_registration_marked_at: Composite index for attendance time queries
+--
+-- Feedback Table:
+--   - idx_feedback_event_id: For filtering feedback by event
+--   - idx_feedback_user_id: For getting user's feedback history
+--   - idx_feedback_created_at: For time-based feedback queries
+--   - idx_feedback_rating: For rating distribution queries (GROUP BY rating)
 --
 -- Indexes included:
 -- - Unique indexes: email, matric_number, user+event registration, registration attendance
