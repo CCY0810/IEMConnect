@@ -253,6 +253,107 @@ class EmailService {
       return { success: false, error: error.message };
     }
   }
+
+  async sendAdminInviteEmail(to, name, inviteUrl, inviterName) {
+    try {
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject: "IEM Connect - You've Been Invited as an Admin!",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">🎉 Admin Invitation</h2>
+            <p>Hello ${name},</p>
+            <p><strong>${inviterName}</strong> has invited you to join IEM Connect as an <strong>Administrator</strong>.</p>
+            <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0; color: #1e40af;"><strong>What this means:</strong></p>
+              <ul style="color: #1e40af; margin: 10px 0;">
+                <li>You'll have full admin access to IEM Connect</li>
+                <li>Manage events, users, and reports</li>
+                <li>Approve new member registrations</li>
+              </ul>
+            </div>
+            <p>Click the button below to complete your registration:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${inviteUrl}" style="background-color: #6366f1; color: white; padding: 14px 35px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Accept Invitation</a>
+            </div>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; word-break: break-all; font-size: 12px;">${inviteUrl}</p>
+            <p><strong>This invitation link expires in 7 days.</strong></p>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+              This is an automated message from IEM Connect. Please do not reply to this email.
+            </p>
+          </div>
+        `,
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log("Admin invite email sent: %s", info.messageId);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error("Error sending admin invite email:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendRoleChangeEmail(to, name, newRole, changedByName) {
+    try {
+      const isPromotion = newRole === "admin";
+      const subject = isPromotion 
+        ? "IEM Connect - You've Been Promoted to Admin!" 
+        : "IEM Connect - Your Role Has Changed";
+      
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">${isPromotion ? '🎉 Congratulations!' : 'Role Update'}</h2>
+            <p>Hello ${name},</p>
+            <p>Your role on IEM Connect has been ${isPromotion ? 'upgraded' : 'changed'} by <strong>${changedByName}</strong>.</p>
+            <div style="background-color: ${isPromotion ? '#f0fdf4' : '#fef2f2'}; border-left: 4px solid ${isPromotion ? '#22c55e' : '#ef4444'}; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0; color: ${isPromotion ? '#166534' : '#991b1b'};">
+                <strong>Your new role:</strong> ${newRole.charAt(0).toUpperCase() + newRole.slice(1)}
+              </p>
+            </div>
+            ${isPromotion ? `
+              <p>As an admin, you now have access to:</p>
+              <ul>
+                <li>User management and verification</li>
+                <li>Event creation and management</li>
+                <li>Reports and analytics</li>
+                <li>System settings</li>
+              </ul>
+            ` : `
+              <p>You will continue to have access to member features including:</p>
+              <ul>
+                <li>Event registration and attendance</li>
+                <li>Your profile and certificates</li>
+                <li>Event history</li>
+              </ul>
+            `}
+            <p style="margin-top: 20px;">
+              <a href="${process.env.FRONTEND_URL || "http://localhost:3000"}/dashboard" style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Go to Dashboard</a>
+            </p>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+              This is an automated message from IEM Connect. Please do not reply to this email.
+            </p>
+          </div>
+        `,
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log("Role change email sent: %s", info.messageId);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error("Error sending role change email:", error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export default new EmailService();
+

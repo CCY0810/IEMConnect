@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "seed:admin": "node seeders/seedAdmin.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

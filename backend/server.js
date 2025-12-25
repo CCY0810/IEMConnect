@@ -12,6 +12,7 @@ import notificationsRoutes from "./routes/notifications.js";
 import certificatesRoutes from "./routes/certificates.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import feedbackRoutes from "./routes/feedback.js";
+import adminRoutes from "./routes/admin.js";
 import { apiRateLimit } from "./middleware/rateLimiter.js";
 import eventReminderScheduler from "./utils/eventReminderScheduler.js";
 
@@ -55,6 +56,7 @@ app.use("/api/v1/notifications", notificationsRoutes);
 app.use("/api/v1/certificates", certificatesRoutes);
 app.use("/api/v1/chatbot", chatbotRoutes);
 app.use("/api/v1/feedback", feedbackRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

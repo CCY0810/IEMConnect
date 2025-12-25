@@ -30,6 +30,7 @@ export type ActivePage =
   | "attendance"
   | "my-events"
   | "settings"
+  | "users"
   | "help";
 
 interface AdminSidebarProps {
@@ -191,6 +192,17 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
           onClick={() => router.push("/my-events")}
           active={activePage === "my-events"}
         />
+
+        {/* User Management */}
+        {isAdmin && (
+          <SidebarButton
+            open={sidebarOpen}
+            icon={<UserCheck size={20} />}
+            label="User Management"
+            onClick={() => router.push("/admin/users")}
+            active={activePage === "users"}
+          />
+        )}
 
         {/* Settings */}
         <SidebarButton
