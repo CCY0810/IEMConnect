@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { getEvents, Event } from "@/lib/event-api";
+import { formatDateDDMMYYYY } from "@/lib/dateFormatter";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
 import { getFileUrl } from "@/lib/event-api";
@@ -39,7 +40,9 @@ import {
   ChevronRight,
   FileText,
   ChevronLeft,
+  UserCheck,
 } from "lucide-react";
+import AdminSidebar from "@/components/AdminSidebar";
 
 export default function EventsPage() {
   const router = useRouter();

@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import NotificationBell from "@/components/NotificationBell";
+import AdminSidebar from "@/components/AdminSidebar";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -339,56 +340,62 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#F3F6FB]">
-      {/* HEADER */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+      {/* SIDEBAR */}
+      <AdminSidebar activePage="settings" />
+
+      {/* MAIN AREA */}
+      <div className="flex-1 min-h-screen">
+        {/* HEADER */}
+        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/dashboard")}
-              className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors text-white"
             >
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-semibold text-slate-900">
+              <h2 className="text-2xl font-bold tracking-tight text-white">
                 My Profile
-              </h1>
-              <p className="text-sm text-slate-500">
+              </h2>
+              <p className="text-sm text-slate-300">
                 View and manage your account information
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <NotificationBell />
+            <div className="text-right hidden sm:block">
+              <div className="text-sm font-semibold text-white">{user.name}</div>
+              <div className="text-xs text-slate-400 capitalize">{user.role}</div>
+            </div>
+            <div className="rounded-full overflow-hidden border-2 border-transparent shadow">
+              <UserAvatar size="md" />
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* CONTENT */}
-      <main className="max-w-4xl mx-auto px-6 py-10">
-        {/* MESSAGE */}
-        {message && (
-          <Alert
-            className={`mb-6 ${
-              message.type === "error"
-                ? "bg-red-50 border-red-200"
-                : "bg-green-50 border-green-200"
-            }`}
-          >
-            <AlertDescription
-              className={
-                message.type === "error" ? "text-red-800" : "text-green-800"
-              }
+        {/* CONTENT */}
+        <main className="px-8 py-10 max-w-4xl mx-auto">
+          {/* MESSAGE */}
+          {message && (
+            <Alert
+              className={`mb-6 ${
+                message.type === "error"
+                  ? "bg-rose-900/70 border-rose-700 text-rose-200"
+                  : "bg-emerald-900/70 border-emerald-700 text-emerald-200"
+              }`}
             >
-              {message.text}
-            </AlertDescription>
-          </Alert>
-        )}
+              <AlertDescription>
+                {message.text}
+              </AlertDescription>
+            </Alert>
+          )}
 
-        {/* PROFILE CARD */}
-        <Card className="bg-white shadow-sm">
-          <CardHeader className="border-b border-slate-100">
+          {/* PROFILE CARD */}
+          <Card className="bg-slate-800 border border-slate-700 shadow-lg">
+          <CardHeader className="border-b border-slate-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative group">
@@ -412,8 +419,7 @@ export default function ProfilePage() {
               {!isEditing && (
                 <Button
                   onClick={() => setIsEditing(true)}
-                  variant="outline"
-                  className="gap-2"
+                  className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
                 >
                   <Edit2 size={16} />
                   Edit Profile
@@ -426,10 +432,10 @@ export default function ProfilePage() {
             <div className="space-y-6">
               {/* NAME - Editable */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Full Name{" "}
                   {isEditing && (
-                    <span className="text-blue-600">(Editable)</span>
+                    <span className="text-indigo-400">(Editable)</span>
                   )}
                 </label>
                 {isEditing ? (
@@ -437,11 +443,11 @@ export default function ProfilePage() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="max-w-md"
+                    className="max-w-md bg-slate-900 border-slate-600 text-white"
                     placeholder="Enter your full name"
                   />
                 ) : (
-                  <p className="text-lg font-medium text-slate-900">
+                  <p className="text-lg font-medium text-white">
                     {user.name}
                   </p>
                 )}
@@ -449,61 +455,61 @@ export default function ProfilePage() {
 
               {/* EMAIL - Read-only */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Email Address{" "}
-                  <span className="text-slate-400">(Read-only)</span>
+                  <span className="text-slate-500">(Read-only)</span>
                 </label>
-                <p className="text-lg text-slate-600">{user.email}</p>
+                <p className="text-lg text-slate-300">{user.email}</p>
               </div>
 
               {/* MEMBERSHIP NUMBER - Read-only */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   IEM Membership Number{" "}
-                  <span className="text-slate-400">(Read-only)</span>
+                  <span className="text-slate-500">(Read-only)</span>
                 </label>
-                <p className="text-lg font-mono text-slate-900 bg-slate-50 px-3 py-2 rounded-md inline-block">
+                <p className="text-lg font-mono text-white bg-slate-900 px-3 py-2 rounded-md inline-block border border-slate-600">
                   {user.membership_number}
                 </p>
               </div>
 
               {/* MATRIC NUMBER - Read-only */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Matric Number{" "}
-                  <span className="text-slate-400">(Read-only)</span>
+                  <span className="text-slate-500">(Read-only)</span>
                 </label>
-                <p className="text-lg font-mono text-slate-900 bg-slate-50 px-3 py-2 rounded-md inline-block">
+                <p className="text-lg font-mono text-white bg-slate-900 px-3 py-2 rounded-md inline-block border border-slate-600">
                   {user.matric_number}
                 </p>
               </div>
 
               {/* FACULTY - Read-only */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Faculty <span className="text-slate-400">(Read-only)</span>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Faculty <span className="text-slate-500">(Read-only)</span>
                 </label>
-                <p className="text-lg text-slate-900">{user.faculty}</p>
+                <p className="text-lg text-white">{user.faculty}</p>
               </div>
 
               {/* BIO - Editable */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Bio{" "}
                   {isEditing && (
-                    <span className="text-blue-600">(Editable)</span>
+                    <span className="text-indigo-400">(Editable)</span>
                   )}
                 </label>
                 {isEditing ? (
                   <textarea
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex min-h-[120px] w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white ring-offset-background placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="Tell us about yourself (max 500 characters)"
                     maxLength={500}
                   />
                 ) : (
-                  <p className="text-lg text-slate-700">
+                  <p className="text-lg text-slate-300">
                     {user.bio || "No bio provided"}
                   </p>
                 )}
@@ -516,14 +522,14 @@ export default function ProfilePage() {
 
               {/* ROLE - Read-only */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Account Role{" "}
-                  <span className="text-slate-400">(Read-only)</span>
+                  <span className="text-slate-500">(Read-only)</span>
                 </label>
-                <p className="text-lg capitalize text-slate-900">
+                <p className="text-lg capitalize text-white">
                   {user.role}
                   {user.role === "admin" && (
-                    <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold">
+                    <span className="ml-2 text-xs bg-indigo-900 text-indigo-300 px-2 py-1 rounded-full font-semibold">
                       Administrator
                     </span>
                   )}
@@ -532,20 +538,19 @@ export default function ProfilePage() {
 
               {/* ACTION BUTTONS */}
               {isEditing && (
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
+                <div className="flex gap-3 pt-4 border-t border-slate-700">
                   <Button
                     onClick={handleSave}
                     disabled={loading}
-                    className="gap-2"
+                    className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
                   >
                     <Save size={16} />
                     {loading ? "Saving..." : "Save Changes"}
                   </Button>
                   <Button
                     onClick={handleCancel}
-                    variant="outline"
                     disabled={loading}
-                    className="gap-2"
+                    className="gap-2 bg-slate-700 text-white hover:bg-slate-600"
                   >
                     <X size={16} />
                     Cancel
@@ -557,13 +562,13 @@ export default function ProfilePage() {
         </Card>
 
         {/* SECURITY NOTE */}
-        <Card className="mt-6 bg-blue-50 border-blue-200">
+        <Card className="mt-6 bg-indigo-900/30 border-indigo-700">
           <CardContent className="pt-6">
             <div className="flex gap-3">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-indigo-800/50 flex items-center justify-center">
                   <svg
-                    className="w-5 h-5 text-blue-600"
+                    className="w-5 h-5 text-indigo-400"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -576,10 +581,10 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                <h3 className="text-sm font-semibold text-indigo-200 mb-1">
                   Security Information
                 </h3>
-                <p className="text-sm text-blue-800">
+                <p className="text-sm text-indigo-300">
                   Your email and membership number cannot be changed for
                   security reasons. If you need to update these fields, please
                   contact your administrator.
@@ -590,16 +595,16 @@ export default function ProfilePage() {
         </Card>
 
         {/* PASSWORD CHANGE SECTION */}
-        <Card className="mt-6">
-          <CardHeader className="border-b border-slate-100">
+        <Card className="mt-6 bg-slate-800 border border-slate-700">
+          <CardHeader className="border-b border-slate-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Lock size={20} className="text-slate-600" />
+                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                  <Lock size={20} className="text-indigo-400" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Password & Security</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-lg text-white">Password & Security</CardTitle>
+                  <CardDescription className="text-slate-400">
                     Manage your account password
                   </CardDescription>
                 </div>
@@ -608,8 +613,7 @@ export default function ProfilePage() {
               {!showPasswordSection && (
                 <Button
                   onClick={() => setShowPasswordSection(true)}
-                  variant="outline"
-                  className="gap-2"
+                  className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
                 >
                   <Lock size={16} />
                   Change Password
@@ -620,7 +624,7 @@ export default function ProfilePage() {
 
           <CardContent className="pt-6">
             {!showPasswordSection ? (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-400">
                 Keep your account secure by using a strong password. Click
                 "Change Password" to update your password.
               </p>
@@ -631,17 +635,11 @@ export default function ProfilePage() {
                   <Alert
                     className={`${
                       passwordMessage.type === "error"
-                        ? "bg-red-50 border-red-200"
-                        : "bg-green-50 border-green-200"
+                        ? "bg-rose-900/70 border-rose-700 text-rose-200"
+                        : "bg-emerald-900/70 border-emerald-700 text-emerald-200"
                     }`}
                   >
-                    <AlertDescription
-                      className={
-                        passwordMessage.type === "error"
-                          ? "text-red-800"
-                          : "text-green-800"
-                      }
-                    >
+                    <AlertDescription>
                       {passwordMessage.text}
                     </AlertDescription>
                   </Alert>
@@ -649,7 +647,7 @@ export default function ProfilePage() {
 
                 {/* CURRENT PASSWORD */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Current Password *
                   </label>
                   <div className="relative">
@@ -659,13 +657,14 @@ export default function ProfilePage() {
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter your current password"
                       disabled={passwordLoading}
+                      className="bg-slate-900 border-slate-600 text-white"
                     />
                     <button
                       type="button"
                       onClick={() =>
                         setShowCurrentPassword(!showCurrentPassword)
                       }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
                     >
                       {showCurrentPassword ? (
                         <EyeOff size={18} />
@@ -678,7 +677,7 @@ export default function ProfilePage() {
 
                 {/* NEW PASSWORD */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     New Password *
                   </label>
                   <div className="relative">
@@ -688,11 +687,12 @@ export default function ProfilePage() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password (min. 6 characters)"
                       disabled={passwordLoading}
+                      className="bg-slate-900 border-slate-600 text-white"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
                     >
                       {showNewPassword ? (
                         <EyeOff size={18} />
@@ -705,7 +705,7 @@ export default function ProfilePage() {
 
                 {/* CONFIRM NEW PASSWORD */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Confirm New Password *
                   </label>
                   <div className="relative">
@@ -715,13 +715,14 @@ export default function ProfilePage() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter new password"
                       disabled={passwordLoading}
+                      className="bg-slate-900 border-slate-600 text-white"
                     />
                     <button
                       type="button"
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
                     >
                       {showConfirmPassword ? (
                         <EyeOff size={18} />
@@ -733,37 +734,36 @@ export default function ProfilePage() {
                 </div>
 
                 {/* PASSWORD REQUIREMENTS */}
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-slate-900 mb-2">
+                <div className="bg-slate-900 border border-slate-600 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-slate-200 mb-2">
                     Password Requirements:
                   </h4>
-                  <ul className="text-sm text-slate-600 space-y-1">
+                  <ul className="text-sm text-slate-400 space-y-1">
                     <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                       At least 6 characters long
                     </li>
                     <li className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                       Use a unique password not used elsewhere
                     </li>
                   </ul>
                 </div>
 
                 {/* ACTION BUTTONS */}
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
+                <div className="flex gap-3 pt-4 border-t border-slate-700">
                   <Button
                     onClick={handleChangePassword}
                     disabled={passwordLoading}
-                    className="gap-2"
+                    className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
                   >
                     <Save size={16} />
                     {passwordLoading ? "Changing..." : "Change Password"}
                   </Button>
                   <Button
                     onClick={handleCancelPasswordChange}
-                    variant="outline"
                     disabled={passwordLoading}
-                    className="gap-2"
+                    className="gap-2 border-slate-600 bg-slate-700 text-white hover:bg-slate-600"
                   >
                     <X size={16} />
                     Cancel
@@ -775,18 +775,18 @@ export default function ProfilePage() {
         </Card>
 
         {/* DANGER ZONE */}
-        <Card className="mt-6 border-red-200 bg-red-50/50">
-          <CardHeader className="border-b border-red-100">
+        <Card className="mt-6 border-rose-800/50 bg-rose-950/30">
+          <CardHeader className="border-b border-rose-800/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertTriangle size={20} className="text-red-600" />
+                <div className="w-10 h-10 rounded-full bg-rose-900/50 flex items-center justify-center">
+                  <AlertTriangle size={20} className="text-rose-400" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg text-red-900">
+                  <CardTitle className="text-lg text-rose-200">
                     Danger Zone
                   </CardTitle>
-                  <CardDescription className="text-red-700">
+                  <CardDescription className="text-rose-400">
                     Irreversible and destructive actions
                   </CardDescription>
                 </div>
@@ -796,7 +796,7 @@ export default function ProfilePage() {
                 <Button
                   onClick={() => setShowDeleteSection(true)}
                   variant="destructive"
-                  className="gap-2"
+                  className="gap-2 bg-rose-600 text-white hover:bg-rose-700"
                 >
                   <AlertTriangle size={16} />
                   Delete Account
@@ -1044,6 +1044,7 @@ export default function ProfilePage() {
           </Card>
         </div>
       )}
+      </div>
     </div>
   );
 }

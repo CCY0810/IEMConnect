@@ -45,6 +45,7 @@ import {
 import React from "react";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
+import AdminSidebar from "@/components/AdminSidebar";
 import {
   getUsersInsights as fetchUsersInsights,
   getEventOperations as fetchEventOperations,
@@ -53,7 +54,10 @@ import {
   getRegistrationsVsAttendance as fetchTrend,
   getRecentActivity as fetchRecentActivity,
   getTopEvents as fetchTopEvents,
+  getFeedbackSummary as fetchFeedbackSummary,
+  FeedbackSummary,
 } from "@/lib/reports-api";
+import FeedbackStats from "@/components/FeedbackStats";
 import { getEvents, getEventById, Event } from "@/lib/event-api";
 import { getEventParticipants } from "@/lib/event-api";
 import { getAttendanceList } from "@/lib/attendance-api";
@@ -131,6 +135,10 @@ export default function ReportsPage() {
     useState<Awaited<ReturnType<typeof fetchRecentActivity>>>([]);
   const [topEvents, setTopEvents] =
     useState<Awaited<ReturnType<typeof fetchTopEvents>>>([]);
+  
+  // Feedback analytics state
+  const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary | null>(null);
+  const [loadingFeedback, setLoadingFeedback] = useState(true);
 
   // Loading states for progressive rendering
   const [loadingStates, setLoadingStates] = useState({
@@ -147,6 +155,13 @@ export default function ReportsPage() {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [eventStats, setEventStats] = useState<any>(null);
   const [loadingEventStats, setLoadingEventStats] = useState(false);
+
+  // Chart expand modal state
+  const [detailModal, setDetailModal] = useState<{
+    isOpen: boolean;
+    type: "faculty" | "trend" | "status" | "methods" | "timeline" | null;
+    title: string;
+  }>({ isOpen: false, type: null, title: "" });
 
   const isAdmin = user?.role === "admin";
 
@@ -353,6 +368,19 @@ export default function ReportsPage() {
       }
     };
 
+    // Load feedback summary
+    const loadFeedback = async () => {
+      try {
+        setLoadingFeedback(true);
+        const feedbackData = await fetchFeedbackSummary();
+        setFeedbackSummary(feedbackData);
+      } catch (err) {
+        console.error("Failed to load feedback summary:", err);
+      } finally {
+        setLoadingFeedback(false);
+      }
+    };
+
     // Load tables last
     const loadTables = async () => {
       try {
@@ -369,10 +397,11 @@ export default function ReportsPage() {
       }
     };
 
-    // Progressive loading: KPIs -> Charts -> Tables
+    // Progressive loading: KPIs -> Charts -> Tables -> Feedback
     loadKPIs();
     setTimeout(() => loadCharts(), 100);
     setTimeout(() => loadTables(), 200);
+    setTimeout(() => loadFeedback(), 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
@@ -446,6 +475,31 @@ export default function ReportsPage() {
           activitySheet,
           "Recent Activity"
         );
+
+        // Feedback Summary Sheet
+        if (feedbackSummary) {
+          const feedbackSheetData = [
+            ["Feedback Summary", ""],
+            ["Total Feedback Received", feedbackSummary.total_feedback || 0],
+            ["Overall Average Rating", (feedbackSummary.overall_average_rating || 0).toFixed(2)],
+            ["Events with Feedback", feedbackSummary.events_with_feedback || 0],
+            ["", ""],
+            ["Rating Distribution", "Count"],
+            ["5 Stars", feedbackSummary.rating_distribution?.["5"] || 0],
+            ["4 Stars", feedbackSummary.rating_distribution?.["4"] || 0],
+            ["3 Stars", feedbackSummary.rating_distribution?.["3"] || 0],
+            ["2 Stars", feedbackSummary.rating_distribution?.["2"] || 0],
+            ["1 Star", feedbackSummary.rating_distribution?.["1"] || 0],
+            ["", ""],
+            ["Top Rated Events", "Avg Rating"],
+            ...(feedbackSummary.top_rated_events || []).map((e) => [
+              e.title,
+              e.avg_rating.toFixed(2),
+            ]),
+          ];
+          const feedbackSheet = XLSX.utils.aoa_to_sheet(feedbackSheetData);
+          XLSX.utils.book_append_sheet(workbook, feedbackSheet, "Feedback Summary");
+        }
 
         const fileName = `analytics-overall-${new Date()
           .toISOString()
@@ -1326,6 +1380,42 @@ export default function ReportsPage() {
                     </Card>
                   </>
                 ) : null}
+              </div>
+
+              {/* Feedback Analytics Section */}
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <span className="text-2xl">📊</span>
+                  Feedback Analytics
+                </h3>
+                {feedbackSummary ? (
+                  <FeedbackStats
+                    averageRating={feedbackSummary.overall_average_rating || 0}
+                    totalFeedback={feedbackSummary.total_feedback || 0}
+                    ratingDistribution={feedbackSummary.rating_distribution || {}}
+                    recentFeedback={feedbackSummary.recent_feedback || []}
+                    loading={loadingFeedback}
+                  />
+                ) : loadingFeedback ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
+                      <CardContent className="pt-6">
+                        <Skeleton className="h-32 w-full" />
+                      </CardContent>
+                    </Card>
+                    <Card className="lg:col-span-2 bg-slate-800 border-0 shadow-lg rounded-xl">
+                      <CardContent className="pt-6">
+                        <Skeleton className="h-48 w-full" />
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card className="bg-slate-800 border-0 shadow-lg rounded-xl">
+                    <CardContent className="py-8 text-center text-slate-400">
+                      No feedback data available yet.
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </TabsContent>
 

@@ -75,6 +75,7 @@ import {
 import { changePassword, deleteAccount } from "@/lib/profile-api";
 import { useToast } from "@/hooks/use-toast";
 import React from "react";
+import AdminSidebar from "@/components/AdminSidebar";
 
 interface UserPreferences {
   notifications: {

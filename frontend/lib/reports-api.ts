@@ -93,3 +93,62 @@ export const getTopEvents = async (): Promise<TopEventItem[]> => {
   const res = await api.get("/reports/top-events");
   return res.data.top_events;
 };
+
+// Feedback Analytics Types
+export interface FeedbackSummary {
+  total_feedback: number;
+  overall_average_rating: number;
+  events_with_feedback: number;
+  rating_distribution: Record<string, number>;
+  top_rated_events: Array<{
+    event_id: number;
+    title: string;
+    avg_rating: number;
+    count: number;
+  }>;
+  recent_feedback: Array<{
+    id: number;
+    event_id: number;
+    event_title: string;
+    user_name: string;
+    rating: number;
+    comment: string | null;
+    created_at: string;
+  }>;
+}
+
+export interface EventFeedbackStats {
+  event: {
+    id: number;
+    title: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+  };
+  stats: {
+    total_feedback: number;
+    average_rating: number;
+    rating_distribution: Record<string, number>;
+  };
+  feedback: Array<{
+    id: number;
+    user_id: number;
+    user_name: string;
+    user_email: string;
+    user_faculty: string;
+    rating: number;
+    comment: string | null;
+    created_at: string;
+  }>;
+}
+
+// Feedback Analytics API calls
+export const getFeedbackSummary = async (): Promise<FeedbackSummary> => {
+  const res = await api.get("/feedback/reports/summary");
+  return res.data;
+};
+
+export const getEventFeedbackStats = async (eventId: number): Promise<EventFeedbackStats> => {
+  const res = await api.get(`/feedback/event/${eventId}`);
+  return res.data;
+};

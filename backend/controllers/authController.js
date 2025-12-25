@@ -645,10 +645,10 @@ export const uploadAvatar = async (req, res) => {
       try {
         const fs = await import("fs");
         if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          await fs.promises.unlink(req.file.path);
         }
       } catch (cleanupError) {
-        console.error("Error cleaning up temp file:", cleanupError);
+        console.warn("Warning: Could not clean up temp file:", cleanupError.message);
       }
     }
 

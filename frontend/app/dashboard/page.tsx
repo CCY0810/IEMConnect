@@ -179,7 +179,24 @@ export default function DashboardPage() {
                 <div className="text-base font-extrabold tracking-wide">IEM Connect</div>
                 <div className="text-xs text-slate-400 font-medium">{isAdmin ? "Admin Portal" : "Member Dashboard"}</div>
               </div>
-            )}
+              <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
+              <p className="mb-6 text-slate-400">Are you sure you want to end your session?</p>
+              <div className="flex w-full gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700" 
+                  onClick={() => setIsLogoutModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 bg-red-600 text-white hover:bg-red-700" 
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            </div>
           </div>
           
           {sidebarOpen && (
