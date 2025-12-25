@@ -17,6 +17,13 @@ const sequelize = new Sequelize(
     port: process.env.DB_PORT || 3306,
     dialect: "mysql",
     logging: false,
+    // TiDB Cloud SSL configuration
+    dialectOptions: process.env.DB_HOST?.includes('tidbcloud.com') ? {
+      ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+      }
+    } : {},
     // CRITICAL: Disable all automatic schema synchronization
     // Indexes should ONLY be created via migrations
     define: {
