@@ -4,7 +4,7 @@
  */
 
 import express from "express";
-import { authenticateToken } from "../middleware/auth.js";
+import { verifyToken } from "../middleware/auth.js";
 import {
   createAdminInvite,
   validateInviteToken,
@@ -23,11 +23,11 @@ router.get("/invite/:token", validateInviteToken);
 router.post("/register", registerWithInvite);
 
 // Protected routes (admin only)
-router.post("/invite", authenticateToken, createAdminInvite);
-router.get("/invites", authenticateToken, getPendingInvites);
-router.delete("/invite/:id", authenticateToken, revokeInvite);
-router.post("/promote", authenticateToken, promoteToAdmin);
-router.post("/demote", authenticateToken, demoteToMember);
-router.get("/users", authenticateToken, getAllUsers);
+router.post("/invite", verifyToken, createAdminInvite);
+router.get("/invites", verifyToken, getPendingInvites);
+router.delete("/invite/:id", verifyToken, revokeInvite);
+router.post("/promote", verifyToken, promoteToAdmin);
+router.post("/demote", verifyToken, demoteToMember);
+router.get("/users", verifyToken, getAllUsers);
 
 export default router;
