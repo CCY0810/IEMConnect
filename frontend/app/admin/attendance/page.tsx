@@ -412,7 +412,7 @@ export default function AdminAttendancePage() {
                             <div className="bg-white p-4 rounded-lg border-2 border-indigo-300 flex justify-center">
                               <div className="text-center">
                                 <QRCodeSVG
-                                  value={`${window.location.origin}/attendance?code=${selectedEvent.attendance_code}`}
+                                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/attendance?code=${selectedEvent.attendance_code}`}
                                   size={192}
                                   level="H"
                                   includeMargin={true}

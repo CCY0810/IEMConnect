@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -84,6 +84,14 @@ interface AttendedEvent {
 }
 
 export default function AttendancePage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen bg-slate-900 items-center justify-center"><div className="text-white">Loading...</div></div>}>
+      <AttendancePageContent />
+    </Suspense>
+  );
+}
+
+function AttendancePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, token, logout } = useAuth();

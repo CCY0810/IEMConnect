@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { QRCodeSVG } from "qrcode.react";
@@ -86,6 +86,14 @@ import {
 } from "lucide-react";
 
 export default function ViewEventPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen bg-slate-900 items-center justify-center"><div className="text-white">Loading...</div></div>}>
+      <ViewEventPageContent />
+    </Suspense>
+  );
+}
+
+function ViewEventPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
@@ -2158,7 +2166,7 @@ export default function ViewEventPage() {
                                 <div className="bg-slate-900 p-4 rounded-lg border-2 border-indigo-500/50 flex justify-center">
                                   <div className="text-center">
                                     <QRCodeSVG
-                                      value={`${window.location.origin}/attendance?code=${event.attendance_code}`}
+                                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/attendance?code=${event.attendance_code}`}
                                       size={192}
                                       level="H"
                                       includeMargin={true}
