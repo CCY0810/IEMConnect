@@ -8,6 +8,7 @@
     "seed:admin": "node seeders/seedAdmin.js"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^3.0.1",
     "@google/generative-ai": "^0.24.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.11",
@@ -27,7 +28,6 @@
     "nodemailer": "^7.0.10",
     "openai": "^6.15.0",
     "pdf-lib": "^1.17.1",
-    "resend": "^6.6.0",
     "sequelize": "^6.35.0",
     "sharp": "^0.34.5"
   },

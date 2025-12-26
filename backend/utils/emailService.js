@@ -1,19 +1,56 @@
-import { Resend } from "resend";
+import brevo from "@getbrevo/brevo";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 class EmailService {
   constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY);
-    this.fromEmail = process.env.EMAIL_FROM || "IEM Connect <onboarding@resend.dev>";
+    this.apiKey = process.env.BREVO_API_KEY;
+    if (this.apiKey) {
+      this.apiInstance = new brevo.TransactionalEmailsApi();
+      const apiKeySetup = this.apiInstance.authentications['apiKey'];
+      apiKeySetup.apiKey = this.apiKey;
+    } else {
+      console.warn("⚠️  BREVO_API_KEY is missing. Email service will be disabled.");
+    }
+    
+    // Format: "Name <email@domain.com>" or just "email@domain.com"
+    // Brevo requires split name and email for the sender object
+    const rawFrom = process.env.EMAIL_FROM || "IEM Connect <iemconnect1@gmail.com>";
+    const match = rawFrom.match(/(.*)<(.*)>/);
+    
+    if (match) {
+        this.sender = { name: match[1].trim(), email: match[2].trim() };
+    } else {
+        this.sender = { email: rawFrom, name: "IEM Connect" };
+    }
+  }
+
+  async sendEmail({ to, subject, html }) {
+    if (!this.apiInstance) {
+        console.warn(`Emails disabled: Email to ${to} skipped`);
+        return { success: true, messageId: "mock-id" };
+    }
+
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = html;
+    sendSmtpEmail.sender = this.sender;
+    sendSmtpEmail.to = [{ email: to }];
+
+    try {
+        const data = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
+        console.log("Email sent successfully. Message ID:", data.messageId);
+        return { success: true, messageId: data.messageId };
+    } catch (error) {
+        console.error("Error sending email:", error);
+        return { success: false, error: error.message };
+    }
   }
 
   async send2FACode(to, code) {
-    try {
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject: "IEM Connect - Your 2FA Code",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -30,27 +67,13 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending 2FA code:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("2FA code sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending 2FA code:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 
   async sendWelcomeEmail(to, name) {
-    try {
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject: "Welcome to IEM Connect!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -64,27 +87,13 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending welcome email:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("Welcome email sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending welcome email:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 
   async sendAccountVerifiedEmail(to, name) {
-    try {
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject: "Your IEM Connect Account Has Been Verified!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -98,31 +107,17 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending account verified email:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("Account verified email sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending account verified email:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 
   async sendPasswordResetEmail(to, name, resetToken) {
-    try {
-      const resetUrl = `${
+    const resetUrl = `${
         process.env.FRONTEND_URL || "http://localhost:3000"
       }/reset-password?token=${resetToken}`;
 
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject: "IEM Connect - Password Reset Request",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -142,27 +137,13 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending password reset email:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("Password reset email sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending password reset email:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 
   async sendPasswordChangedEmail(to, name) {
-    try {
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject: "IEM Connect - Password Changed Successfully",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -179,27 +160,13 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending password changed email:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("Password changed email sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending password changed email:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 
   async sendAccountDeletedEmail(to, name) {
-    try {
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject: "IEM Connect - Account Deleted",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -222,27 +189,13 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending account deleted email:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("Account deleted email sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending account deleted email:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 
   async sendNotificationEmail(to, name, title, message) {
-    try {
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject: `IEM Connect - ${title}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -259,27 +212,13 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending notification email:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("Notification email sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending notification email:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 
   async sendAdminInviteEmail(to, name, inviteUrl, inviterName) {
-    try {
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject: "IEM Connect - You've Been Invited as an Admin!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -306,32 +245,18 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending admin invite email:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("Admin invite email sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending admin invite email:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 
   async sendRoleChangeEmail(to, name, newRole, changedByName) {
-    try {
-      const isPromotion = newRole === "admin";
-      const subject = isPromotion 
-        ? "IEM Connect - You've Been Promoted to Admin!" 
-        : "IEM Connect - Your Role Has Changed";
+    const isPromotion = newRole === "admin";
+    const subject = isPromotion 
+      ? "IEM Connect - You've Been Promoted to Admin!" 
+      : "IEM Connect - Your Role Has Changed";
       
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
+    return this.sendEmail({
+        to,
         subject,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -367,20 +292,8 @@ class EmailService {
               This is an automated message from IEM Connect. Please do not reply to this email.
             </p>
           </div>
-        `,
-      });
-
-      if (error) {
-        console.error("Error sending role change email:", error);
-        return { success: false, error: error.message };
-      }
-
-      console.log("Role change email sent:", data?.id);
-      return { success: true, messageId: data?.id };
-    } catch (error) {
-      console.error("Error sending role change email:", error);
-      return { success: false, error: error.message };
-    }
+        `
+    });
   }
 }
 
