@@ -13,6 +13,10 @@ class EmailService {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      // Add timeouts to prevent hanging connections
+      connectionTimeout: 10000, // 10 seconds to establish connection
+      greetingTimeout: 10000, // 10 seconds for SMTP greeting
+      socketTimeout: 30000, // 30 seconds for socket inactivity
     });
   }
 

@@ -13,7 +13,7 @@ RUN npm install --omit=dev
 # Copy application source
 COPY . .
 
-# Expose the port (Koyeb reads PORT env)
+# Expose the port (Render reads PORT env)
 ENV PORT=8000
 EXPOSE 8000
 
