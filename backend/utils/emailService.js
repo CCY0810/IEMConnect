@@ -1,30 +1,19 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || "smtp.gmail.com",
-      port: process.env.EMAIL_PORT || 587,
-      secure: process.env.EMAIL_SECURE === "true", // true for 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      // Add timeouts to prevent hanging connections
-      connectionTimeout: 10000, // 10 seconds to establish connection
-      greetingTimeout: 10000, // 10 seconds for SMTP greeting
-      socketTimeout: 30000, // 30 seconds for socket inactivity
-    });
+    this.resend = new Resend(process.env.RESEND_API_KEY);
+    this.fromEmail = process.env.EMAIL_FROM || "IEM Connect <onboarding@resend.dev>";
   }
 
   async send2FACode(to, code) {
     try {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject: "IEM Connect - Your 2FA Code",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -42,11 +31,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("2FA code sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending 2FA code:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("2FA code sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending 2FA code:", error);
       return { success: false, error: error.message };
@@ -55,9 +48,9 @@ class EmailService {
 
   async sendWelcomeEmail(to, name) {
     try {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject: "Welcome to IEM Connect!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -72,11 +65,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Welcome email sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending welcome email:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("Welcome email sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending welcome email:", error);
       return { success: false, error: error.message };
@@ -85,9 +82,9 @@ class EmailService {
 
   async sendAccountVerifiedEmail(to, name) {
     try {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject: "Your IEM Connect Account Has Been Verified!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -102,11 +99,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Account verified email sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending account verified email:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("Account verified email sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending account verified email:", error);
       return { success: false, error: error.message };
@@ -119,9 +120,9 @@ class EmailService {
         process.env.FRONTEND_URL || "http://localhost:3000"
       }/reset-password?token=${resetToken}`;
 
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject: "IEM Connect - Password Reset Request",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -142,11 +143,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Password reset email sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending password reset email:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("Password reset email sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending password reset email:", error);
       return { success: false, error: error.message };
@@ -155,9 +160,9 @@ class EmailService {
 
   async sendPasswordChangedEmail(to, name) {
     try {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject: "IEM Connect - Password Changed Successfully",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -175,11 +180,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Password changed email sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending password changed email:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("Password changed email sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending password changed email:", error);
       return { success: false, error: error.message };
@@ -188,9 +197,9 @@ class EmailService {
 
   async sendAccountDeletedEmail(to, name) {
     try {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject: "IEM Connect - Account Deleted",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -214,11 +223,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Account deleted email sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending account deleted email:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("Account deleted email sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending account deleted email:", error);
       return { success: false, error: error.message };
@@ -227,9 +240,9 @@ class EmailService {
 
   async sendNotificationEmail(to, name, title, message) {
     try {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject: `IEM Connect - ${title}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -247,11 +260,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Notification email sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending notification email:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("Notification email sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending notification email:", error);
       return { success: false, error: error.message };
@@ -260,9 +277,9 @@ class EmailService {
 
   async sendAdminInviteEmail(to, name, inviteUrl, inviterName) {
     try {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject: "IEM Connect - You've Been Invited as an Admin!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -290,11 +307,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Admin invite email sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending admin invite email:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("Admin invite email sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending admin invite email:", error);
       return { success: false, error: error.message };
@@ -308,9 +329,9 @@ class EmailService {
         ? "IEM Connect - You've Been Promoted to Admin!" 
         : "IEM Connect - Your Role Has Changed";
       
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
         subject,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -347,11 +368,15 @@ class EmailService {
             </p>
           </div>
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Role change email sent: %s", info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error("Error sending role change email:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("Role change email sent:", data?.id);
+      return { success: true, messageId: data?.id };
     } catch (error) {
       console.error("Error sending role change email:", error);
       return { success: false, error: error.message };
@@ -360,4 +385,3 @@ class EmailService {
 }
 
 export default new EmailService();
-

@@ -25,6 +25,7 @@
     "nodemailer": "^7.0.10",
     "openai": "^6.15.0",
     "pdf-lib": "^1.17.1",
+    "resend": "^6.6.0",
     "sequelize": "^6.35.0",
     "sharp": "^0.34.5"
   },
