@@ -23,15 +23,27 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from backend root
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
-// Database connection
+// Detect if we're using TiDB Cloud (port 4000 or cloud host)
+const isCloudDeployment = 
+  process.env.DB_PORT === '4000' || 
+  (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com'));
+
+// Database connection with TiDB SSL support
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || '3306'),
     dialect: 'mysql',
     logging: false,
+    dialectOptions: isCloudDeployment ? {
+      ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+      }
+    } : {}
   }
 );
 
