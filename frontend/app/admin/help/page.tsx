@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import {
 export default function HelpCentrePage() {
   const router = useRouter();
   const { user, token } = useAuth();
+  const [hasMounted, setHasMounted] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
@@ -43,6 +44,10 @@ export default function HelpCentrePage() {
   );
 
   const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   // Search results
   const searchResults = useMemo(() => {
@@ -91,7 +96,11 @@ export default function HelpCentrePage() {
     setSearchQuery("");
   };
 
-  // Protect page
+  // Protect page - only check after component has mounted on client
+  if (!hasMounted) {
+    return <div className="flex min-h-screen bg-slate-900 items-center justify-center"><div className="text-white">Loading...</div></div>;
+  }
+
   if (!token) {
     router.push("/login");
     return null;
