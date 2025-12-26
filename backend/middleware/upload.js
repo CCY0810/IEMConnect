@@ -1,34 +1,19 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinaryConfig.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
+// Configure Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "iem_connect_uploads", // Folder name in Cloudinary
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "pdf", "doc", "docx"],
+    resource_type: "auto", // Automatically detect image/pdf/video
   },
 });
 
-// File filter
+// File filter (optional, since Cloudinary handles formats, but good for double-checking)
 const fileFilter = (req, file, cb) => {
-  // Accept images and PDFs
   const allowedMimes = [
     "image/jpeg",
     "image/jpg",
@@ -43,16 +28,10 @@ const fileFilter = (req, file, cb) => {
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(
-      new Error(
-        "Invalid file type. Only images, PDFs, and Word documents are allowed."
-      ),
-      false
-    );
+    cb(new Error("Invalid file type."), false);
   }
 };
 
-// Create multer instance
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
