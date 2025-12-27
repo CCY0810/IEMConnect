@@ -13,7 +13,6 @@ import {
 import emailService from "../utils/emailService.js";
 import NotificationService from "../services/notificationService.js";
 import {
-  processAvatarImage,
   deleteAvatarFile,
 } from "../middleware/profileUpload.js";
 import path from "path";
@@ -614,44 +613,29 @@ export const uploadAvatar = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Delete old avatar if exists
+    // Delete old avatar from Cloudinary if exists
     if (user.avatar_url) {
-      deleteAvatarFile(user.avatar_url);
+      await deleteAvatarFile(user.avatar_url);
     }
 
-    // Process and optimize the uploaded image
-    const tempFilePath = req.file.path;
-    const filename = await processAvatarImage(tempFilePath, user.id);
+    // Get Cloudinary URL from the uploaded file
+    const avatarUrl = req.file.path; // Cloudinary URL
 
-    // Update user's avatar_url
-    await user.update({ avatar_url: filename });
+    // Update user's avatar_url with the Cloudinary URL
+    await user.update({ avatar_url: avatarUrl });
 
     res.status(200).json({
       message: "Avatar uploaded successfully",
-      avatar_url: filename,
-      avatar_url_full: `/api/v1/auth/avatar/${filename}`,
+      avatar_url: avatarUrl,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        avatar_url: filename,
+        avatar_url: avatarUrl,
       },
     });
   } catch (error) {
     console.error("Upload avatar error:", error);
-    
-    // Clean up temp file if it exists
-    if (req.file && req.file.path) {
-      try {
-        const fs = await import("fs");
-        if (fs.existsSync(req.file.path)) {
-          await fs.promises.unlink(req.file.path);
-        }
-      } catch (cleanupError) {
-        console.warn("Warning: Could not clean up temp file:", cleanupError.message);
-      }
-    }
-
     res.status(500).json({
       error: "Failed to upload avatar",
       details: process.env.NODE_ENV === "development" ? error.message : undefined,
@@ -671,8 +655,8 @@ export const deleteAvatar = async (req, res) => {
       return res.status(400).json({ error: "No avatar to delete" });
     }
 
-    // Delete avatar file
-    deleteAvatarFile(user.avatar_url);
+    // Delete avatar file from Cloudinary
+    await deleteAvatarFile(user.avatar_url);
 
     // Update user's avatar_url to null
     await user.update({ avatar_url: null });
@@ -692,26 +676,13 @@ export const deleteAvatar = async (req, res) => {
   }
 };
 
-// Serve avatar image
+// Serve avatar image - DEPRECATED: Avatars are now served directly from Cloudinary
 export const getAvatar = async (req, res) => {
-  try {
-    const { filename } = req.params;
-    const avatarsDir = path.join(__dirname, "../uploads/avatars");
-    const filePath = path.join(avatarsDir, filename);
-
-    const fs = await import("fs");
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: "Avatar not found" });
-    }
-
-    // Set cache headers for 1 year
-    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    res.setHeader("Content-Type", "image/webp");
-    res.sendFile(filePath);
-  } catch (error) {
-    console.error("Get avatar error:", error);
-    res.status(500).json({ error: "Failed to retrieve avatar" });
-  }
+  // Avatars are now stored as Cloudinary URLs and served directly from there
+  return res.status(410).json({ 
+    error: "This endpoint is deprecated. Avatars are now served directly from Cloudinary.",
+    message: "Please use the avatar_url returned by the user API."
+  });
 };
 
 // Delete account

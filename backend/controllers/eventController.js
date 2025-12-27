@@ -3,13 +3,31 @@ import EventRegistration from "../models/EventRegistration.js";
 import User from "../models/User.js";
 import NotificationService from "../services/notificationService.js";
 import { Op } from "sequelize";
-import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import Joi from "joi";
+import cloudinary from "../config/cloudinaryConfig.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Helper function to extract public_id from Cloudinary URL
+// URL format: https://res.cloudinary.com/{cloud_name}/image/upload/v{version}/{public_id}.{format}
+const extractCloudinaryPublicId = (url) => {
+  if (!url || !url.includes('cloudinary.com')) return null;
+  try {
+    // Match the pattern after /upload/ or /raw/upload/
+    const match = url.match(/\/(?:image|raw|video)\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+    if (match && match[1]) {
+      // Return the public_id (may include folder path)
+      return match[1];
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting Cloudinary public_id:', error);
+    return null;
+  }
+};
 
 // Create a new event
 export const createEvent = async (req, res) => {
@@ -60,9 +78,9 @@ export const createEvent = async (req, res) => {
       status,
     } = value;
 
-    // Handle file uploads
-    const poster_file = req.files?.poster_file?.[0]?.filename || null;
-    const paperwork_file = req.files?.paperwork_file?.[0]?.filename || null;
+    // Handle file uploads - store Cloudinary URL (path) instead of filename
+    const poster_file = req.files?.poster_file?.[0]?.path || null;
+    const paperwork_file = req.files?.paperwork_file?.[0]?.path || null;
 
     // Create event
     const event = await Event.create({
@@ -154,12 +172,12 @@ export const getEvents = async (req, res) => {
       events.map(async (event) => {
         const eventData = event.toJSON();
 
-        // Add file URLs
+        // Add file URLs - poster_file and paperwork_file now contain Cloudinary URLs
         if (eventData.poster_file) {
-          eventData.poster_url = `/api/v1/events/files/${eventData.poster_file}`;
+          eventData.poster_url = eventData.poster_file;
         }
         if (eventData.paperwork_file) {
-          eventData.paperwork_url = `/api/v1/events/files/${eventData.paperwork_file}`;
+          eventData.paperwork_url = eventData.paperwork_file;
         }
 
         // Get participant count (include both registered and attended, exclude cancelled)
@@ -210,12 +228,12 @@ export const getEventById = async (req, res) => {
 
     const eventData = event.toJSON();
 
-    // Add full URLs for files
+    // Add full URLs for files - poster_file and paperwork_file now contain Cloudinary URLs
     if (eventData.poster_file) {
-      eventData.poster_url = `/api/v1/events/files/${eventData.poster_file}`;
+      eventData.poster_url = eventData.poster_file;
     }
     if (eventData.paperwork_file) {
-      eventData.paperwork_url = `/api/v1/events/files/${eventData.paperwork_file}`;
+      eventData.paperwork_url = eventData.paperwork_file;
     }
 
     // Get participant count (include both registered and attended, exclude cancelled)
@@ -307,33 +325,35 @@ export const updateEvent = async (req, res) => {
     let paperwork_file = event.paperwork_file;
 
     if (req.files?.poster_file?.[0]) {
-      // Delete old poster if exists
+      // Delete old poster from Cloudinary if exists
       if (event.poster_file) {
-        const oldPosterPath = path.join(
-          __dirname,
-          "../uploads",
-          event.poster_file
-        );
-        if (fs.existsSync(oldPosterPath)) {
-          fs.unlinkSync(oldPosterPath);
+        try {
+          // Extract public_id from Cloudinary URL
+          const publicId = extractCloudinaryPublicId(event.poster_file);
+          if (publicId) {
+            await cloudinary.uploader.destroy(publicId);
+          }
+        } catch (deleteError) {
+          console.error("Failed to delete old poster from Cloudinary:", deleteError);
         }
       }
-      poster_file = req.files.poster_file[0].filename;
+      poster_file = req.files.poster_file[0].path; // Store Cloudinary URL
     }
 
     if (req.files?.paperwork_file?.[0]) {
-      // Delete old paperwork if exists
+      // Delete old paperwork from Cloudinary if exists
       if (event.paperwork_file) {
-        const oldPaperworkPath = path.join(
-          __dirname,
-          "../uploads",
-          event.paperwork_file
-        );
-        if (fs.existsSync(oldPaperworkPath)) {
-          fs.unlinkSync(oldPaperworkPath);
+        try {
+          // Extract public_id from Cloudinary URL
+          const publicId = extractCloudinaryPublicId(event.paperwork_file);
+          if (publicId) {
+            await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+          }
+        } catch (deleteError) {
+          console.error("Failed to delete old paperwork from Cloudinary:", deleteError);
         }
       }
-      paperwork_file = req.files.paperwork_file[0].filename;
+      paperwork_file = req.files.paperwork_file[0].path; // Store Cloudinary URL
     }
 
     // Update event
@@ -519,22 +539,26 @@ export const deleteEvent = async (req, res) => {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    // Delete associated files
+    // Delete associated files from Cloudinary
     if (event.poster_file) {
-      const posterPath = path.join(__dirname, "../uploads", event.poster_file);
-      if (fs.existsSync(posterPath)) {
-        fs.unlinkSync(posterPath);
+      try {
+        const publicId = extractCloudinaryPublicId(event.poster_file);
+        if (publicId) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      } catch (deleteError) {
+        console.error("Failed to delete poster from Cloudinary:", deleteError);
       }
     }
 
     if (event.paperwork_file) {
-      const paperworkPath = path.join(
-        __dirname,
-        "../uploads",
-        event.paperwork_file
-      );
-      if (fs.existsSync(paperworkPath)) {
-        fs.unlinkSync(paperworkPath);
+      try {
+        const publicId = extractCloudinaryPublicId(event.paperwork_file);
+        if (publicId) {
+          await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+        }
+      } catch (deleteError) {
+        console.error("Failed to delete paperwork from Cloudinary:", deleteError);
       }
     }
 
@@ -549,44 +573,15 @@ export const deleteEvent = async (req, res) => {
   }
 };
 
-// Serve uploaded files
+// Serve uploaded files - DEPRECATED: Files are now served directly from Cloudinary
+// This route is kept for backwards compatibility but should not be used for new uploads
 export const getFile = (req, res) => {
-  try {
-    const { filename } = req.params;
-    const filePath = path.join(__dirname, "../uploads", filename);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: "File not found" });
-    }
-
-    // Get file extension to determine MIME type
-    const ext = path.extname(filename).toLowerCase();
-    const mimeTypes = {
-      ".png": "image/png",
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".gif": "image/gif",
-      ".webp": "image/webp",
-      ".pdf": "application/pdf",
-      ".doc": "application/msword",
-      ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    };
-
-    // Set Content-Type header explicitly based on extension
-    const mimeType = mimeTypes[ext] || "application/octet-stream";
-    res.setHeader("Content-Type", mimeType);
-    
-    // Set cache headers for images
-    if (mimeType.startsWith("image/")) {
-      res.setHeader("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
-    }
-    
-    // Send file - Express will handle the rest
-    res.sendFile(path.resolve(filePath));
-  } catch (error) {
-    console.error("Get file error:", error);
-    res.status(500).json({ error: "Failed to retrieve file" });
-  }
+  // Files are now stored as Cloudinary URLs and served directly from there
+  // This endpoint is deprecated
+  return res.status(410).json({ 
+    error: "This endpoint is deprecated. Files are now served directly from Cloudinary.",
+    message: "Please use the poster_url or paperwork_url returned by the event API."
+  });
 };
 
 // Register for an event

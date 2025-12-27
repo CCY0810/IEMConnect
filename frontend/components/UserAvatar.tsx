@@ -44,6 +44,11 @@ export default function UserAvatar({
 
   const getAvatarUrl = () => {
     if (displayUser.avatar_url) {
+      // If avatar_url is already a full URL (Cloudinary), use it directly
+      if (displayUser.avatar_url.startsWith('http')) {
+        return displayUser.avatar_url;
+      }
+      // Fallback for legacy data (just filename) - use API endpoint
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
       return `${apiUrl}/auth/avatar/${displayUser.avatar_url}`;
     }

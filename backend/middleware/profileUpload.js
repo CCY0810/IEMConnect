@@ -31,31 +31,52 @@ const profileUpload = multer({
   },
 });
 
+// Helper function to extract public_id from Cloudinary URL
+const extractCloudinaryPublicId = (url) => {
+  if (!url || !url.includes('cloudinary.com')) return null;
+  try {
+    // Match the pattern after /upload/
+    const match = url.match(/\/(?:image|raw|video)\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting Cloudinary public_id:', error);
+    return null;
+  }
+};
+
 /**
- * Process uploaded avatar image - Adapter for legacy code
- * In Cloudinary version, this just returns the filename/public_id
+ * Process uploaded avatar image
+ * Returns the Cloudinary URL for the uploaded image
  */
 export const processAvatarImage = async (file) => {
-  // Multer-storage-cloudinary puts the file info in req.file
-  // We just need to return the filename (which is the public_id or url)
   if (!file) {
     throw new Error("No file uploaded");
   }
-  return file.filename; // Cloudinary public_id
+  return file.path; // Cloudinary URL (e.g., https://res.cloudinary.com/...)
 };
 
 /**
  * Delete avatar file from Cloudinary
- * @param {string} filename - Cloudinary public_id
+ * @param {string} avatarUrl - Full Cloudinary URL or public_id
  */
-export const deleteAvatarFile = async (filename) => {
-  if (!filename) return;
+export const deleteAvatarFile = async (avatarUrl) => {
+  if (!avatarUrl) return;
 
   try {
-    await cloudinary.uploader.destroy(filename);
-    console.log(`Deleted avatar from Cloudinary: ${filename}`);
+    // Extract public_id from URL if it's a full URL
+    const publicId = avatarUrl.includes('cloudinary.com') 
+      ? extractCloudinaryPublicId(avatarUrl)
+      : avatarUrl; // Assume it's already a public_id for legacy data
+    
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
+      console.log(`Deleted avatar from Cloudinary: ${publicId}`);
+    }
   } catch (error) {
-    console.error(`Error deleting avatar ${filename}:`, error);
+    console.error(`Error deleting avatar:`, error);
   }
 };
 
