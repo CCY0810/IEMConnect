@@ -10,6 +10,9 @@ const storage = new CloudinaryStorage({
     let resourceType = "image";
     let format = undefined;
     
+    // Extract extension from original filename as backup
+    const ext = file.originalname.split('.').pop()?.toLowerCase();
+    
     if (file.mimetype === "application/pdf") {
       resourceType = "raw";
       format = "pdf";
@@ -19,15 +22,22 @@ const storage = new CloudinaryStorage({
     ) {
       resourceType = "raw";
       format = file.mimetype.includes("openxmlformats") ? "docx" : "doc";
+    } else if (file.mimetype.startsWith("image/")) {
+      // For images, use the extension from filename if available
+      resourceType = "image";
+      if (ext && ["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
+        format = ext === "jpg" ? "jpeg" : ext;
+      }
     }
     
-    console.log(`Uploading file: ${file.originalname}, mimetype: ${file.mimetype}, resource_type: ${resourceType}`);
+    console.log(`Uploading file: ${file.originalname}, mimetype: ${file.mimetype}, resource_type: ${resourceType}, format: ${format || 'auto'}`);
     
     return {
       folder: "iem_connect_uploads",
       resource_type: resourceType,
       format: format,
-      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "pdf", "doc", "docx"],
+      // Don't use allowed_formats - our fileFilter already validates mimetypes
+      // and Cloudinary's format detection can fail for some valid files
     };
   },
 });
@@ -63,3 +73,4 @@ const upload = multer({
 });
 
 export default upload;
+
