@@ -19,12 +19,13 @@ import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
-// All event routes require authentication
-router.use(verifyToken);
-
-// Serve uploaded files (accessible to all authenticated users)
-// This must come before /:id route to avoid conflict
+// Serve uploaded files (publicly accessible - no auth required)
+// Images need to be fetchable by browsers without auth headers
+// This MUST come before the verifyToken middleware
 router.get("/files/:filename", getFile);
+
+// All other event routes require authentication
+router.use(verifyToken);
 
 // Get all events (accessible to all authenticated users)
 router.get("/", getEvents);
