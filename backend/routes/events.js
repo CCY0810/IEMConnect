@@ -19,6 +19,22 @@ import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
+// Wrapper to handle multer upload errors
+const handleUpload = (uploadMiddleware) => {
+  return (req, res, next) => {
+    uploadMiddleware(req, res, (err) => {
+      if (err) {
+        console.error("File upload error:", err.message);
+        return res.status(400).json({ 
+          error: "File upload failed", 
+          details: err.message 
+        });
+      }
+      next();
+    });
+  };
+};
+
 // Serve uploaded files (publicly accessible - no auth required)
 // Images need to be fetchable by browsers without auth headers
 // This MUST come before the verifyToken middleware
@@ -55,10 +71,10 @@ router.post("/:id/end", verifyAdmin, endEvent);
 router.post(
   "/",
   verifyAdmin,
-  upload.fields([
+  handleUpload(upload.fields([
     { name: "poster_file", maxCount: 1 },
     { name: "paperwork_file", maxCount: 1 },
-  ]),
+  ])),
   createEvent
 );
 
@@ -66,10 +82,10 @@ router.post(
 router.put(
   "/:id",
   verifyAdmin,
-  upload.fields([
+  handleUpload(upload.fields([
     { name: "poster_file", maxCount: 1 },
     { name: "paperwork_file", maxCount: 1 },
-  ]),
+  ])),
   updateEvent
 );
 

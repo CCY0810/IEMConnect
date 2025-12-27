@@ -14,10 +14,10 @@ const __dirname = path.dirname(__filename);
 let cachedTemplate = null;
 
 const getTemplatePath = () => {
-  // Template is in public folder at root level
-  // __dirname is backend/controllers, so go up two levels to reach root
-  const rootDir = path.resolve(__dirname, "../..");
-  return path.join(rootDir, "public", "certificateOfParticipation.pdf");
+  // Template is in backend/public folder
+  // __dirname is backend/controllers, so go up one level to reach backend
+  const backendDir = path.resolve(__dirname, "..");
+  return path.join(backendDir, "public", "certificateOfParticipation.pdf");
 };
 
 const loadTemplate = async () => {

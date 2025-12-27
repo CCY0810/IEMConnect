@@ -121,11 +121,17 @@ export const deleteEvent = async (id: number): Promise<void> => {
   await api.delete(`/events/${id}`);
 };
 
-// Get file URL
-export const getFileUrl = (filename: string): string => {
+// Get file URL - handles both Cloudinary URLs and legacy local file paths
+export const getFileUrl = (filePathOrUrl: string): string => {
+  // If it's already a full URL (Cloudinary), return it directly
+  if (filePathOrUrl.startsWith('http://') || filePathOrUrl.startsWith('https://')) {
+    return filePathOrUrl;
+  }
+  
+  // Legacy support: construct backend URL for old local file paths
   const baseUrl =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-  return `${baseUrl}/events/files/${filename}`;
+  return `${baseUrl}/events/files/${filePathOrUrl}`;
 };
 
 // Register for an event
