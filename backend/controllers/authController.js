@@ -15,6 +15,7 @@ import NotificationService from "../services/notificationService.js";
 import {
   deleteAvatarFile,
 } from "../middleware/profileUpload.js";
+import { blacklistToken, blacklistAllUserTokens } from "../services/tokenBlacklistService.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -222,12 +223,35 @@ export const verify2FA = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    // In a real implementation, you would invalidate the token here
-    // For JWT, this typically involves adding the token to a blacklist
+    // Get token from authorization header
+    const token = req.headers.authorization?.split(" ")[1];
+    
+    if (token) {
+      // Add token to blacklist - it will be rejected on future requests
+      blacklistToken(token, req.user.id);
+    }
+
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Logout error:", error);
     res.status(500).json({ error: "Logout failed" });
+  }
+};
+
+/**
+ * Logout from all sessions
+ * Invalidates all tokens for the current user
+ */
+export const logoutAllSessions = async (req, res) => {
+  try {
+    // Blacklist all tokens for this user
+    // Any token issued before this timestamp will be rejected
+    blacklistAllUserTokens(req.user.id);
+
+    res.status(200).json({ message: "All sessions logged out successfully" });
+  } catch (error) {
+    console.error("Logout all sessions error:", error);
+    res.status(500).json({ error: "Failed to logout all sessions" });
   }
 };
 

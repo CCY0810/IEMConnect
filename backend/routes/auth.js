@@ -4,6 +4,7 @@ import {
   login,
   verify2FA,
   logout,
+  logoutAllSessions,
   verifySession,
   resend2FA,
   getUnverifiedUsers,
@@ -36,6 +37,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/verify-2fa", verifyTempToken, verify2FA);
 router.post("/logout", verifyToken, logout);
+router.post("/logout-all", verifyToken, logoutAllSessions);
 router.get("/verify-session", verifyToken, verifySession);
 router.post("/resend-2fa", verifyTempToken, resend2FA);
 

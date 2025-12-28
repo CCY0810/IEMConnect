@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
+import { isTokenBlacklisted } from "../services/tokenBlacklistService.js"
 
 dotenv.config()
 
@@ -29,6 +30,11 @@ export const verifyToken = (req, res, next) => {
 
   if (!token) {
     return res.status(401).json({ error: "No token provided" })
+  }
+
+  // Check if token has been revoked (logout)
+  if (isTokenBlacklisted(token)) {
+    return res.status(401).json({ error: "Token has been revoked" })
   }
 
   try {
