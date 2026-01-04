@@ -37,6 +37,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import NotificationBell from "@/components/NotificationBell";
 import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -373,6 +374,7 @@ export default function ProfilePage() {
             <div className="rounded-full overflow-hidden border-2 border-transparent shadow">
               <UserAvatar size="md" />
             </div>
+            <HeaderLogoutButton />
           </div>
         </header>
 

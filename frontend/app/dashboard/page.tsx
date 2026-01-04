@@ -25,29 +25,21 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
 import {
-  Menu,
-  LogOut,
-  Users,
   FileText,
   Calendar,
   CheckSquare,
   Settings,
-  HelpCircle,
-  PieChart as PieChartIcon,
   TrendingUp,
   Clock,
   CheckCircle2,
-  ChevronRight, 
   UserCheck, 
   UserPlus, 
-  ChevronLeft,
-  AlertTriangle,
-  X,
 } from "lucide-react";
 
 import NotificationBell from "@/components/NotificationBell"; 
 import UserAvatar from "@/components/UserAvatar";
 import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 import QuickActionButton from "@/components/QuickActionButton";
 import UpcomingEventCard from "@/components/UpcomingEventCard";
 import SimpleMonthView from "@/components/SimpleMonthView";
@@ -78,11 +70,10 @@ interface DashboardUser {
 
 
 export default function DashboardPage() {
-  const { user: authUser, token, logout } = useAuth();
+  const { user: authUser, token } = useAuth();
   const router = useRouter();
   const user = authUser as DashboardUser;
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showApprovalPanel, setShowApprovalPanel] = useState(false);
   const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -93,9 +84,6 @@ export default function DashboardPage() {
   } | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
-
-  // Logout modal state
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // --- Core Backend Logic (Preserved) ---
   useEffect(() => {
@@ -117,11 +105,6 @@ export default function DashboardPage() {
     };
     fetchEvents();
   }, [token]);
-
-  const handleLogout = async () => {
-    setIsLogoutModalOpen(false);
-    await logout();
-  };
 
   const fetchUnverifiedUsers = async () => {
     try {
@@ -184,37 +167,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-slate-900 text-slate-100">
-      {/* LOGOUT CONFIRMATION MODAL */}
-      {isLogoutModalOpen && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-slate-800 p-6 shadow-2xl border border-slate-700">
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/30 text-red-500">
-                <AlertTriangle size={32} />
-              </div>
-              <h3 className="mb-2 text-xl font-bold text-white">Logout Confirmation</h3>
-              <p className="mb-6 text-slate-400">Are you sure you want to end your session?</p>
-              <div className="flex w-full gap-3">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 border-slate-600 bg-transparent text-white hover:bg-slate-700" 
-                  onClick={() => setIsLogoutModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  className="flex-1 bg-red-600 text-white hover:bg-red-700" 
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SIDEBAR - Now using shared AdminSidebar component */}
+      {/* SIDEBAR - Using shared AdminSidebar component */}
       <AdminSidebar activePage="dashboard" />
 
       {/* MAIN AREA */}
@@ -259,13 +212,7 @@ export default function DashboardPage() {
                 <UserAvatar size="md" />
               </button>
 
-              <button 
-                className="p-2 rounded-lg hover:bg-white/10 text-white" 
-                onClick={() => setIsLogoutModalOpen(true)}
-                title="Logout"
-              >
-                <LogOut size={18} />
-              </button>
+              <HeaderLogoutButton />
             </div>
           </div>
         </header>
@@ -565,32 +512,4 @@ function StatsCard({
   );
 }
 
-function SidebarButton({
-  icon,
-  label,
-  open,
-  active,
-  onClick,
-  variant,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  open: boolean;
-  active?: boolean;
-  onClick?: () => void;
-  variant?: 'default' | 'destructive';
-}) {
-  const baseClasses = "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors duration-200 font-medium";
-  const activeClasses = active ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg" : variant === 'destructive' ? "text-rose-300 hover:bg-rose-900/30" : "text-slate-300 hover:bg-gray-800 hover:text-white";
 
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseClasses} ${activeClasses}`}
-    >
-      <div className={`w-6 h-6 flex items-center justify-center transition-transform ${active ? 'scale-100' : 'scale-90'}`}>{icon}</div>
-      {open && <span className="truncate">{label}</span>}
-      {open && active && <ChevronRight size={16} className="ml-auto text-white/70" />}
-    </button>
-  );
-}

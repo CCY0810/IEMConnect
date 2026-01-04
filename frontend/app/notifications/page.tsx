@@ -18,8 +18,10 @@ import {
   deleteNotification,
   Notification,
 } from "@/lib/notification-api";
-import { Bell, CheckCheck, X, ArrowLeft, Trash2, CheckCircle } from "lucide-react"; // Added CheckCircle for visual confirmation
+import { Bell, CheckCheck, Trash2, CheckCircle } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 
 const formatTimeAgo = (date: string) => {
   const now = new Date();
@@ -105,18 +107,16 @@ export default function NotificationsPage() {
   const unreadNotifications = notifications.filter((n) => !n.is_read);
 
   return (
-    // APPLY DARK BACKGROUND
-    <div className="min-h-screen bg-slate-900 text-white">
-      {/* HEADER: Dark and Sticky */}
-      <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="p-2 rounded-lg hover:bg-slate-700 transition-colors text-white"
-            >
-              <ArrowLeft size={20} />
-            </button>
+    // APPLY DARK BACKGROUND with sidebar layout
+    <div className="flex min-h-screen bg-slate-900 text-white">
+      {/* SIDEBAR */}
+      <AdminSidebar activePage="notifications" />
+
+      {/* MAIN CONTENT */}
+      <div className="flex-1 min-h-screen">
+        {/* HEADER: Dark and Sticky */}
+        <header className="bg-white/10 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40">
+          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold text-white flex items-center gap-2">
                 <Bell size={24} className="text-indigo-400" />
@@ -128,25 +128,24 @@ export default function NotificationsPage() {
                   : "All caught up!"}
               </p>
             </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            {unreadCount > 0 && (
-              <Button
-                onClick={handleMarkAllAsRead}
-                disabled={markingAll}
-                variant="outline"
-                // APPLY DARK BUTTON STYLES
-                className="gap-2 bg-slate-700 border-slate-600 text-white hover:bg-slate-600 hover:text-white"
-              >
-                <CheckCheck size={16} />
-                {markingAll ? "Marking..." : "Mark all as read"}
-              </Button>
-            )}
+            <div className="flex items-center gap-4">
+              <NotificationBell />
+              {unreadCount > 0 && (
+                <Button
+                  onClick={handleMarkAllAsRead}
+                  disabled={markingAll}
+                  variant="outline"
+                  className="gap-2 bg-slate-700 border-slate-600 text-white hover:bg-slate-600 hover:text-white"
+                >
+                  <CheckCheck size={16} />
+                  {markingAll ? "Marking..." : "Mark all as read"}
+                </Button>
+              )}
+              <HeaderLogoutButton />
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* CONTENT */}
       <main className="max-w-6xl mx-auto px-6 py-10">
@@ -208,7 +207,8 @@ export default function NotificationsPage() {
             )}
           </div>
         )}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

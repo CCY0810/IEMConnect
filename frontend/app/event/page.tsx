@@ -28,12 +28,7 @@ import { Badge } from "@/components/ui/badge";
 
 import {
   Menu,
-  LogOut,
   Calendar,
-  CheckSquare,
-  Settings,
-  HelpCircle,
-  PieChart as PieChartIcon, 
   Plus,
   Search,
   Eye,
@@ -41,9 +36,9 @@ import {
   ChevronRight,
   FileText,
   ChevronLeft,
-  UserCheck,
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 
 export default function EventsPage() {
   const router = useRouter();
@@ -114,6 +109,7 @@ export default function EventsPage() {
             >
               <UserAvatar size="md" />
             </button>
+            <HeaderLogoutButton />
           </div>
         </header>
 

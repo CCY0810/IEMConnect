@@ -29,6 +29,7 @@ import {
 import AdminSidebar from "@/components/AdminSidebar";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 import {
   getAllUsers,
   getPendingInvites,
@@ -237,6 +238,7 @@ export default function UserManagementPage() {
               <div className="text-xs text-slate-400 capitalize">{user.role}</div>
             </div>
             <UserAvatar size="md" />
+            <HeaderLogoutButton />
           </div>
         </header>
 

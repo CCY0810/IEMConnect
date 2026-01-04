@@ -35,9 +35,11 @@ import {
   Users,
   RefreshCw,
   Calendar,
-  ArrowLeft,
   Clock,
 } from "lucide-react";
+import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
+import NotificationBell from "@/components/NotificationBell";
 
 interface AttendanceRecord {
   id: number;
@@ -221,27 +223,26 @@ export default function AdminAttendancePage() {
   if (!user || user.role !== "admin") return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/dashboard")}
-            className="gap-2 mb-4"
-          >
-            <ArrowLeft size={16} />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Attendance Management
-          </h1>
-          <p className="text-slate-600">
-            Select an event to manage attendance check-ins
-          </p>
-        </div>
+    <div className="flex min-h-screen bg-slate-900 text-slate-100">
+      {/* SIDEBAR */}
+      <AdminSidebar activePage="attendance" />
 
-        <div className="grid lg:grid-cols-3 gap-6">
+      {/* MAIN CONTENT */}
+      <div className="flex-1 min-h-screen">
+        {/* HEADER */}
+        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Attendance Management</h2>
+            <p className="text-sm text-slate-300">Select an event to manage attendance check-ins</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            <HeaderLogoutButton />
+          </div>
+        </header>
+
+        <main className="p-8 max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-3 gap-6">
           {/* EVENT SELECTION */}
           <div className="lg:col-span-1">
             <Card className="shadow-lg">
@@ -559,7 +560,8 @@ export default function AdminAttendancePage() {
               </Card>
             )}
           </div>
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   );

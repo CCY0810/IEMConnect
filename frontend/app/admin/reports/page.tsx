@@ -45,6 +45,7 @@ import React from "react";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
 import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 import {
   getUsersInsights as fetchUsersInsights,
   getEventOperations as fetchEventOperations,
@@ -736,13 +737,7 @@ export default function ReportsPage() {
                 : "Export Event Data"}
             </Button>
 
-            {/* Top-right Logout (same style as dashboard) */}
-            <button
-              className="p-2 rounded-lg hover:bg-white/10 text-white"
-              onClick={handleLogout}
-            >
-              <LogOut size={18} />
-            </button>
+            <HeaderLogoutButton />
           </div>
         </header>
 

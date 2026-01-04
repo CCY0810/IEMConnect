@@ -23,6 +23,7 @@ import {
 import AdminSidebar from "@/components/AdminSidebar";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 import {
   helpCategories,
   searchHelp,
@@ -139,6 +140,7 @@ export default function HelpCentrePage() {
             >
               <UserAvatar size="md" />
             </button>
+            <HeaderLogoutButton />
           </div>
         </header>
 

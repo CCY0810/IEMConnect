@@ -49,6 +49,8 @@ import {
   BarChart3,
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
+import NotificationBell from "@/components/NotificationBell";
 
 /**
  * Admin Feedback Dashboard
@@ -209,32 +211,27 @@ export default function FeedbackDashboardPage() {
     <div className="flex min-h-screen bg-slate-900 text-white">
       <AdminSidebar activePage="feedback" />
       <div className="flex-1 min-h-screen">
-        <div className="px-8 py-10 max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        {/* HEADER */}
+        <header className="flex items-center justify-between px-8 py-4 sticky top-0 z-40 bg-white/10 backdrop-blur-xl shadow-lg border-b border-white/20">
           <div>
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/dashboard")}
-              className="mb-2 text-slate-400 hover:text-white hover:bg-slate-800"
-            >
-              <ChevronLeft size={16} className="mr-1" />
-              Back to Dashboard
-            </Button>
-            <h1 className="text-3xl font-bold text-white">Feedback Reports</h1>
-            <p className="text-slate-400 mt-1">
-              View and analyze participant feedback for events
-            </p>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Feedback Reports</h2>
+            <p className="text-sm text-slate-300">View and analyze participant feedback for events</p>
           </div>
-          <Button
-            onClick={fetchData}
-            variant="outline"
-            className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-          >
-            <RefreshCw size={16} className="mr-2" />
-            Refresh
-          </Button>
-        </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            <Button
+              onClick={fetchData}
+              variant="outline"
+              className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+            >
+              <RefreshCw size={16} className="mr-2" />
+              Refresh
+            </Button>
+            <HeaderLogoutButton />
+          </div>
+        </header>
+
+        <main className="px-8 py-10 max-w-7xl mx-auto">
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -555,7 +552,7 @@ export default function FeedbackDashboardPage() {
             </CardContent>
           </Card>
         )}
-        </div>
+        </main>
       </div>
     </div>
   );
