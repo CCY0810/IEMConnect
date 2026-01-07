@@ -49,6 +49,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 
 interface AttendanceResult {
   event: {
@@ -274,9 +275,7 @@ function AttendancePageContent() {
                 <UserAvatar size="md" />
               </button>
 
-              <button className="p-2 rounded-lg hover:bg-white/10 text-white" onClick={logout}>
-                <LogOut size={18} />
-              </button>
+              <HeaderLogoutButton />
             </div>
           </div>
         </header>

@@ -27,6 +27,7 @@ import { sendEventAnnouncement } from "@/lib/notification-api";
 import NotificationBell from "@/components/NotificationBell";
 import { getFileUrl } from "@/lib/event-api";
 import UserAvatar from "@/components/UserAvatar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -900,12 +901,7 @@ function ViewEventPageContent() {
             >
               <UserAvatar size="md" />
             </button>
-            <button
-              onClick={logout}
-              className="p-2 rounded-lg hover:bg-white/10 text-white"
-            >
-              <LogOut size={18} className="text-white" />
-            </button>
+            <HeaderLogoutButton />
           </div>
         </header>
 

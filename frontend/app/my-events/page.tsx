@@ -21,6 +21,7 @@ import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
 import FeedbackForm from "@/components/FeedbackForm";
 import AdminSidebar from "@/components/AdminSidebar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 import { getFileUrl } from "@/lib/event-api";
 import {
   Calendar,
@@ -174,9 +175,7 @@ export default function MyEventsPage() {
                 <UserAvatar size="md" />
               </button>
 
-              <button className="p-2 rounded-lg hover:bg-white/10 text-white" onClick={logout}>
-                <LogOut size={18} />
-              </button>
+              <HeaderLogoutButton />
             </div>
           </div>
         </header>

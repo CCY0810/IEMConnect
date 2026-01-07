@@ -6,6 +6,7 @@ import { useAuth } from "@/context/auth-context";
 import { createEvent } from "@/lib/event-api";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
+import HeaderLogoutButton from "@/components/HeaderLogoutButton";
 import {
   validateName,
   validateEmail,
@@ -428,9 +429,7 @@ export default function CreateEventPage() {
               <UserAvatar size="md" />
             </button>
 
-            <button onClick={logout} className="p-2 rounded-lg hover:bg-white/10 text-white" title="Logout">
-              <LogOut size={18} className="text-white" />
-            </button>
+            <HeaderLogoutButton />
           </div>
         </header>
 
