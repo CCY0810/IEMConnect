@@ -48,6 +48,11 @@ app.use(cors({
 }));
 app.use(compression()); // Enable response compression
 app.use(express.json());
+
+// Trust proxy - Required for rate limiting to work correctly behind Render/Vercel
+// This ensures req.ip uses the real client IP from X-Forwarded-For header
+app.set('trust proxy', 1);
+
 app.use(apiRateLimit); // Apply general rate limiting
 
 // Request logging middleware
