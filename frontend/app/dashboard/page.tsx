@@ -11,7 +11,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { getUnverifiedUsers, verifyUser } from "@/lib/admin-api";
+import { getUnverifiedUsers, verifyUser, rejectUser } from "@/lib/admin-api";
 import { getEvents, Event } from "@/lib/event-api"; 
 import {
   Table,
@@ -33,7 +33,8 @@ import {
   Clock,
   CheckCircle2,
   UserCheck, 
-  UserPlus, 
+  UserPlus,
+  UserX,
 } from "lucide-react";
 
 import NotificationBell from "@/components/NotificationBell"; 
@@ -78,6 +79,7 @@ export default function DashboardPage() {
   const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [approvalLoading, setApprovalLoading] = useState<number | null>(null); 
+  const [rejectLoading, setRejectLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -136,6 +138,23 @@ export default function DashboardPage() {
       });
     } finally {
       setApprovalLoading(null);
+    }
+  };
+
+  const handleRejectUser = async (id: number, name: string) => {
+    try {
+      setRejectLoading(id);
+      await rejectUser(id);
+
+      setMessage({ type: "success", text: `${name}'s application has been rejected and removed.` });
+      setUnverifiedUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error.response?.data?.error || "Failed to reject user",
+      });
+    } finally {
+      setRejectLoading(null);
     }
   };
 
@@ -416,16 +435,27 @@ export default function DashboardPage() {
                                 {new Date(u.createdAt).toLocaleDateString()}
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button
-                                  size="sm"
-                                  disabled={approvalLoading === u.id}
-                                  onClick={() => handleApproveUser(u.id)}
-                                  className="bg-emerald-600 hover:bg-emerald-700 shadow-md text-white"
-                                >
-                                  {approvalLoading === u.id
-                                    ? "Verifying..."
-                                    : "Verify"}
-                                </Button>
+                                <div className="flex gap-2 justify-end">
+                                  <Button
+                                    size="sm"
+                                    disabled={approvalLoading === u.id || rejectLoading === u.id}
+                                    onClick={() => handleApproveUser(u.id)}
+                                    className="bg-emerald-600 hover:bg-emerald-700 shadow-md text-white"
+                                  >
+                                    {approvalLoading === u.id
+                                      ? "Verifying..."
+                                      : "Verify"}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={approvalLoading === u.id || rejectLoading === u.id}
+                                    onClick={() => handleRejectUser(u.id, u.name)}
+                                    className="border-rose-600 text-rose-400 hover:bg-rose-900/30 hover:text-rose-300"
+                                  >
+                                    {rejectLoading === u.id ? "..." : <><UserX size={14} className="mr-1" />Reject</>}
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))}

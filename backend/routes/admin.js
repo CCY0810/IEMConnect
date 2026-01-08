@@ -14,6 +14,7 @@ import {
   getAllUsers,
   getPendingInvites,
   revokeInvite,
+  deleteUser,
 } from "../controllers/adminController.js";
 
 const router = express.Router();
@@ -29,5 +30,6 @@ router.delete("/invite/:id", verifyToken, revokeInvite);
 router.post("/promote", verifyToken, promoteToAdmin);
 router.post("/demote", verifyToken, demoteToMember);
 router.get("/users", verifyToken, getAllUsers);
+router.delete("/user/:id", verifyToken, deleteUser);
 
 export default router;

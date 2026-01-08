@@ -25,6 +25,8 @@ import {
   CheckCircle,
   Clock,
   Trash2,
+  UserMinus,
+  AlertTriangle,
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 import NotificationBell from "@/components/NotificationBell";
@@ -37,6 +39,7 @@ import {
   promoteToAdmin,
   demoteToMember,
   revokeInvite,
+  deleteMember,
 } from "@/lib/admin-api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -78,6 +81,11 @@ export default function UserManagementPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
+
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<User | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Redirect non-admin users
   useEffect(() => {
@@ -199,6 +207,37 @@ export default function UserManagementPage() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!memberToDelete) return;
+
+    setDeleteLoading(true);
+    try {
+      await deleteMember(memberToDelete.id);
+      toast({
+        title: "Member Removed",
+        description: `${memberToDelete.name} has been removed from the platform`,
+      });
+      setShowDeleteModal(false);
+      setMemberToDelete(null);
+      // Refresh users
+      const usersRes = await getAllUsers();
+      setUsers(usersRes.users || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.error || "Failed to remove member",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const openDeleteConfirmation = (member: User) => {
+    setMemberToDelete(member);
+    setShowDeleteModal(true);
   };
 
   if (authLoading || loading) {
@@ -417,20 +456,31 @@ export default function UserManagementPage() {
                           <p className="text-sm text-slate-400">{member.email}</p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handlePromote(member.id)}
-                        disabled={actionLoading === member.id}
-                        className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900/20 gap-1"
-                      >
-                        {actionLoading === member.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <ArrowUpCircle className="w-4 h-4" />
-                        )}
-                        Promote
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handlePromote(member.id)}
+                          disabled={actionLoading === member.id}
+                          className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900/20 gap-1"
+                        >
+                          {actionLoading === member.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <ArrowUpCircle className="w-4 h-4" />
+                          )}
+                          Promote
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openDeleteConfirmation(member)}
+                          className="text-rose-400 hover:text-rose-300 hover:bg-rose-900/20 gap-1"
+                        >
+                          <UserMinus className="w-4 h-4" />
+                          Remove
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -508,6 +558,74 @@ export default function UserManagementPage() {
                     <Mail className="w-4 h-4" />
                   )}
                   Send Invite
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {showDeleteModal && memberToDelete && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+            <CardHeader className="border-b border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-white">Remove Member</CardTitle>
+                    <CardDescription className="text-slate-400">
+                      This action cannot be undone
+                    </CardDescription>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setMemberToDelete(null);
+                  }}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="bg-rose-900/20 border border-rose-800 rounded-lg p-4">
+                <p className="text-rose-300 text-sm">
+                  You are about to remove <strong className="text-white">{memberToDelete.name}</strong> ({memberToDelete.email}) from the platform.
+                </p>
+                <ul className="mt-3 text-sm text-rose-300 space-y-1">
+                  <li>• All their event registrations will be deleted</li>
+                  <li>• Their attendance records will be removed</li>
+                  <li>• Their feedback and notifications will be cleared</li>
+                  <li>• They will receive an email notification</li>
+                </ul>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setMemberToDelete(null);
+                  }}
+                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteMember}
+                  disabled={deleteLoading}
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 text-white gap-2"
+                >
+                  {deleteLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <UserMinus className="w-4 h-4" />
+                  )}
+                  Remove Member
                 </Button>
               </div>
             </CardContent>

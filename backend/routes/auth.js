@@ -9,6 +9,7 @@ import {
   resend2FA,
   getUnverifiedUsers,
   verifyUser,
+  rejectUser,
   forgotPassword,
   resetPassword,
   updateProfile,
@@ -44,6 +45,7 @@ router.post("/resend-2fa", verifyTempToken, resend2FA);
 // Admin approval routes
 router.get("/unverified-users", verifyToken, getUnverifiedUsers);
 router.post("/verify-user", verifyToken, verifyUser);
+router.post("/reject-user", verifyToken, rejectUser);
 
 // Password reset routes
 router.post("/forgot-password", forgotPassword);

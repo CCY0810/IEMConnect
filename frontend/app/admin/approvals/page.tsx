@@ -21,7 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { getUnverifiedUsers, verifyUser } from "@/lib/admin-api";
+import { Input } from "@/components/ui/input";
+import { getUnverifiedUsers, verifyUser, rejectUser } from "@/lib/admin-api";
 import NotificationBell from "@/components/NotificationBell";
 import UserAvatar from "@/components/UserAvatar";
 import {
@@ -40,6 +41,8 @@ import {
   ChevronRight,
   ChevronLeft,
   MessageSquare,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 
 interface UnverifiedUser {
@@ -61,6 +64,12 @@ export default function ApprovalsPage() {
   const [users, setUsers] = useState<UnverifiedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+
+  // Rejection modal state
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [userToReject, setUserToReject] = useState<UnverifiedUser | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectLoading, setRejectLoading] = useState(false);
 
   const isAdmin = user?.role === "admin";
 
@@ -124,6 +133,40 @@ export default function ApprovalsPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleReject = async () => {
+    if (!userToReject) return;
+
+    setRejectLoading(true);
+    try {
+      await rejectUser(userToReject.id, rejectReason.trim() || undefined);
+      
+      // Update UI
+      setUsers((prev) => prev.filter((u) => u.id !== userToReject.id));
+      setShowRejectModal(false);
+      setUserToReject(null);
+      setRejectReason("");
+      
+      toast({
+        title: "Application Rejected",
+        description: `${userToReject.name}'s application has been rejected and removed.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Rejection Failed",
+        description: error.response?.data?.error || "Failed to reject user",
+        variant: "destructive",
+      });
+    } finally {
+      setRejectLoading(false);
+    }
+  };
+
+  const openRejectModal = (user: UnverifiedUser) => {
+    setUserToReject(user);
+    setRejectReason("");
+    setShowRejectModal(true);
   };
 
   if (!user) return null;
@@ -364,6 +407,15 @@ export default function ApprovalsPage() {
                                   </>
                                 )}
                               </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openRejectModal(u)}
+                                className="border-rose-600 text-rose-400 hover:bg-rose-900/30 hover:text-rose-300"
+                              >
+                                <UserX size={14} className="mr-1" />
+                                Reject
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -376,6 +428,90 @@ export default function ApprovalsPage() {
           </Card>
         </main>
       </div>
+
+      {/* REJECTION CONFIRMATION MODAL */}
+      {showRejectModal && userToReject && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+            <CardHeader className="border-b border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-white">Reject Application</CardTitle>
+                    <CardDescription className="text-slate-400">
+                      This will remove the user's registration
+                    </CardDescription>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setUserToReject(null);
+                    setRejectReason("");
+                  }}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="bg-rose-900/20 border border-rose-800 rounded-lg p-4">
+                <p className="text-rose-300 text-sm">
+                  You are about to reject the application from <strong className="text-white">{userToReject.name}</strong> ({userToReject.email}).
+                </p>
+                <p className="text-rose-300 text-sm mt-2">
+                  Their registration will be permanently removed from the system.
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Rejection Reason (optional)
+                </label>
+                <Input
+                  type="text"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g., Invalid membership number, duplicate account..."
+                  className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  This reason will be included in the email sent to the applicant.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setUserToReject(null);
+                    setRejectReason("");
+                  }}
+                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleReject}
+                  disabled={rejectLoading}
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 text-white gap-2"
+                >
+                  {rejectLoading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <UserX className="w-4 h-4" />
+                  )}
+                  Reject Application
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -295,6 +295,70 @@ class EmailService {
         `
     });
   }
+
+  async sendAccountRemovedEmail(to, name, removedByName) {
+    return this.sendEmail({
+        to,
+        subject: "IEM Connect - Account Removed",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Account Removed</h2>
+            <p>Hello ${name},</p>
+            <p>We're writing to inform you that your IEM Connect account has been removed by an administrator (<strong>${removedByName}</strong>).</p>
+            <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0; color: #991b1b;"><strong>What this means:</strong></p>
+              <ul style="color: #991b1b; margin: 10px 0;">
+                <li>You will no longer be able to log in to IEM Connect</li>
+                <li>Your profile, event history, and related data have been removed</li>
+                <li>Any certificates you've earned are no longer accessible</li>
+              </ul>
+            </div>
+            <p>If you believe this was done in error or have any questions, please contact the IEM Connect administrators or support team.</p>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+              This is an automated message from IEM Connect. Please do not reply to this email.
+            </p>
+          </div>
+        `
+    });
+  }
+
+  async sendApplicationRejectedEmail(to, name, reason, rejectedByName) {
+    const reasonSection = reason 
+      ? `
+        <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #991b1b;"><strong>Reason provided:</strong></p>
+          <p style="margin: 10px 0 0 0; color: #7f1d1d;">${reason}</p>
+        </div>
+      `
+      : '';
+
+    return this.sendEmail({
+        to,
+        subject: "IEM Connect - Application Status Update",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Application Status Update</h2>
+            <p>Hello ${name},</p>
+            <p>Thank you for your interest in joining IEM Connect. After careful review by our team, we regret to inform you that your registration application has not been approved at this time.</p>
+            ${reasonSection}
+            <div style="background-color: #f9fafb; border-left: 4px solid #6b7280; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0; color: #374151;"><strong>What you can do:</strong></p>
+              <ul style="color: #374151; margin: 10px 0;">
+                <li>Review your application details and ensure all information is accurate</li>
+                <li>Contact the IEM Connect administrators for more information</li>
+                <li>You may submit a new application with correct information</li>
+              </ul>
+            </div>
+            <p>If you believe this decision was made in error or have any questions, please don't hesitate to reach out to us.</p>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+              This is an automated message from IEM Connect. Please do not reply to this email.
+            </p>
+          </div>
+        `
+    });
+  }
 }
 
 export default new EmailService();

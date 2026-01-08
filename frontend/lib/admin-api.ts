@@ -12,6 +12,12 @@ export const verifyUser = async (userId: number) => {
   return response.data;
 };
 
+// Reject a user application (admin only)
+export const rejectUser = async (userId: number, reason?: string) => {
+  const response = await api.post("/auth/reject-user", { userId, reason });
+  return response.data;
+};
+
 // ========== ADMIN INVITE FUNCTIONS ==========
 
 // Create admin invite
@@ -68,5 +74,11 @@ export const demoteToMember = async (userId: number) => {
 // Revoke admin invite
 export const revokeInvite = async (inviteId: number) => {
   const response = await api.delete(`/admin/invite/${inviteId}`);
+  return response.data;
+};
+
+// Delete/remove a member (admin only)
+export const deleteMember = async (userId: number) => {
+  const response = await api.delete(`/admin/user/${userId}`);
   return response.data;
 };

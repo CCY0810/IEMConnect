@@ -11,6 +11,10 @@ import crypto from "crypto";
 import Joi from "joi";
 import User from "../models/User.js";
 import AdminInvite from "../models/AdminInvite.js";
+import EventRegistration from "../models/EventRegistration.js";
+import Attendance from "../models/Attendance.js";
+import Feedback from "../models/Feedback.js";
+import Notification from "../models/Notification.js";
 import emailService from "../utils/emailService.js";
 
 /**
@@ -442,5 +446,102 @@ export const revokeInvite = async (req, res) => {
   } catch (error) {
     console.error("Revoke invite error:", error);
     res.status(500).json({ error: "Failed to revoke invite" });
+  }
+};
+
+/**
+ * Delete/remove a member
+ * DELETE /api/v1/admin/user/:id
+ */
+export const deleteUser = async (req, res) => {
+  try {
+    // Verify requester is admin
+    const admin = await User.findByPk(req.user.id);
+    if (!admin || admin.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
+
+    const { id } = req.params;
+    const userId = parseInt(id);
+
+    // Prevent admin from deleting themselves
+    if (userId === admin.id) {
+      return res.status(400).json({ 
+        error: "You cannot delete your own account" 
+      });
+    }
+
+    // Find the user to delete
+    const userToDelete = await User.findByPk(userId);
+    if (!userToDelete) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Prevent deleting other admins (safety measure)
+    if (userToDelete.role === "admin") {
+      return res.status(403).json({ 
+        error: "Cannot delete admin accounts. Demote to member first." 
+      });
+    }
+
+    // Store user details for response and email
+    const userName = userToDelete.name;
+    const userEmail = userToDelete.email;
+
+    // Get all registration IDs for this user (needed for attendance deletion)
+    const registrations = await EventRegistration.findAll({
+      where: { user_id: userId },
+      attributes: ["id"],
+    });
+    const registrationIds = registrations.map(r => r.id);
+
+    // Delete related data in order (respecting foreign key constraints)
+    // 1. Delete attendance records (references registrations)
+    if (registrationIds.length > 0) {
+      await Attendance.destroy({
+        where: { registration_id: registrationIds },
+      });
+    }
+
+    // 2. Delete event registrations
+    await EventRegistration.destroy({
+      where: { user_id: userId },
+    });
+
+    // 3. Delete feedback
+    await Feedback.destroy({
+      where: { user_id: userId },
+    });
+
+    // 4. Delete notifications
+    await Notification.destroy({
+      where: { user_id: userId },
+    });
+
+    // 5. Finally delete the user
+    await userToDelete.destroy();
+
+    // Send notification email to the removed user
+    try {
+      await emailService.sendAccountRemovedEmail(userEmail, userName, admin.name);
+    } catch (emailError) {
+      console.error("Failed to send account removal email:", emailError);
+      // Don't fail the request if email fails
+    }
+
+    console.log(`User ${userName} (${userEmail}) deleted by admin ${admin.name}`);
+
+    return res.status(200).json({ 
+      success: true,
+      message: `Member ${userName} (${userEmail}) has been removed`,
+      deletedData: {
+        registrations: registrationIds.length,
+        notifications: "cleared",
+        feedback: "cleared",
+      }
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    return res.status(500).json({ error: "Failed to delete user" });
   }
 };

@@ -398,6 +398,72 @@ export const verifyUser = async (req, res) => {
   }
 };
 
+// Reject a user application (for admin)
+// The user record will be deleted since unverified users have no data to preserve
+export const rejectUser = async (req, res) => {
+  try {
+    // Check if user is admin
+    const adminUser = await User.findByPk(req.user.id);
+    if (adminUser.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
+
+    // Get user ID and optional rejection reason from request body
+    const { userId, reason } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    // Find the user to reject
+    const userToReject = await User.findByPk(userId);
+    if (!userToReject) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Only allow rejecting unverified users
+    if (userToReject.is_verified === 1) {
+      return res.status(400).json({ 
+        error: "Cannot reject a verified user. Use the remove member feature instead." 
+      });
+    }
+
+    // Store user info before deletion for response and email
+    const userName = userToReject.name;
+    const userEmail = userToReject.email;
+
+    // Delete the unverified user (no related data to clean up since they never logged in)
+    await userToReject.destroy();
+
+    // Send rejection email
+    try {
+      await emailService.sendApplicationRejectedEmail(
+        userEmail,
+        userName,
+        reason || null,
+        adminUser.name
+      );
+    } catch (emailError) {
+      console.error("Failed to send rejection email:", emailError);
+      // Don't fail the request if email fails
+    }
+
+    console.log(`User application rejected: ${userName} (${userEmail}) by admin ${adminUser.name}`);
+
+    res.status(200).json({
+      success: true,
+      message: `Application from ${userName} has been rejected and removed.`,
+      rejectedUser: {
+        name: userName,
+        email: userEmail,
+      },
+    });
+  } catch (error) {
+    console.error("User rejection error:", error);
+    res.status(500).json({ error: "Failed to reject user" });
+  }
+};
+
 // Forgot Password - Request password reset
 export const forgotPassword = async (req, res) => {
   try {
