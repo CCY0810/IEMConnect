@@ -117,7 +117,7 @@ export const submitFeedback = async (req, res) => {
         event_id: feedback.event_id,
         rating: feedback.rating,
         comment: feedback.comment,
-        created_at: feedback.created_at,
+        created_at: feedback.createdAt,
       },
     });
   } catch (error) {
@@ -157,7 +157,7 @@ export const getMyFeedback = async (req, res) => {
         event_date: f.event?.start_date,
         rating: f.rating,
         comment: f.comment,
-        created_at: f.created_at,
+        created_at: f.createdAt,
       })),
     });
   } catch (error) {
@@ -316,7 +316,7 @@ export const getEventFeedback = async (req, res) => {
         user_faculty: f.user?.faculty,
         rating: f.rating,
         comment: f.comment,
-        created_at: f.created_at,
+        created_at: f.createdAt,
       })),
     });
   } catch (error) {
@@ -419,7 +419,7 @@ export const getFeedbackSummary = async (req, res) => {
       user_name: f.user?.name || "Anonymous",
       rating: f.rating,
       comment: f.comment,
-      created_at: f.created_at,
+      created_at: f.createdAt,
     }));
 
     res.json({
@@ -493,7 +493,7 @@ export const exportFeedback = async (req, res) => {
       f.user?.faculty || "",
       f.rating,
       `"${(f.comment || "").replace(/"/g, '""')}"`, // Escape quotes in CSV
-      new Date(f.created_at).toISOString(),
+      f.createdAt ? new Date(f.createdAt).toISOString() : "",
     ]);
 
     const csvContent = [
