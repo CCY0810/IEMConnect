@@ -301,43 +301,6 @@ export default function EventsPage() {
 
 
 
-type SidebarButtonVariant = "default" | "destructive";
-
-interface SidebarButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  open: boolean;
-  active?: boolean;               
-  onClick?: () => void;
-  variant?: SidebarButtonVariant; 
-}
-
-function SidebarButton({
-  icon,
-  label,
-  open,
-  active = false,
-  onClick,
-  variant = "default",
-}: SidebarButtonProps) {
-  const baseClasses =
-    "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors duration-200 font-medium";
-
-  const activeClasses = active
-    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg"
-    : variant === "destructive"
-    ? "text-rose-300 hover:bg-rose-900/30"
-    : "text-slate-300 hover:bg-gray-800 hover:text-white";
-
-  return (
-    <button onClick={onClick} className={`${baseClasses} ${activeClasses}`}>
-      <div className={`w-6 h-6 flex items-center justify-center transition-transform ${active ? 'scale-100' : 'scale-90'}`}>{icon}</div>
-      {open && <span className="truncate">{label}</span>}
-      {open && active && <ChevronRight size={16} className="ml-auto text-white/70" />}
-    </button>
-  );
-}
-
 
 
 function PosterImage({ poster, onClick }: { poster?: string | null; onClick?: () => void }) {
