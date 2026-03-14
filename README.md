@@ -132,3 +132,10 @@ This project was developed for **academic purposes at Universiti Teknologi Malay
 ![Chatbot](images/chatbot.png)
 ![Event Page](images/event.png)
 ![Analytics & Report Page](images/analytic.png)
+
+---
+
+# 📄 Project Documentation
+
+[LeanCanvas](docs/iPixelo_Report.pdf)
+
