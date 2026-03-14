@@ -1,9 +1,5 @@
 # 🚀 IEM Connect
 
-## 🌐 Live Demo
-
-[![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge&logo=vercel&logoColor=white)](https://iemconnect.vercel.app/)
-
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
@@ -13,6 +9,12 @@
 IEM Connect is a **web-based event management platform** developed for the **IEM UTM Student Section** to centralize event organization, registration, and participation tracking.
 
 The platform allows members to discover events, register for activities, receive announcements, and track participation through a single digital system.
+
+---
+
+## 🌐 Live Demo
+
+[![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge&logo=vercel&logoColor=white)](https://iemconnect.vercel.app/)
 
 ---
 
