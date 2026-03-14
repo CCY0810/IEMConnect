@@ -137,5 +137,14 @@ This project was developed for **academic purposes at Universiti Teknologi Malay
 
 # 📄 Project Documentation
 
-[LeanCanvas](docs/iPixelo_Report.pdf)
+[Lean Canvas](docs/GGEZ_IEM_Connect_LeanCanvas.pdf)
+[Product Backlog](docs/GGEZ_IEM_Connect_ProductBacklog.xlsx)
+[Pitch Deck](docs/GGEZ_IEM_Connect_PitchDeck.pdf)
+[Sprint 1 Progress](docs/GGEZ_IEM_Connect_S1Slide.pdf)
+[Sprint 2 Progress](docs/GGEZ_IEM_Connect_S2Slide.pdf)
+[Sprint 3 Progress](docs/GGEZ_IEM_Connect_S3Slide.pdf)
+[Sprint 4 Progress](docs/GGEZ_IEM_Connect_S4Slide.pdf)
+[Live Demo](docs/GGEZ_IEM_Connect_LiveDemoSlide.pdf)
+[Poster](docs/GGEZ_IEM_Connect_Poster.pdf)
+
 
