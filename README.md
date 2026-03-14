@@ -1,5 +1,9 @@
 # 🚀 IEM Connect
 
+## 🌐 Live Demo
+
+[![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge&logo=vercel&logoColor=white)](https://iemconnect.vercel.app/)
+
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
@@ -60,11 +64,12 @@ Many student organizations manage events using **scattered platforms and manual 
 
 | Category | Technology |
 |--------|--------|
-| **Frontend** | HTML, CSS, JavaScript |
-| **Backend** | Node.js|
+| **Frontend** | HTML, CSS, JavaScript | 
+| **Backend** | Node.js| 
 | **Database** | MySQL |
 | **Security** | JWT, Two-Factor Authentication |
 | **Project Management** | Agile Scrum |
+| **Deployment** | Vercel, Render, TiDB, Cloudinary, Brevo |
 
 ---
 
@@ -118,3 +123,12 @@ The platform successfully improves:
 # 📄 License
 
 This project was developed for **academic purposes at Universiti Teknologi Malaysia (UTM)**.
+
+---
+
+# 🖥 System Preview
+
+![Home Page](images/homepage.png)
+![Chatbot](images/chatbot.png)
+![Event Page](images/event.png)
+![Analytics & Report Page](images/analytic.png)
